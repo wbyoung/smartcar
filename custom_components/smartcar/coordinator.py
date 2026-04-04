@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 from homeassistant.util import dt as dt_util
 
 from .auth import AbstractAuth
-from .const import CONF_APPLICATION_MANAGEMENT_TOKEN, DOMAIN, EntityDescriptionKey
+from .const import DOMAIN, EntityDescriptionKey
 from .util import key_path_get, key_path_update
 
 _LOGGER = logging.getLogger(__name__)
@@ -514,9 +514,7 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{vin}",
-            update_interval=UPDATE_INTERVAL
-            if CONF_APPLICATION_MANAGEMENT_TOKEN not in entry.data
-            else None,
+            update_interval=UPDATE_INTERVAL,
         )
 
     def is_scope_enabled(
@@ -571,10 +569,7 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         """
         if self.batch_requests:
             return
-        if (
-            self.config_entry.pref_disable_polling
-            or CONF_APPLICATION_MANAGEMENT_TOKEN in self.config_entry.data
-        ):
+        if self.config_entry.pref_disable_polling:
             return
 
         entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(

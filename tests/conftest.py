@@ -374,7 +374,6 @@ def webhook_scenario(
             },
         )
 
-        expected_calls = 0
         expected_response = expected.get("response", "")
         expected_response_status = expected.get("response_status", 204)
         expected_reauth_calls = expected.get("reauth_calls", 0)
@@ -383,9 +382,8 @@ def webhook_scenario(
         with patch("custom_components.smartcar.PLATFORMS", [platform]):
             await setup_added_integration(hass, mock_config_entry)
 
-        # no requests should have been made during setup when webhooks are enabled
-        # because this automatically disables polling.
-        assert aioclient_mock.call_count == expected_calls
+        # polling occurs during setup even when webhooks are enabled
+        calls_after_setup = aioclient_mock.call_count
 
         with patch(
             "homeassistant.config_entries.ConfigEntry.async_start_reauth"
@@ -410,8 +408,8 @@ def webhook_scenario(
             )
             await hass.async_block_till_done()
 
-        # still no calls since webhooks will update from the data it received
-        assert aioclient_mock.call_count == expected_calls
+        # no additional calls since webhooks update from the data they received
+        assert aioclient_mock.call_count == calls_after_setup
         assert mock_start_reauth.call_count == expected_reauth_calls
 
         device_id = vehicle_attributes["vin"]
