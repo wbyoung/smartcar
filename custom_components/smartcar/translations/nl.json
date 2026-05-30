@@ -1,0 +1,118 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "already_in_progress": "Configuratie is al in gang gezet",
+            "cannot_connect": "Verbinding maken met Smartcar is mislukt.",
+            "cloud_not_connected": "Niet verbonden met Home Assistant Cloud.",
+            "duplicate_vehicles": "Voertuigen kunnen maar één keer worden ingesteld. De volgende VIN's zijn al geconfigureerd: {vins}.",
+            "external_url_required": "Home Assistant heeft een publiek bereikbare HTTPS-URL nodig zodat Smartcar terug kan doorverwijzen. Schakel Home Assistant Cloud (Nabu Casa) in, of stel een `external_url` in onder Instellingen \u2192 Systeem \u2192 Netwerk.",
+            "invalid_auth": "De Client ID of het Client Secret is onjuist. Controleer ze in het Smartcar-dashboard.",
+            "missing_user_id": "De Smartcar-callback bevatte geen gebruikers-id. De integratie kan zonder dit gegeven niet verder.",
+            "no_vehicles": "Smartcar heeft geen voertuigen geretourneerd voor deze gebruiker.",
+            "oauth_error": "Smartcar gaf een fout terug tijdens de autorisatie: {error}",
+            "reauth_successful": "Opnieuw authenticeren is gelukt",
+            "unknown": "Onverwachte fout",
+            "wrong_vehicles": "De voertuigen moeten overeenkomen met de oorspronkelijke selectie. Bestaande VIN's: {vins}."
+        },
+        "create_entry": {
+            "default": "Smartcar-configuratie voltooid.\n\nAls je webhooks hebt ingeschakeld, registreer dan deze URL als de *Vehicle data callback URI* in je Smartcar-dashboard:\n\n`{webhook_url}`"
+        },
+        "error": {
+            "no_scopes": "Kies minstens één scope",
+            "no_management_token": "Application Management Token ontbreekt",
+            "extraneous_management_token": "Geef geen Application Management Token op als webhooks niet zijn ingeschakeld",
+            "invalid_auth": "Smartcar accepteert de inloggegevens niet. Controleer de V3 Client ID en het Client Secret.",
+            "cannot_connect": "Kan Smartcar niet bereiken om de inloggegevens te controleren."
+        },
+        "step": {
+            "user": {
+                "title": "Smartcar-inloggegevens",
+                "description": "Voer de drie waarden uit je Smartcar-dashboard in.\n\nDe **Application ID** staat op de overzichtspagina van je applicatie. De **Client ID** en het **Client Secret** vind je op het tabblad *API Credentials*. Dit zijn verschillende waarden.\n\nZorg ervoor dat de redirect-URI van je Home Assistant `{redirect_url}` is geregistreerd onder *Authorized redirect URIs* op de applicatiepagina voordat je verdergaat.",
+                "data": {
+                    "application_id": "Application ID",
+                    "client_id": "V3 Client ID",
+                    "client_secret": "V3 Client Secret"
+                }
+            },
+            "webhooks": {
+                "title": "Webhooks (optioneel)",
+                "description": "Met webhooks kan Smartcar voertuiggegevens in realtime naar Home Assistant sturen, in plaats van te vertrouwen op periodiek pollen.\n\nAls je webhooks wilt gebruiken, plak dan hier je **Application Management Token** uit het Smartcar-dashboard. De callback-URL die je in Smartcar moet registreren krijg je na afloop van de configuratie te zien.",
+                "data": {
+                    "use_webhooks": "Webhooks gebruiken",
+                    "application_management_token": "Application Management Token (alleen bij gebruik van webhooks)"
+                }
+            },
+            "scopes": {
+                "title": "Rechten",
+                "description": "Kies welke Smartcar-rechten je voor je voertuig wilt opvragen.",
+                "data": {
+                    "control_charge": "Laden besturen (start/stop & laadlimiet)",
+                    "control_security": "Voertuig vergrendelen of ontgrendelen",
+                    "read_battery": "EV/PHEV-accuniveau, -capaciteit & -bereik",
+                    "read_charge": "Laadkabel / laadstatus",
+                    "read_engine_oil": "Levensduur motorolie",
+                    "read_fuel": "Brandstoftankniveau",
+                    "read_location": "Voertuiglocatie",
+                    "read_odometer": "Totale afgelegde afstand",
+                    "read_security": "Status van deuren / ramen / sloten",
+                    "read_tires": "Bandenspanning"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Smartcar opnieuw authenticeren",
+                "description": "De Smartcar-integratie moet opnieuw worden geauthenticeerd."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cloud_not_connected": "Niet verbonden met Home Assistant Cloud.",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "no_management_token": "Application Management Token ontbreekt",
+            "extraneous_management_token": "Geef geen Application Management Token op als webhooks niet zijn ingeschakeld"
+        },
+        "step": {
+            "webhooks": {
+                "title": "Webhooks",
+                "description": "Webhook-callback-URL (registreer deze in het Smartcar-dashboard als de *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nAls er geen URL wordt weergegeven, voltooi dan eerst de configuratie en kom hier later terug.",
+                "data": {
+                    "use_webhooks": "Webhooks gebruiken",
+                    "application_management_token": "Application Management Token (alleen bij gebruik van webhooks)"
+                }
+            }
+        }
+    },
+    "services": {
+        "lock_doors": {
+            "description": "Vergrendel de deuren van een voertuig.",
+            "fields": {
+                "config_entry": {
+                    "description": "De configuratie die voor deze actie moet worden gebruikt.",
+                    "name": "Configuratie"
+                },
+                "vin": {
+                    "description": "De VIN van het voertuig waarop de actie moet worden uitgevoerd.",
+                    "name": "VIN"
+                }
+            },
+            "name": "Deuren vergrendelen"
+        },
+        "unlock_doors": {
+            "description": "Ontgrendel de deuren van een voertuig.",
+            "fields": {
+                "config_entry": {
+                    "description": "De configuratie die voor deze actie moet worden gebruikt.",
+                    "name": "Configuratie"
+                },
+                "vin": {
+                    "description": "De VIN van het voertuig waarop de actie moet worden uitgevoerd.",
+                    "name": "VIN"
+                }
+            },
+            "name": "Deuren ontgrendelen"
+        }
+    }
+}
