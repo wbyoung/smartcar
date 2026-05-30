@@ -1,143 +1,142 @@
-# Smartcar Integration – FAQ
+# Smartcar V3 Integration — FAQ
 
-Before diving into deeper troubleshooting, it’s worth checking a few common Smartcar resources. Many issues can be explained (or avoided) by understanding the platform, brand, or plan limitations.
+Common issues and how to diagnose them. Many of these are platform-side issues that aren't really integration bugs but need to be understood to get data flowing.
 
-### Pre-flight check list:
+## Pre-flight check
 
-- [Smartcar Status](https://status.smartcar.com/) – Current platform status and known incidents
-- [Smartcar Brands Status](https://brandreliability.smartcar.com/) – Known issues affecting specific car brands
-- [Brand Data Frequency](https://smartcar.com/docs/help/frequencies) – How frequently are updates expected for each brand
-- [Brand Data Reliability](https://smartcar.com/docs/help/reliability-and-freshness) – How reliable each brand is for data and commands
-- [my.smartcar.com](https://my.smartcar.com/) – a useful app to check that you have the required permission (scopes) enabled for your vehicle and your integration (you'll need to re-authenticate your vehicle)
-- [Known Issues and Limitations](/wbyoung/smartcar?tab=readme-ov-file#known-issues--limitations) - In case you missed this section in the README, it is worth reviewing.
+Before deep-diving, sanity-check the obvious:
 
-### Is your car brand supported in your region?
+- [Smartcar Status](https://status.smartcar.com/) — platform-wide outages.
+- [Smartcar Brand Reliability](https://brandreliability.smartcar.com/) — known issues per OEM.
+- [Brand Data Frequency](https://smartcar.com/docs/help/frequencies) — how often each brand actually sends data.
+- [Vehicle Compatibility](https://smartcar.com/product/compatible-vehicles) — confirm your vehicle and country are supported.
 
-Smartcar availability varies by region. Check whether your car brand is supported where you live on [smartcar.com/global](https://smartcar.com/global)
+## Setup-time problems
 
-### Is your car compatible with Smartcar, and what data is available?
+### "Invalid parameter client_id" during Connect
 
-Available sensors (data signals) depend on the brand, model, year, and region of your vehicle. See this [compatible vehicles table](https://smartcar.com/product/compatible-vehicles) to confirm what data and commands are supported for your vehicle.
+Smartcar Connect rejected the value HA sent as `client_id` in the redirect URL. This is the most common setup error: the **Application ID** field in the HA form needs the *Application ID* from your Smartcar dashboard, **not** the V3 Client ID.
 
-### Is your Home Assistant server publicly accessible?
+The two are different:
 
-For webhooks to work, Smartcar servers must be able to reach your Home Assistant server via a **public**, **secure** (https) url. You will need a valid SSL certificate for your HA domain name. There are [separate guides](https://www.home-assistant.io/docs/configuration/remote/) on how to do this.
-Make sure you have configured a valid **Home Assistant URL** in your [HA network settings](https://my.home-assistant.io/redirect/network/).
-Test to see if this is accessible from the public internet using a tool like [httpstatus.io](https://httpstatus.io/): you should get a **200 OK** response.
-For the OAuth setup flow to complete successfully, you must also have [my.home-assistant.io](https://my.home-assistant.io/) URL redirects configured correctly, as described in the installation guide.
+- **Application ID** — shown on your Smartcar application's overview page. Used by Connect.
+- **V3 Client ID** — shown under *API Credentials* on the same application page. Format: `client_xxx...`. Used by IAM to mint access tokens.
 
-### Can you update sensors through polling?
+They often look superficially similar (both can be `client_xxx` format depending on when the application was created), so it's easy to swap them. The error message includes the rejected value — if it matches your V3 Client ID, that's the swap.
 
-Smartcar favours webhooks instead of polling for vehicle updates. Webhooks really are more efficient, faster and unlimited. But polling is perfect for the initial setup and troubleshooting. Check if you can update the values of some sensors using the `homeassistant.update_entity` function. You can use this in a [HA automation](examples/poll-smartcar-simple.yaml) or head over to [Developer Tools - Actions](https://my.home-assistant.io/redirect/developer_services/) and run this action manually:
+### "Failed to resume setup flow" / 404 on `/api/smartcar/callback`
 
-```
- - action: homeassistant.update_entity
-   data:
-     entity_id:
-      - sensor.<make_model>_odometer
-      - device_tracker.<make_model>_location
-```
+Either:
 
-This request can take a very long time to receive a response from your car, between 20 seconds to a couple of minutes. If you open the sensor you've just updated in HA, you will see that there are additional attributes for it which will include: `Age` – the date and time at which the data was recorded by the vehicle `Fetched at` – the date and time at which Smartcar fetched the data These values do not necessarily update each time you make a request. They only update when Smartcar changes them (i.e. when it reaches out to your car brand's server, it'll update the `fetched_at` value).
-**Remember:** you have a very limited number of poll requests and you could run out very quickly in testing.
+1. **You restarted HA in the middle of the flow.** Start the flow over.
+2. **The callback view didn't register.** This used to happen with older versions of the integration — `async_setup` runs only after a config entry exists, but during the first setup there's no entry yet. The current integration registers the view from the config flow as well, so this shouldn't happen anymore. If it does, restart HA and try again; if that fails, there's a real bug.
 
-### Is the Smartcar-HA integration configured correctly for webhooks?
+### "Failed to setup" after a successful setup, with "Config entry … has already been setup!" errors in the log
 
-If your Home Assistant _network_ configuration is correct (see above), the [Smartcar-HA integration](https://my.home-assistant.io/redirect/integration/?domain=smartcar) will provide you a webhook URL that looks like this:
-`https://your-home-assistant.example.com/api/webhook/xxxxxxxxxxxxxxxxxxxxxx`
-Test this url with [httpstatus.io](https://httpstatus.io/): a status **405 Method not allowed** response is expected and confirms the endpoint is reachable. While you're here, double check that this URL from your HA integration settings exactly matches the `Vehicle data callback URI` in your Smartcar dashboard -> Integrations settings. Also check that the Token configured in the Smartcar-HA integration is the **Application Management Token**, found at Smartcar Dashboard -> Configuration -> API Keys. It should look like this:
+This was a bug in earlier V3 builds where a failure after `async_forward_entry_setups` triggered a retry loop. The platforms were registered on the first attempt, and the retry's forward call collided with them.
 
-![webhook](images/FAQ1.png)
+Fix: delete the broken config entry from Settings → Devices & Services, restart HA, set up again with the current integration version. The current version moves all fallible operations before the forward call and makes the first data refresh fire-and-forget, so failures in the data path don't trigger setup retries.
 
-### Is your webhook configured correctly in the Smartcar dashboard?
+### Setup completes but I can't see where to register the callback URL on Smartcar
 
-The **free tier** currently only provides access to about 9 useful Trigger signals and 9 Data signals (subject to change). To access more, you’ll need to upgrade your Smartcar subscription plan. Is your car [subscribed](README.md#subscribe-vehicle) to the webhook?
+It's not the webhook callback — that's separate. The integration setup needs an **OAuth redirect URI** registered on your Smartcar *application* (the same place where the Application ID and API Credentials live). Look for a field labelled *Allowed Redirect URIs*, *Redirect URLs*, or similar. Paste the URL exactly as HA displayed it during setup.
 
-**Important:** disable the `VehicleUserAccount` triggers and data signals in your webhook config. These have been [identified](README.md/issues/51#issuecomment-3682790541) as a cause of repeated `REAUTHENTICATE` errors.
+## Runtime problems
 
-![disable_webhook](images/FAQ2.png)
+### All entities are "Unavailable" even though setup succeeded
 
-**Important:** Webhook updates are definitely **not** sent in real time, despite what Smartcar might claim. See [Data Frequency](https://smartcar.com/docs/help/frequencies) for your brand and keep in mind that other factors could add delays too. Smartcar or any other third-party services never directly communicate with your car; instead the car at certain intervals sends the data to your manufacturer's server where it is cached, and Smartcar gets it from there. In order to get new webhook data sent to your HA, you have to do something to your car so data values change. For example, if you have the odometer enabled for webhook, take the car for a drive so that the odometer increases, then webhooks should trigger from Smartcar to HA and you should see the new values after a hopefully short period of time (brand data frequency updates permitting).
+The most common cause. Almost always means: **vehicle isn't subscribed to your webhook** on Smartcar's side.
 
-### Does your Smartcar subscription plan include the data signals you need?
+In V3, signal data only flows for subscribed vehicles. This is true for both webhook delivery and the polling `/signals` endpoint — Smartcar returns `404 Not Found` on `/vehicles/{id}/signals` for unsubscribed vehicles, not an empty list.
 
-Data signals availability is limited by your current Smartcar subscription plan. You might be able to view different data sensors for your car in the SmarCar dashboard, but it would depend on your subscription what signals are sent via the webhook. Review your active plan and current signals available to you in the [Smartcar billing dashboard](https://dashboard.smartcar.com/team/billing). Compare plans on the [pricing page](https://smartcar.com/pricing#pricing).
+Fix:
 
-### Enabling extra data signals
+1. Smartcar dashboard → *Integrations* → open your webhook.
+2. Enable **"Automatically subscribe all vehicles"**.
+3. Save.
+4. Wait. OEM polling cadence varies — you'll see *some* data within an hour for most brands, but full signal coverage can take longer. Refer to [Brand Data Frequency](https://smartcar.com/docs/help/frequencies) for your make.
 
-If you've upgraded your plan, make sure you enable the extra signals in the webhook settings in your Smartcar dashboard. You must also enable the relevant sensors for your car in your Home Assistant. By default these are disabled. It shouldn't make a difference to the Smartcar-HA integration whether you are on a free tier or a paying customer, the only difference is in what data signals Smartcar is sending to you via webhooks. If you enable sensors in HA which are not also enabled in your webhook settings Data signals, these will not receive any data and will remain "Unavailable".
+If you'd rather subscribe vehicles selectively, do it from Smartcar dashboard → *Vehicles* → your car → *Webhook Subscriptions* → *Subscribe*.
 
-### Check the Smartcar log
+### Smartcar dashboard log shows 404 on `/vehicles/:id/signals`
 
-In your Smartcar Dashboard go to Vehicles, select your vehicle from the list, then select Webhooks which should show the recent webhook logs for the vehicle. Hopefully all your log entries have a **200 OK** status code. On the most recent webhook log entry (top one) click the tree dots menu and select View Log Details This should show you more details about what Smartcar is trying to send via webhook, which signals were sent and which have failed and why. There is a few minutes delay until any new log entries are shown in the Smartcar dashboard log, this is normal.
+Same root cause as above: vehicle isn't subscribed. The integration is calling the right endpoint with the right auth; Smartcar is saying "this vehicle has no signals subscription so there's nothing to return". Enable auto-enrollment.
 
-![log](images/FAQ3.png)
+### Webhook delivery works but `last_webhook_received` shows a stale time
 
-### When all else fails: Start fresh
+Webhooks fire when signals change, *and* on Smartcar's internal cadence — they're not continuous. If your vehicle is parked and unchanged, webhooks won't fire. Take it for a short drive to force odometer / battery / location changes and confirm webhooks resume.
 
-If you’re still stuck, a clean setup often resolves lingering issues:
+The `sensor.<make_model>_last_webhook_received` entity exposes `response_status` and `response_data` attributes — if Smartcar is sending but HA is rejecting (e.g. HMAC verification failure), those will show non-200 status codes.
 
-- **Remove the Smartcar credentials** from the [integrations dashboard](https://my.home-assistant.io/redirect/integrations/): click the three dots in the top right corner and select [Application Credentials](https://my.home-assistant.io/redirect/application_credentials/). There, delete the Smartcar OAuth credentials.
-- Remove the Smartcar-HA integration via HACS, and also
-- Delete the car from your Smartcar dashboard.
+### Some entities show data, others stay unavailable
 
-Then restart HA and reinstall and reconfigure everything from scratch, following the installation guide. Once finished setting it up again, it should bring your car back in HA with all its sensor history.
+Two likely reasons:
 
-### Keep in mind
+1. **The signal isn't enabled in your webhook config.** Smartcar's webhooks deliver a subset of signals configured in the dashboard. Unselected signals don't reach HA. Open your webhook in the dashboard and confirm the signals matching your unavailable entities are enabled.
+2. **The signal isn't included in your Smartcar plan.** Some signals are only available on paid plans. The free tier currently exposes about 9 trigger signals and 9 data signals (subject to change). Check your [Smartcar billing page](https://dashboard.smartcar.com/team/billing) and compare against the [pricing page](https://smartcar.com/pricing#pricing).
+3. **Your vehicle doesn't support the signal.** Even with the right plan, signal support varies by make/model/year. The [compatibility table](https://smartcar.com/product/compatible-vehicles) shows what's available.
 
-Smartcar regularly pushes [platform updates and changes](https://smartcar.com/docs/changelog/latest). Occasionally, these updates may introduce unexpected behavior or break existing functionality.
+### Repeated `REAUTHENTICATE` errors
 
-### Getting community help
+Known issue on Smartcar's side, often associated with the `VehicleUserAccount` signal group. Workaround: disable both the `VehicleUserAccount` triggers and data signals in your webhook configuration. Reference: [original integration issue #51](https://github.com/wbyoung/smartcar/issues/51).
 
-Before you open a new issue on GitHub, please work through the troubleshooting steps above.
+### Tokens expire mid-session, integration goes unavailable
 
-Download the Diagnostics file from your car in Home Assistant and attach it or paste its contents in your GitHub issue. This is a neat json file redacted to remove any personal information and should help us understand your Smartcar-HA setup.
+This shouldn't happen — the token manager fetches a fresh token on demand. If it does, check the HA log for entries from `custom_components.smartcar.auth_impl` around the time it went unavailable. The most likely cause is your V3 Client ID or Secret being revoked or rotated on the Smartcar dashboard.
 
-![help](images/FAQ4.png)
+### Polling fetches return empty data but webhooks work
 
-It would be extremely helpful if you would enable debugging and capture a few webhook payloads in the logs. To enable debugging, go to the [integration settings page](https://my.home-assistant.io/redirect/integration/?domain=smartcar), click the three dots in the top right corner and select **Enable debug logging**. Then just wait for a while, take your car for a quick drive, so that you get at least one webhook payload (you can check if a webhook payload was sent in the Smartcar dashboard logs).
-When you **Disable debug logging** you will be prompted to download a log file (this is best done on a computer, not a phone).
+If webhooks are enabled and arriving, polling is largely redundant. The 6-hour periodic poll is a safety net for missed webhooks. If you want to disable it entirely (and rely solely on webhooks), use *Settings → Devices & Services → Smartcar → ⋯ → System Options → Disable polling*.
 
-![log](images/FAQ5.png)
+## Diagnostics
 
-In that log file you will find a line that starts with `DEBUG (MainThread) [custom_components.smartcar.webhooks] Received JSON from Smartcar:` followed by the **raw webhook payload** enclosed in single quotes (`'...'`) The JSON should start with a `{` and end with an `}`
+### Enable debug logging
 
-### Posting logs and data
+Settings → Devices & Services → Smartcar → ⋯ → *Enable debug logging*. Then reproduce the issue. The logs will include:
 
-Please post your logs as easy to read as possible: If you're sending the entire logs, attach it as a file as you've downloaded it. If you're posting just the relevant JSON webhook payload, ideally first run it through a "[beautify](https://jsonformatter.org/)" app and mark it as JSON code when posting it here, like so:
+- `custom_components.smartcar.coordinator` — what the polling code is fetching and getting back.
+- `custom_components.smartcar.webhooks` — incoming webhook payloads (raw JSON).
+- `custom_components.smartcar.auth_impl` — token mint requests and refreshes.
+- `custom_components.smartcar.views` — the OAuth callback view.
 
-    ```json
-    PASTE YOUR JSON HERE
-    ```
+Disable debug logging when done — you'll be prompted to download the log file.
 
-If the JSON or log is very long, make it collapsible:
+### Check Smartcar's side of the conversation
 
-    <details>
-    <summary>This is my long JSON</summary>
+The Smartcar dashboard has its own log of every request it received and webhook it sent:
 
-    ```json
-    PASTED JSON HERE
-    ```
+- Application page → *Logs* or *Activity* tab — API requests received from your integration.
+- Webhook config → *Logs* — webhook deliveries attempted, including HTTP status responses from your HA.
 
-    </details>
+If you suspect a request is malformed, the dashboard often shows more context than HA does — paths, status codes, sometimes response bodies.
 
-It greatly improves the readability of the entire thread, and for the long collapsed section you will see:
+## When all else fails
 
-<details>
-<summary>This is my long JSON</summary>
+A clean reset:
 
-```json
-PASTED JSON HERE
-```
+1. Settings → Devices & Services → Smartcar → ⋯ → *Delete*.
+2. Smartcar dashboard → *Vehicles* → disconnect the vehicle.
+3. Smartcar dashboard → *Integrations* → delete the webhook.
+4. Restart HA.
+5. Set up from scratch following the [README setup steps](README.md#setup).
 
-</details>
+This wipes any half-baked state on both sides.
 
-### Sharing Smartcar logs and data
+## Privacy and what's shared with Smartcar
 
-If you’re sharing logs or data from the Smartcar dashboard, screenshots are usually much easier to read than pasted text due to formatting which is not transferred on GitHub. Remember to mask any personal info in the screenshot.
+Worth knowing if you care about this:
 
-All of this makes it significantly easier for contributors and volunteers to help you.
+- **Your HA URL is registered with Smartcar.** Either your Nabu Casa Cloud URL or your own external URL ends up in their dashboard as both the OAuth redirect URI and the webhook callback URI.
+- **Webhook payloads transit Smartcar's infrastructure.** Encrypted end-to-end at the TLS layer, but routed through their servers.
+- **Smartcar logs requests** in their dashboard. Bearer tokens and headers are typically masked but URLs and timestamps aren't.
+- **Webhook payloads contain vehicle identifiers, location coordinates, and signal values.** If posting log excerpts publicly for help, redact lat/long and vehicle IDs.
 
-### Privacy
+## Reporting bugs
 
-The raw log file and the raw webhook data will include some information about your car (make, model, year, location coordinates) and some unique identifiers that Smartcar uses. While these cannot be used in any malicious way and are only relevant for your HA server, you may wish to redact them before posting publicly.
+Before opening an issue:
+
+1. Work through the relevant sections above.
+2. Enable debug logging, reproduce, and grab the log file.
+3. Download the integration diagnostics file (Settings → Devices & Services → Smartcar → ⋯ → *Download diagnostics*) — it's redacted automatically.
+
+Attach the diagnostics and relevant log excerpts (the section around the issue, not the full multi-MB file). If posting raw webhook JSON, beautify it and wrap in a `<details>` block so the issue stays readable.
