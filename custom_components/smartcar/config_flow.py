@@ -1,21 +1,48 @@
+"""Smartcar V3 config flow.
+
+This flow no longer uses Home Assistant's ``AbstractOAuth2FlowHandler``.
+Smartcar V3 dropped per-user OAuth tokens with refresh, so the standard
+authorization-code-grant + refresh-token framework doesn't fit. Instead:
+
+  1. The user enters three credentials (Application ID, V3 Client ID, V3
+     Client Secret) plus optional webhook settings.
+  2. We verify the V3 Client ID/Secret immediately by minting a token at
+     ``iam.smartcar.com/oauth2/token`` — this fails fast on bad creds.
+  3. The user picks the scopes to request.
+  4. We show them the redirect URI they need to register on the Smartcar
+     dashboard, then send them to Smartcar Connect.
+  5. After consent, Smartcar redirects to ``/api/smartcar/callback`` on this
+     HA instance, where :class:`SmartcarConnectCallbackView` resumes the flow
+     with the ``userId`` from the URL.
+  6. We fetch ``/v3/connections`` using the just-discovered ``userId`` to
+     enumerate vehicles, then create the config entry.
+
+There is no my.home-assistant.io intermediary in this flow — the callback
+goes directly to the HA instance's external URL. That sidesteps Safari's
+ITP-blocked localStorage issue from the earlier OAuth2 path.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import secrets
 from typing import Any, cast
+from urllib.parse import urlencode
 
 from aiohttp import ClientConnectorError, ClientError
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -24,41 +51,58 @@ from homeassistant.helpers.selector import (
 import voluptuous as vol
 
 from . import populate_entry_data, vehicle_vins_in_use
-from .auth_impl import AccessTokenAuthImpl
+from .auth_impl import ClientCredentialsAuthImpl, ClientCredentialsTokenManager
 from .const import (
     API_HOST,
+    CONF_APPLICATION_ID,
     CONF_APPLICATION_MANAGEMENT_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
     CONF_CLOUDHOOK,
+    CONF_SCOPES,
     CONFIGURABLE_SCOPES,
     DEFAULT_NAME,
     DEFAULT_SCOPES,
     DOMAIN,
+    OAUTH2_AUTHORIZE,
     REQUIRED_SCOPES,
     SMARTCAR_MODE,
     Scope,
 )
 from .errors import EmptyVehicleListError, InvalidAuthError, MissingVINError
 from .util import unique_id_from_entry_data, vins_from_entry_data
+from .views import CALLBACK_PATH, async_register_view, register_state
 from .webhooks import webhook_url_from_id
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_USE_WEBHOOKS = "use_webhooks"
 
-GENERAL_CONFIGURATION_SCHEMA = {
-    vol.Required(CONF_USE_WEBHOOKS, default=True): bool,
-    vol.Optional(CONF_APPLICATION_MANAGEMENT_TOKEN): TextSelector(
-        config=TextSelectorConfig(type=TextSelectorType.TEXT)
-    ),
-}
-BASE_DESCRIPTION_PLACEHOLDERS = {
-    "webhook_url": "webhooks-not-enabled",
-    "smartcar_url": "https://dashboard.smartcar.com/configuration",
-    "docs_url": "https://github.com/wbyoung/smartcar/#webhooks",
-}
+CREDENTIALS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_APPLICATION_ID): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.TEXT)
+        ),
+        vol.Required(CONF_CLIENT_ID): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.TEXT)
+        ),
+        vol.Required(CONF_CLIENT_SECRET): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
+WEBHOOKS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USE_WEBHOOKS, default=True): bool,
+        vol.Optional(CONF_APPLICATION_MANAGEMENT_TOKEN): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
 
 
-def _validate_general_configuration_input(
+def _validate_webhook_input(
     user_input: dict[str, Any],
     errors: dict[str, str],
 ) -> None:
@@ -67,130 +111,168 @@ def _validate_general_configuration_input(
 
     if use_webhooks and not management_token:
         errors[CONF_APPLICATION_MANAGEMENT_TOKEN] = "no_management_token"
-
     if not use_webhooks and management_token:
         errors["base"] = "extraneous_management_token"
-
     if not management_token:
         user_input.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
 
 
-def _add_dynamic_values_to_entry_data(
-    data: dict[str, Any],
-) -> dict[str, Any]:
-    return (
-        {
-            **data,
-            CONF_USE_WEBHOOKS: bool(data.get(CONF_APPLICATION_MANAGEMENT_TOKEN)),
-        }
-        if data
-        else data
-    )
+def _build_redirect_uri(hass: HomeAssistant) -> str | None:
+    """Construct the absolute callback URL Smartcar will redirect to.
+
+    Uses Home Assistant's :func:`get_url` helper which considers, in order
+    of preference:
+
+      * a user-configured ``external_url`` (configuration.yaml or
+        Settings → System → Network),
+      * the Nabu Casa Cloud remote URL (when the user has an active
+        subscription),
+      * other publicly-reachable URLs HA knows about.
+
+    Internal URLs and IP-only addresses are rejected — Smartcar's redirect
+    target must be a publicly reachable HTTPS URL. Returns ``None`` if no
+    such URL is available.
+    """
+    try:
+        url = get_url(
+            hass,
+            allow_internal=False,
+            allow_ip=False,
+            allow_cloud=True,
+            require_ssl=True,
+            require_standard_port=False,
+        )
+    except NoURLAvailableError:
+        return None
+    return f"{url.rstrip('/')}{CALLBACK_PATH}"
 
 
-class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: ignore[call-arg]
-    """Config flow to handle Smartcar OAuth2 authentication."""
+class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Smartcar V3 config flow."""
 
-    DOMAIN = DOMAIN
-    VERSION = 2
+    VERSION = 1
     MINOR_VERSION = 0
-    entry_data: dict[str, Any] | None = None
-    scope_data: dict[str, Any] | None = None
+
+    def __init__(self) -> None:
+        """Initialize per-flow state."""
+        self._credentials: dict[str, Any] = {}
+        self._webhook_data: dict[str, Any] = {}
+        self._scope_data: dict[str, Any] = {}
+        self._state: str | None = None
+        self._user_id: str | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,  # noqa: ARG004
     ) -> OptionsFlow:
-        """Get the options flow for this handler.
-
-        Returns:
-            The options flow.
-        """
+        """Return the options flow."""
         return SmartcarOptionsFlow()
 
-    @property
-    def logger(self) -> logging.Logger:
-        return _LOGGER
+    # ------------------------------------------------------------------ #
+    # Steps                                                              #
+    # ------------------------------------------------------------------ #
 
-    @property
-    def extra_authorize_data(self) -> dict[str, Any]:
-        """Extra data that needs to be appended to the authorize url."""
-
-        return {
-            "mode": SMARTCAR_MODE,
-            "scope": " ".join(self.requested_scopes),
-        }
-
-    def _initial_data(self) -> dict[str, Any]:
-        return self._get_reauth_entry().data if self.source == SOURCE_REAUTH else {}
-
-    @property
-    def selected_scopes(self) -> list[Scope]:
-        assert self.scope_data
-
-        return sorted(
-            [
-                cast("Scope", scope)
-                for scope, selected in self.scope_data.items()
-                if selected
-            ]
-        )
-
-    @property
-    def requested_scopes(self) -> list[Scope]:
-        return REQUIRED_SCOPES + self.selected_scopes
-
-    async def async_step_webhooks(
-        self,
-        user_input: dict[str, Any] | None = None,
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the webhooks config step.
-
-        Returns:
-            The config flow result.
-        """
+        """First step: collect & verify the three Smartcar credentials."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {**BASE_DESCRIPTION_PLACEHOLDERS}
 
         if user_input is not None:
-            user_input = {**user_input}
-            _validate_general_configuration_input(user_input, errors)
+            try:
+                await self._test_credentials(
+                    user_input[CONF_CLIENT_ID],
+                    user_input[CONF_CLIENT_SECRET],
+                )
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except (ClientConnectorError, ClientError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            else:
+                self._credentials = {
+                    CONF_APPLICATION_ID: user_input[CONF_APPLICATION_ID].strip(),
+                    CONF_CLIENT_ID: user_input[CONF_CLIENT_ID].strip(),
+                    CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET].strip(),
+                }
+                return await self.async_step_webhooks()
 
-        if user_input is not None and not errors:
-            self.entry_data = {**user_input}
-            self.entry_data.pop(CONF_USE_WEBHOOKS, None)
-            return await self.async_step_scopes()
+        # On reauth, pre-fill from the existing entry where possible.
+        prefill: dict[str, Any] = {}
+        if self.source == SOURCE_REAUTH:
+            existing = self._get_reauth_entry().data
+            prefill = {
+                CONF_APPLICATION_ID: existing.get(CONF_APPLICATION_ID, ""),
+                CONF_CLIENT_ID: existing.get(CONF_CLIENT_ID, ""),
+            }
+
+        # Show the user the redirect URI they need to register on Smartcar's
+        # dashboard. Without external_url this will be a placeholder warning.
+        redirect_uri = _build_redirect_uri(self.hass) or (
+            "<your-home-assistant-external-url>" + CALLBACK_PATH
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                CREDENTIALS_SCHEMA, prefill or user_input
+            ),
+            errors=errors,
+            last_step=False,
+            description_placeholders={"redirect_url": redirect_uri},
+        )
+
+    async def _test_credentials(
+        self, client_id: str, client_secret: str
+    ) -> None:
+        """Mint a token at the IAM endpoint to verify the V3 client creds."""
+        session = async_get_clientsession(self.hass)
+        manager = ClientCredentialsTokenManager(
+            session, client_id.strip(), client_secret.strip()
+        )
+        # InvalidAuthError raised on 401/403, ClientError on network issues.
+        await manager.async_get_access_token()
+
+    async def async_step_webhooks(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Step 2: webhook configuration (optional)."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            input_copy = {**user_input}
+            _validate_webhook_input(input_copy, errors)
+            if not errors:
+                self._webhook_data = {**input_copy}
+                self._webhook_data.pop(CONF_USE_WEBHOOKS, None)
+                return await self.async_step_scopes()
+            user_input = input_copy
+
+        prefill = (
+            {CONF_USE_WEBHOOKS: False}
+            if user_input is None
+            else user_input
+        )
 
         return self.async_show_form(
             step_id="webhooks",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(GENERAL_CONFIGURATION_SCHEMA),
-                _add_dynamic_values_to_entry_data(self._initial_data())
-                if user_input is None
-                else user_input,
+                WEBHOOKS_SCHEMA, prefill
             ),
             errors=errors,
             last_step=False,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_scopes(
-        self,
-        user_input: dict[str, Any] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the scopes selection step.
-
-        Returns:
-            The config flow result.
-        """
+        """Step 3: select scopes to request from Connect."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.scope_data = user_input
-
-            if self.selected_scopes:
-                return await self.async_step_auth()
+            self._scope_data = user_input
+            if self._selected_scopes:
+                return await self.async_step_authorize()
             errors["base"] = "no_scopes"
 
         return self.async_show_form(
@@ -202,82 +284,110 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                         for scope in CONFIGURABLE_SCOPES
                     }
                 ),
-                dict.fromkeys(
-                    self._initial_data().get(CONF_TOKEN, {}).get("scopes", []), True
-                )
-                if user_input is None
-                else user_input,
+                user_input if user_input is not None else {},
             ),
             errors=errors,
             last_step=False,
         )
 
-    async def async_step_auth(
+    async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        # add in the start of our customized flow if that hasn't been done yet
-        if self.source == SOURCE_REAUTH:
-            if self.scope_data is None:
-                return await self.async_step_scopes()
-        elif self.entry_data is None:
-            return await self.async_step_webhooks()
-        return await super().async_step_auth(user_input)
+        """Step 4: send the user to Smartcar Connect.
 
-    async def async_step_reauth(
-        self,
-        entry_data: Mapping[str, Any],  # noqa: ARG002
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error.
+        When ``user_input`` arrives, it has been forwarded by the callback
+        view and contains either ``{"userId": "...", "code": "..."}`` (happy
+        path) or ``{"error": "..."}`` (Connect surfaced an error).
 
-        Returns:
-            The config flow result.
+        On the resume we return :meth:`async_external_step_done` rather than
+        invoking the next step directly. The framework then dispatches to
+        ``async_step_finish`` itself, which keeps the flow state machine
+        consistent — calling the next step directly from a resumed
+        external-step handler can cause the framework to double-dispatch
+        the result, which in turn calls ``async_setup_entry`` twice.
         """
-        self.entry_data = {**self._initial_data()}
-        return await self.async_step_reauth_confirm()
+        if user_input is not None:
+            if "error" in user_input:
+                return self.async_abort(
+                    reason="oauth_error",
+                    description_placeholders={"error": user_input["error"]},
+                )
+            self._user_id = user_input.get("userId")
+            if not self._user_id:
+                return self.async_abort(reason="missing_user_id")
+            return self.async_external_step_done(next_step_id="finish")
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
+        # First time through: confirm we have an external URL, generate state,
+        # park it for the callback view, build the Connect URL, and hand off.
+        redirect_uri = _build_redirect_uri(self.hass)
+        if not redirect_uri:
+            return self.async_abort(reason="external_url_required")
+
+        # Register the view here so the very first config flow works.
+        # `async_setup` only runs after the first config entry exists, which
+        # is too late for the initial setup's redirect. The function is
+        # idempotent so calling it again does nothing.
+        async_register_view(self.hass)
+
+        self._state = secrets.token_urlsafe(32)
+        register_state(self.hass, self._state, self.flow_id)
+
+        connect_url = self._build_connect_url(redirect_uri, self._state)
+        return self.async_external_step(step_id="authorize", url=connect_url)
+
+    def _build_connect_url(self, redirect_uri: str, state: str) -> str:
+        params = {
+            "response_type": "code",
+            "client_id": self._credentials[CONF_APPLICATION_ID],
+            "redirect_uri": redirect_uri,
+            "scope": " ".join(self._requested_scopes),
+            "mode": SMARTCAR_MODE,
+            "state": state,
+        }
+        return f"{OAUTH2_AUTHORIZE}?{urlencode(params)}"
+
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None  # noqa: ARG002
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required.
-
-        Returns:
-            The config flow result.
-        """
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
-
-    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
-        assert self.entry_data is not None
+        """Step 5: discover vehicles via /connections and create the entry."""
+        assert self._user_id is not None
+        assert self._credentials
 
         session = async_get_clientsession(self.hass)
-        token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-        auth = AccessTokenAuthImpl(session, token, API_HOST)
-        data = {**self.entry_data, **data}
-        data.pop(CONF_USE_WEBHOOKS, None)
-        description_placeholders = {**BASE_DESCRIPTION_PLACEHOLDERS}
+        token_manager = ClientCredentialsTokenManager(
+            session,
+            self._credentials[CONF_CLIENT_ID],
+            self._credentials[CONF_CLIENT_SECRET],
+        )
+        auth = ClientCredentialsAuthImpl(
+            session, token_manager, API_HOST, self._user_id
+        )
+
+        data: dict[str, Any] = {
+            **self._credentials,
+            **self._webhook_data,
+            "sc_user_id": self._user_id,
+        }
 
         try:
-            await populate_entry_data(
-                data,
-                auth,
-                self.requested_scopes,
-            )
+            await populate_entry_data(data, auth)
         except EmptyVehicleListError:
-            _LOGGER.exception("No vehicles returned")
+            _LOGGER.exception("No vehicles returned by /connections")
             return self.async_abort(reason="no_vehicles")
         except MissingVINError:
             _LOGGER.exception("Missing vehicle VIN")
             return self.async_abort(reason="unknown")
         except InvalidAuthError:
-            _LOGGER.exception("Failed to authenticate")
-            return self.async_abort(reason="invalid_access_token")
-        except (ClientConnectorError, ClientError):
+            _LOGGER.exception("Authentication failed during /connections fetch")
+            return self.async_abort(reason="invalid_auth")
+        except (ClientConnectorError, ClientError, TimeoutError):
             _LOGGER.exception("Failed to fetch vehicles")
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(unique_id_from_entry_data(data))
 
+        # Block accidental duplicate entries that would create overlapping
+        # device records for the same VIN.
         other_vins = vehicle_vins_in_use(
             self.hass,
             self._get_reauth_entry() if self.source == SOURCE_REAUTH else None,
@@ -287,30 +397,29 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             for details in data.get("vehicles", {}).values()
             if details["vin"] in other_vins
         ]
-
         if duplicate_vins:
             return self.async_abort(
                 reason="duplicate_vehicles",
-                description_placeholders={"vins": duplicate_vins},
+                description_placeholders={"vins": ", ".join(duplicate_vins)},
             )
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
-
             self._abort_if_unique_id_mismatch(
                 reason="wrong_vehicles",
                 description_placeholders={
-                    "vins": vins_from_entry_data(self._initial_data())
+                    "vins": vins_from_entry_data(reauth_entry.data)
                 },
             )
-
             return self.async_update_reload_and_abort(
-                reauth_entry, data={**self._initial_data(), **data}
+                reauth_entry, data={**reauth_entry.data, **data}
             )
 
         self._abort_if_unique_id_configured()
 
-        # populate webhook details
+        # Generate the webhook id (Smartcar's "vehicle data callback URI"
+        # is a separate URL from our OAuth callback path).
+        description_placeholders: dict[str, str] = {}
         if CONF_APPLICATION_MANAGEMENT_TOKEN in data:
             try:
                 webhook_id, webhook_url, cloudhook = await _get_webhook_details(
@@ -323,10 +432,7 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 CONF_WEBHOOK_ID: webhook_id,
                 CONF_CLOUDHOOK: cloudhook,
             }
-            description_placeholders = {
-                **description_placeholders,
-                "webhook_url": webhook_url,
-            }
+            description_placeholders["webhook_url"] = webhook_url
 
         return self.async_create_entry(
             title=DEFAULT_NAME,
@@ -334,50 +440,67 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             description_placeholders=description_placeholders,
         )
 
+    # ------------------------------------------------------------------ #
+    # Reauth                                                             #
+    # ------------------------------------------------------------------ #
+
+    async def async_step_reauth(
+        self,
+        entry_data: Mapping[str, Any],  # noqa: ARG002
+    ) -> ConfigFlowResult:
+        """Start a reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm and re-run credential entry."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    # ------------------------------------------------------------------ #
+    # Helpers                                                            #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def _selected_scopes(self) -> list[Scope]:
+        return sorted(
+            [
+                cast("Scope", scope)
+                for scope, selected in (self._scope_data or {}).items()
+                if selected
+            ]
+        )
+
+    @property
+    def _requested_scopes(self) -> list[Scope]:
+        return REQUIRED_SCOPES + self._selected_scopes
+
 
 class SmartcarOptionsFlow(OptionsFlow):
-    """Handle a option flow."""
-
-    def _initial_data(self) -> dict[str, Any]:
-        result: dict[str, Any] = self.config_entry.data
-        return result
+    """Adjust webhook settings post-setup."""
 
     async def async_step_init(
-        self,
-        user_input: dict[str, Any] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle options flow.
-
-        Returns:
-            The config flow result.
-        """
         return await self.async_step_webhooks(user_input)
 
     async def async_step_webhooks(
-        self,
-        user_input: dict[str, Any] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the webhooks config step.
-
-        Returns:
-            The config flow result.
-        """
         entry_data = {**self.config_entry.data}
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {**BASE_DESCRIPTION_PLACEHOLDERS}
+        description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = {**user_input}
-            _validate_general_configuration_input(user_input, errors)
+            input_copy = {**user_input}
+            _validate_webhook_input(input_copy, errors)
+            if not errors:
+                entry_data.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
+                entry_data.update(input_copy)
+                entry_data.pop(CONF_USE_WEBHOOKS, None)
 
-        if user_input is not None and not errors:
-            entry_data.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
-            entry_data.update(user_input)
-            entry_data.pop(CONF_USE_WEBHOOKS, None)
-
-        # always try to populate webhook details since the url is used in the
-        # description placeholders. (the entry_data will not be saved if there
-        # were errors.)
         if entry_data.get(CONF_APPLICATION_MANAGEMENT_TOKEN):
             try:
                 webhook_id, webhook_url, cloudhook = await _get_webhook_details(
@@ -385,38 +508,35 @@ class SmartcarOptionsFlow(OptionsFlow):
                 )
             except cloud.CloudNotConnected:
                 return self.async_abort(reason="cloud_not_connected")
-            entry_data = {
-                **entry_data,
-                CONF_WEBHOOK_ID: webhook_id,
-                CONF_CLOUDHOOK: cloudhook,
-            }
-            description_placeholders = {
-                **description_placeholders,
-                "webhook_url": webhook_url,
-            }
+            entry_data.update(
+                {CONF_WEBHOOK_ID: webhook_id, CONF_CLOUDHOOK: cloudhook}
+            )
+            description_placeholders["webhook_url"] = webhook_url
         else:
             entry_data.pop(CONF_WEBHOOK_ID, None)
             entry_data.pop(CONF_CLOUDHOOK, None)
 
         if user_input is not None and not errors:
             self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data=entry_data,
+                self.config_entry, data=entry_data
             )
             return self.async_create_entry(
-                data={},
-                description_placeholders=description_placeholders,
+                data={}, description_placeholders=description_placeholders
             )
+
+        prefill = {
+            CONF_USE_WEBHOOKS: bool(entry_data.get(CONF_APPLICATION_MANAGEMENT_TOKEN)),
+            **{
+                k: entry_data[k]
+                for k in (CONF_APPLICATION_MANAGEMENT_TOKEN,)
+                if k in entry_data
+            },
+        }
 
         return self.async_show_form(
             step_id="webhooks",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(GENERAL_CONFIGURATION_SCHEMA),
-                _add_dynamic_values_to_entry_data(
-                    self._initial_data(),
-                )
-                if user_input is None
-                else user_input,
+                WEBHOOKS_SCHEMA, prefill if user_input is None else user_input
             ),
             errors=errors,
             last_step=True,
@@ -429,4 +549,9 @@ async def _get_webhook_details(
 ) -> tuple[str, str, bool]:
     if webhook_id is None:
         webhook_id = webhook.async_generate_id()
-    return (webhook_id, *(await webhook_url_from_id(hass, webhook_id)))
+    url, cloudhook = await webhook_url_from_id(hass, webhook_id)
+    return webhook_id, url, cloudhook
+
+
+# Re-export so __init__ can call it from async_setup if needed.
+__all__ = ["SmartcarConfigFlow", "SmartcarOptionsFlow", "async_register_view"]

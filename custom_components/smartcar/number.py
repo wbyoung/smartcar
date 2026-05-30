@@ -1,3 +1,5 @@
+"""Smartcar charge limit number entity."""
+
 from dataclasses import dataclass
 import logging
 from typing import TypedDict
@@ -21,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class SmartcarNumberDescription(NumberEntityDescription, SmartcarEntityDescription):
-    """Class describing Smartcar number entities."""
+    """Smartcar number entity description."""
 
 
 ENTITY_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
@@ -52,6 +54,7 @@ async def async_setup_entry(  # noqa: RUF029
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up number entities for each vehicle."""
     coordinators: dict[str, SmartcarVehicleCoordinator] = (
         entry.runtime_data.coordinators
     )
@@ -74,27 +77,26 @@ class _StorageValue(TypedDict):
 class SmartcarChargeLimitNumber(
     SmartcarEntity[float, list[_StorageValue]], NumberEntity
 ):
-    """Number entity for charge limit."""
+    """Charge limit number entity."""
 
     _attr_has_entity_name = True
 
     @property
     def native_value(self) -> float | None:
+        """Return the current global charge limit as a percentage."""
         return self._extract_value()
 
     async def async_set_native_value(self, value: float) -> None:
-        assert value >= 50, "Value must be between 50 and 100"
-        assert value <= 100, "Value must be between 50 and 100"
+        """Send a new charge limit via V3 commands/charge/limit."""
+        assert 50 <= value <= 100, "Value must be between 50 and 100"
 
-        if await self._async_send_command(
-            "/charge/limit", {"limit": (raw_value := value / 100.0)}
-        ):
+        raw_value = value / 100.0
+        if await self._async_send_command("charge/limit", {"limit": raw_value}):
             non_global_or_conditional_limits = [
-                value
-                for value in self._extract_raw_value() or []
-                if value["type"] != "global" or value["condition"] is not None
+                v
+                for v in self._extract_raw_value() or []
+                if v["type"] != "global" or v["condition"] is not None
             ]
-
             self._inject_raw_value(
                 [
                     {"type": "global", "limit": raw_value, "condition": None},

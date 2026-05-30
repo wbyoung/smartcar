@@ -1,8 +1,12 @@
+"""Constants for the Smartcar integration."""
+
 from enum import StrEnum, auto
 
 DOMAIN = "smartcar"
 DEFAULT_NAME = "Smartcar"
-API_HOST = "https://api.smartcar.com"
+
+# V3 Vehicle API base host. The "/v3" path segment is added by the auth layer.
+API_HOST = "https://vehicle.api.smartcar.com"
 
 PLATFORMS = [
     "sensor",
@@ -13,16 +17,31 @@ PLATFORMS = [
     "number",
 ]
 
+# Smartcar Connect — user-consent endpoint. Identifies the application by
+# Application ID (NOT the V3 Client ID), and returns an auth code plus userId
+# in the redirect. The auth code is discarded; only userId is kept.
 OAUTH2_AUTHORIZE = "https://connect.smartcar.com/oauth/authorize"
-OAUTH2_TOKEN = "https://auth.smartcar.com/oauth/token"  # noqa: S105
+
+# V3 IAM token endpoint — application-level access tokens via the
+# OAuth 2.0 client_credentials grant. Tokens last 1 hour and are minted
+# on demand using the V3 Client ID + Client Secret (separate from the
+# Application ID used by Connect).
+IAM_TOKEN_URL = "https://iam.smartcar.com/oauth2/token"  # noqa: S105
+
 SMARTCAR_MODE = "live"
 
+# Config entry data keys.
+CONF_APPLICATION_ID = "application_id"  # Connect URL client_id parameter.
+CONF_CLIENT_ID = "client_id"  # V3 IAM client_id.
+CONF_CLIENT_SECRET = "client_secret"  # V3 IAM client_secret.  # noqa: S105
 CONF_APPLICATION_MANAGEMENT_TOKEN = "application_management_token"  # noqa: S105
 CONF_CLOUDHOOK = "cloudhook"
+CONF_SC_USER_ID = "sc_user_id"  # Smartcar user id; sent as sc-user-id header.
+CONF_SCOPES = "scopes"  # Permissions returned from /connections after Connect.
 
 
 class Scope(StrEnum):
-    """Scope enumeration class."""
+    """Smartcar permission scope."""
 
     READ_VEHICLE_INFO = auto()
     READ_VIN = auto()
@@ -58,7 +77,7 @@ DEFAULT_SCOPES = [
 
 
 class EntityDescriptionKey(StrEnum):
-    """EntityDescriptionKey enumeration class."""
+    """Entity description key enumeration."""
 
     PLUG_STATUS = auto()
     LOCATION = auto()

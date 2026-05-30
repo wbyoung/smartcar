@@ -1,3 +1,7 @@
+"""Smartcar V3 webhook handling."""
+
+from __future__ import annotations
+
 from collections.abc import Callable
 import copy
 from functools import wraps
@@ -15,33 +19,31 @@ from homeassistant.util import dt as dt_util
 
 from . import util
 from .const import CONF_APPLICATION_MANAGEMENT_TOKEN
-from .coordinator import DATAPOINT_CODE_MAP, SmartcarVehicleCoordinator
+from .coordinator import (
+    DATAPOINT_CODE_MAP,
+    IMPERIAL_UNITS,
+    SmartcarVehicleCoordinator,
+    normalize_signal_body_percent,
+)
 from .types import SmartcarData
 
 _LOGGER = logging.getLogger(__name__)
 
-# values from the smartcar service that denote an imperial measurement and can
-# be converted by one of the imperial_conversion functions defined on an entity
-# description.
-_IMPERIAL_MEASUREMENTS = {"miles", "psi", "gallons"}
-
-_SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP: dict[str | None, str] = {
-    "charge-chargelimits": "limit",
-}
-
 
 async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str, bool]:
+    """Return (url, is_cloudhook) for the configured webhook id."""
     if cloud.async_active_subscription(hass):
         webhook_url = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
         cloudhook = True
     else:
         webhook_url = webhook.async_generate_url(hass, webhook_id)
         cloudhook = False
-
     return webhook_url, cloudhook
 
 
 def update_meta_coordinator_data[F: Callable[..., Any], ReturnT](fn: F) -> F:
+    """Capture the last webhook request/response into the meta coordinator."""
+
     @wraps(fn)
     async def wrapper(*args, **kwargs) -> ReturnT:  # noqa: ANN002, ANN003
         response = await fn(*args, **kwargs)
@@ -74,23 +76,14 @@ async def handle_webhook(
     *,
     config_entry: ConfigEntry,
 ) -> web.Response:
-    """Handle webhook callback.
-
-    Returns:
-        The response to send back to Smartcar.
-    """
+    """Process an incoming Smartcar V3 webhook."""
     try:
         body = await request.text()
         message = json.loads(body)
     except ValueError:
         _LOGGER.warning("Received invalid JSON from Smartcar")
         return web.json_response(
-            {
-                "error": {
-                    "code": "invalid_json",
-                    "message": "invalid JSON body",
-                }
-            },
+            {"error": {"code": "invalid_json", "message": "invalid JSON body"}},
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -100,18 +93,15 @@ async def handle_webhook(
     signature = request.headers.get("SC-Signature")
     data = message.get("data", {})
 
+    # Verification handshake — not signed.
     if message.get("eventType") == "VERIFY":
         return web.json_response(
             {"challenge": util.hmac_sha256_hexdigest(app_token, data["challenge"])}
         )
 
-    _LOGGER.debug("Validating signature: %s; app_token: %s", signature, app_token)
-
-    # the verify message is not signed, so that's done before this check. all
-    # other messages must be signed & validated before we process the data from
-    # them.
+    # Every other payload must be signed.
     if not hmac.compare_digest(util.hmac_sha256_hexdigest(app_token, body), signature):
-        _LOGGER.error("ignoring message with invalid signature")
+        _LOGGER.error("Ignoring webhook message with invalid signature")
         return web.json_response(
             {
                 "error": {
@@ -122,14 +112,10 @@ async def handle_webhook(
             status=HTTPStatus.UNAUTHORIZED,
         )
 
-    # respond to test mode payloads to aid with setup
+    # TEST mode acknowledgements for dashboard setup.
     if message.get("meta", {}).get("mode") == "TEST":
         vehicle = data.get("vehicle", {})
-        vehicle_id = vehicle.get("id")
-        _LOGGER.debug(
-            "mode=TEST; no action taken for vehicle with id: %s",
-            vehicle_id,
-        )
+        _LOGGER.debug("TEST webhook for vehicle %s; no action", vehicle.get("id"))
         return web.json_response(
             {
                 "status": {
@@ -147,6 +133,8 @@ async def handle_webhook(
     vehicle_id = vehicle.get("id")
     runtime_data: SmartcarData = config_entry.runtime_data
     coordinators = runtime_data.coordinators
+
+    # Map the webhook's vehicle id → our locally-keyed coordinator (by VIN).
     vehicle_vin: str | None = next(
         (
             vin
@@ -163,7 +151,7 @@ async def handle_webhook(
 
     if not coordinator:
         _LOGGER.debug(
-            "ignoring message for unknown vehicle with id: %s, vin: %s",
+            "Ignoring webhook for unknown vehicle id=%s, vin=%s",
             vehicle_id,
             vehicle_vin or "unknown",
         )
@@ -199,10 +187,10 @@ def _handle_webhook_errors(
             and resolution == "REAUTHENTICATE"
             and (not signals or any(_is_integrated(s) for s in signals))
         ):
-            _LOGGER.info("requesting reauth due to webhook message: %s", error)
+            _LOGGER.info("Requesting reauth due to webhook message: %s", error)
             config_entry.async_start_reauth(hass)
         else:
-            _LOGGER.debug("ignoring error in webhook: %s", error)
+            _LOGGER.debug("Ignoring error in webhook: %s", error)
 
 
 def _is_integrated(signal: dict) -> bool:
@@ -214,6 +202,7 @@ def _handle_webhook_signals(
     coordinator: SmartcarVehicleCoordinator,
     signals: list[dict],
 ) -> None:
+    """Apply webhook signals to the coordinator's stored data."""
     with coordinator.create_updated_data() as (add, updated_data):
         data_changed = False
 
@@ -231,11 +220,9 @@ def _handle_webhook_signals(
                     status.get("error", {}),
                     level="error" if _is_integrated(signal) else "debug",
                 )
-
                 body = {"value": None}
 
-            if body.get("unit") == "percent":
-                _handle_percent_unit_conversion(code, body)
+            normalize_signal_body_percent(code, body)
 
             if code in DATAPOINT_CODE_MAP:
                 assert code is not None
@@ -245,15 +232,17 @@ def _handle_webhook_signals(
                 unit = body.pop("unit", None)
                 unit_system = (
                     "imperial"
-                    if unit in _IMPERIAL_MEASUREMENTS
+                    if unit in IMPERIAL_UNITS
                     else "metric"
                     if unit
                     else None
                 )
 
-                if data_age:
+                # Webhook timestamps are ms-since-epoch (numeric); /signals
+                # uses ISO strings. Handle ms here.
+                if isinstance(data_age, (int, float)):
                     data_age = dt_util.utc_from_timestamp(data_age / 1000)
-                if fetched_at:
+                if isinstance(fetched_at, (int, float)):
                     fetched_at = dt_util.utc_from_timestamp(fetched_at / 1000)
 
                 add.from_response_body(
@@ -264,23 +253,10 @@ def _handle_webhook_signals(
                     fetched_at=fetched_at,
                     can_clear_meta=not is_error,
                 )
-
                 data_changed = True
 
         if data_changed:
             coordinator.async_set_updated_data(updated_data)
-
-
-def _handle_percent_unit_conversion(code: str | None, body: dict[str, Any]) -> None:
-    if "values" in body:
-        item_key = _SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP.get(code) or "value"
-        values = body["values"]
-        values = [value | {item_key: value[item_key] / 100} for value in values]
-        body["values"] = values
-        body.pop("unit")
-    else:
-        body["value"] /= 100
-        body.pop("unit")
 
 
 def _handle_webhook_signal_error(
@@ -291,6 +267,5 @@ def _handle_webhook_signal_error(
 ) -> None:
     error_type = error.get("type")
     error_code = error.get("code")
-
     logger_method = getattr(_LOGGER, level)
     logger_method("error for signal %s: %s:%s", signal_name, error_type, error_code)

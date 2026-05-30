@@ -1,3 +1,5 @@
+"""Smartcar charging switch entity."""
+
 from dataclasses import dataclass
 import logging
 
@@ -15,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class SmartcarSwitchDescription(SwitchEntityDescription, SmartcarEntityDescription):
-    """Class describing Smartcar switch entities."""
+    """Smartcar switch entity description."""
 
 
 ENTITY_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
@@ -33,7 +35,7 @@ async def async_setup_entry(  # noqa: RUF029
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches from coordinator."""
+    """Set up switch entities for each vehicle."""
     coordinators: dict[str, SmartcarVehicleCoordinator] = (
         entry.runtime_data.coordinators
     )
@@ -48,26 +50,23 @@ async def async_setup_entry(  # noqa: RUF029
 
 
 class SmartcarChargingSwitch(SmartcarEntity[bool, bool], SwitchEntity):
-    """Switch entity."""
+    """Charging switch entity."""
 
     _attr_has_entity_name = True
 
     @property
     def is_on(self) -> bool:
+        """Return whether the vehicle is charging."""
         return self._extract_value()
 
-    async def async_turn_on(
-        self,
-        **kwargs,  # noqa: ARG002, ANN003
-    ) -> None:
-        if await self._async_send_command("/charge", {"action": "START"}):
+    async def async_turn_on(self, **kwargs) -> None:  # noqa: ARG002, ANN003
+        """Start charging via V3 commands/charge/start."""
+        if await self._async_send_command("charge/start"):
             self._inject_raw_value(value=True)
             self.async_write_ha_state()
 
-    async def async_turn_off(
-        self,
-        **kwargs,  # noqa: ARG002, ANN003
-    ) -> None:
-        if await self._async_send_command("/charge", {"action": "STOP"}):
+    async def async_turn_off(self, **kwargs) -> None:  # noqa: ARG002, ANN003
+        """Stop charging via V3 commands/charge/stop."""
+        if await self._async_send_command("charge/stop"):
             self._inject_raw_value(value=False)
             self.async_write_ha_state()

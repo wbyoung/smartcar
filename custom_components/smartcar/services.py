@@ -1,4 +1,4 @@
-"""Support for the Smartcar services."""
+"""Smartcar custom services."""
 
 from functools import partial
 import logging
@@ -36,9 +36,7 @@ ATTR_VIN: Final = "vin"
 _SERVICE_SCHEMA_DOORS_SECURITY: Final = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            },
+            {"integration": DOMAIN},
         ),
         vol.Optional(ATTR_VIN): cv.string,
     },
@@ -48,17 +46,7 @@ SERVICE_SCHEMA_UNLOCK_DOORS: Final = _SERVICE_SCHEMA_DOORS_SECURITY
 
 
 def _async_write_entity_state(hass: HomeAssistant, entity_id: str) -> None:
-    """Write entity state for a specific entity.
-
-    This looks up the entity in the system in the same way that
-    `async_update_entity` does, but only writes out the change to the state
-    machine. It does not request that the entity's device/coordinator perform
-    an update.
-
-    It's based a little on internal knowledge of the HA entity component, and
-    could be rewritten to register/store entity instances on a data key or the
-    runtime data for this integration if needed in the future.
-    """
+    """Write entity state for a specific entity."""
     domain = entity_id.partition(".")[0]
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
     assert entity_comp is not None
@@ -69,7 +57,7 @@ def _async_write_entity_state(hass: HomeAssistant, entity_id: str) -> None:
 
 async def _send_security_command(
     call: ServiceCall,
-    action: Literal["LOCK", "UNLOCK"],
+    action: Literal["lock", "unlock"],
     *,
     hass: HomeAssistant,
 ) -> None:
@@ -81,9 +69,7 @@ async def _send_security_command(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
+            translation_placeholders={"config_entry": entry_id},
         )
 
     if not vin:
@@ -91,43 +77,34 @@ async def _send_security_command(
 
     coordinator = entry.runtime_data.coordinators[vin]
     description = next(
-        description
-        for description in LOCK_ENTITY_DESCRIPTIONS
-        if description.key == EntityDescriptionKey.DOOR_LOCK
+        d
+        for d in LOCK_ENTITY_DESCRIPTIONS
+        if d.key == EntityDescriptionKey.DOOR_LOCK
     )
 
-    if await async_send_command(coordinator, "/security", {"action": action}):
-        inject_raw_value(coordinator, description, value=action == "LOCK")
+    # V3 command paths: commands/security/lock and commands/security/unlock
+    if await async_send_command(coordinator, f"security/{action}"):
+        inject_raw_value(coordinator, description, value=action == "lock")
 
-        entities: list[er.RegistryEntry] = er.async_entries_for_config_entry(
-            er.async_get(hass), entry_id
-        )
-
-        for entity in entities:
+        for entity in er.async_entries_for_config_entry(er.async_get(hass), entry_id):
+            if "_" not in entity.unique_id:
+                continue
             _, key = entity.unique_id.split("_", 1)
             if key == EntityDescriptionKey.DOOR_LOCK:
                 _async_write_entity_state(hass, entity.entity_id)
 
 
-async def _lock_doors(
-    call: ServiceCall,
-    *,
-    hass: HomeAssistant,
-) -> ServiceResponse:
-    await _send_security_command(call, "LOCK", hass=hass)
+async def _lock_doors(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResponse:
+    await _send_security_command(call, "lock", hass=hass)
 
 
-async def _unlock_doors(
-    call: ServiceCall,
-    *,
-    hass: HomeAssistant,
-) -> ServiceResponse:
-    await _send_security_command(call, "UNLOCK", hass=hass)
+async def _unlock_doors(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResponse:
+    await _send_security_command(call, "unlock", hass=hass)
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up Smartcar services."""
+    """Register the Smartcar services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_NAME_LOCK_DOORS,

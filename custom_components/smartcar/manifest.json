@@ -4,13 +4,13 @@
   "after_dependencies": ["cloud"],
   "codeowners": ["@tube0013", "@wbyoung"],
   "config_flow": true,
-  "dependencies": ["application_credentials", "webhook"],
+  "dependencies": ["http", "webhook"],
   "documentation": "https://github.com/wbyoung/smartcar",
   "homekit": {},
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/wbyoung/smartcar/issues",
   "requirements": [],
   "ssdp": [],
-  "version": "0.1.0",
+  "version": "2.0.0",
   "zeroconf": []
 }

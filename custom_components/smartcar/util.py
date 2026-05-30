@@ -6,9 +6,21 @@ import hmac
 import logging
 from typing import Any, cast, overload
 
-from aiohttp import ClientResponse
+from aiohttp import ClientConnectionError, ClientResponse
 
-_RETRYABLE_STATUSES = frozenset({429, 500})
+# Statuses that warrant an automatic retry with backoff. 429 is handled
+# specially below: we only retry if Smartcar gave us a Retry-After hint.
+_RETRYABLE_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+# Connection-level errors that indicate a transient network problem worth
+# retrying. We use the aiohttp base class ClientConnectionError to cover
+# the whole subtree (ClientConnectorError, ServerDisconnectedError,
+# ServerTimeoutError, ClientOSError, ...) without enumerating each one.
+# TimeoutError covers asyncio.TimeoutError raised by aiohttp's own timeouts.
+_TRANSIENT_NETWORK_ERRORS: tuple[type[BaseException], ...] = (
+    ClientConnectionError,
+    TimeoutError,
+)
 
 
 async def async_request_with_retry(
@@ -23,33 +35,72 @@ async def async_request_with_retry(
 ) -> ClientResponse:
     """Execute an async HTTP request with retry and exponential backoff.
 
-    Retries on 500 responses with exponential backoff. For 429
-    responses, only retries when a Retry-After header is present.
-    The caller is responsible for calling raise_for_status() and
-    handling errors.
+    Retries on:
+      * Transient network errors (DNS failures, dropped connections,
+        socket-level read timeouts).
+      * 5xx upstream errors (500, 502, 503, 504) using exponential
+        backoff. If a ``Retry-After`` header is present its value is
+        honoured (capped at ``max_delay``).
+      * 429 rate-limit responses *only* when ``Retry-After`` is set;
+        retrying without that guidance risks making rate limiting worse.
+
+    The caller is responsible for calling ``raise_for_status()`` on the
+    returned response and handling any remaining error status code.
 
     Returns:
-        The response on success or after retries are exhausted.
+        The response on success, or after retries are exhausted.
 
     Raises:
+        ClientConnectionError, TimeoutError: If all retries fail with a
+            transient network error.
         AssertionError: Should never be raised; satisfies the type checker.
     """
     for attempt in range(max_retries + 1):
-        response = await request_fn()
+        try:
+            response = await request_fn()
+        except _TRANSIENT_NETWORK_ERRORS as err:
+            if attempt == max_retries:
+                logger.warning(
+                    "%s: %s after %s attempts, giving up",
+                    context,
+                    type(err).__name__,
+                    attempt + 1,
+                )
+                raise
+            delay = min(base_delay * 2**attempt, max_delay)
+            logger.warning(
+                "%s: %s, retrying in %.1fs (attempt %s/%s)",
+                context,
+                type(err).__name__,
+                delay,
+                attempt + 1,
+                max_retries,
+            )
+            await asyncio.sleep(delay)
+            continue
 
         if response.status not in retry_statuses or attempt == max_retries:
             return response
 
-        if response.status == 429:
-            retry_after = response.headers.get("Retry-After")
-            if not retry_after:
-                return response
+        # Parse Retry-After (seconds form; HTTP-date form not handled).
+        retry_after_str = response.headers.get("Retry-After")
+        retry_after: float | None = None
+        if retry_after_str:
             try:
-                delay = min(float(retry_after), max_delay)
+                retry_after = float(retry_after_str)
             except ValueError:
-                return response
-        else:
-            delay = min(base_delay * 2**attempt, max_delay)
+                retry_after = None
+
+        # Smartcar rate-limited us without saying how long to wait; bail
+        # rather than guess and risk worsening the situation.
+        if response.status == 429 and retry_after is None:
+            return response
+
+        delay = (
+            min(retry_after, max_delay)
+            if retry_after is not None
+            else min(base_delay * 2**attempt, max_delay)
+        )
 
         logger.warning(
             "%s: HTTP %s, retrying in %.1fs (attempt %s/%s)",
