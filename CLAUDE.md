@@ -168,24 +168,35 @@ The integration verifies incoming webhook payloads using HMAC-SHA256 with the **
 
 The integration has a partial V3 test suite. The split:
 
-**Active V3 tests** (40 tests, all passing locally):
-- `tests/test_util.py` — pure utility tests for HTTP retry, HMAC, key-path helpers. Unchanged from the V2 suite (`util.py` is V3-clean).
+**Active V3 tests** (51 tests, all passing locally):
+
+- `tests/test_util.py` — 26 pure utility tests for HTTP retry, HMAC, key-path helpers. Unchanged from the V2 suite (`util.py` is V3-clean).
 - `tests/test_auth_impl.py` — 8 tests for `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, `ClientCredentialsAuthImpl`. Covers token caching, expiry refresh, 401/403 handling, malformed responses, invalidation, and the bootstrap auth's `with_user_id()` rebinding.
 - `tests/test_config_flow.py` — 6 tests covering: the happy path (credentials → webhooks → scopes → Connect external step → callback resume → finish), IAM-rejecting-credentials at the user step, network failure at the user step, missing-external-URL abort at the authorize step, missing-user-id from the callback (deferred abort via `_oauth_error`), and the webhooks step rejecting an enable-without-token.
+- `tests/test_binary_sensor.py` — 3 tests built from a real VW ID.7 webhook payload. Verifies that populated signals surface on their entities (charging cable plugged in), that closure signals absent from the payload render as `unavailable`, and that meta signals (online, asleep, etc.) render as `unavailable` when no data is present.
+- `tests/test_sensor.py` — 3 tests against the same fixture. Verifies battery (80%), range (472 km), odometer (16342 km), charging_status (`FULLY_CHARGED`), charging_power (0 W) and time_to_complete (0). Separately checks that signals arriving with `status: ERROR` (`charge-chargerate` here, with error code `NOT_CHARGING`) render as `unavailable`, and that signals not present in the payload (engine oil, fuel, tire pressure) likewise render as `unavailable`.
+- `tests/test_switch.py` — 3 tests for the charging switch. Initial state (`off`, derived from `charge-ischarging: false`), `turn_on` dispatches `commands/charge/start`, `turn_off` dispatches `commands/charge/stop`.
+- `tests/test_diagnostics.py` — 2 tests. Verifies that the diagnostics dump redacts the VIN and never includes the application management token or cloudhook secret, and that the coordinator data is present in the dump.
 
-**Stubbed pending V3 fixture work** (9 modules, module-level `pytest.skip`):
-- `test_binary_sensor.py`, `test_device_tracker.py`, `test_diagnostics.py`, `test_init.py`, `test_lock.py`, `test_number.py`, `test_sensor.py`, `test_services.py`, `test_switch.py`
+**Stubbed pending V3 fixture work** (5 modules, module-level `pytest.skip`):
 
-These need regenerated fixture data: the V2 suite's `tests/fixtures/api/*.json` files describe per-endpoint mocks against `/v2.0/vehicles/{id}/...` paths; V3 uses a single `/v3/vehicles/{id}/signals` returning JSON:API attributes. The webhook payload fixtures (`tests/fixtures/webhooks/*.json`) similarly need rebuilding against actual V3 webhook payloads from Smartcar.
+- `test_device_tracker.py`, `test_init.py`, `test_lock.py`, `test_number.py`, `test_services.py`
 
-The recommended rebuild order, once webhook payloads are flowing in production: capture a representative webhook payload per signal group (charge, location, odometer, etc.), use that as the `tests/fixtures/webhooks/<make>_<scenario>.json` shape, regenerate `tests/snapshots/` via `pytest --snapshot-update`, then rebuild the sensor tests one platform at a time.
+These need additional fixture data — typically locations (`location-preciselocation`) for device_tracker, lock state (`closure-islocked`) for lock and door entities, and service-call routing for services. The VW ID.7 fixture has `location-preciselocation: null` and `closure-islocked: null`, so they can't be re-enabled with what's on hand. As new payloads with those signals become available, they can be added under `tests/fixtures/coordinator_data/` and the stubs unstubbed.
+
+**Fixture data on hand**:
+
+- `tests/fixtures/webhooks/vw_id7_vehicle_state.json` — full V3 webhook payload for a VW ID.7 (sanitised; vehicle id and user id replaced with stable test UUIDs, VIN already redacted upstream).
+- `tests/fixtures/coordinator_data/vw_id7.json` — the same vehicle's signal state after the integration's webhook handler has processed it (the shape that sits in `coordinator.data`). This is the simpler artefact to inject in tests via the `setup_with_data` fixture, which patches `_async_update_data` and runs the integration's `async_setup_entry`.
+- `tests/fixtures/vehicles/vw_id7.json` — vehicle metadata as it appears in the config entry's `vehicles` dict.
 
 **Quirks worth knowing:**
 
 - `tests/conftest.py` includes a session-scoped `_aiohttp_thread_warmup` fixture that creates and discards an aiohttp `ClientSession` before any test runs. This is to pre-spawn aiohttp's `_run_safe_shutdown_loop` daemon thread, which the pytest-HA leak detector would otherwise flag as a leak the first time a test creates a session.
-- `mock_smartcar_auth` patches `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, and `ClientCredentialsAuthImpl` at the import sites in `__init__.py` and `config_flow.py`. If you rename or relocate those classes, update the patch paths in the fixture.
-- `mock_config_entry` carries the V3 data shape (Application ID, V3 Client ID, V3 Client Secret, `sc_user_id`, `vehicles` dict). No `token` blob or `auth_implementation` field.
-- The `pytest_collection_modifyitems` hook in `conftest.py` auto-skips any test that names V2-only fixtures (`vehicle`, `vehicle_fixture`, `vehicle_attributes`, `api_response_type`, `webhook_scenario`, `webhook_body`, `webhook_headers`, `init_integration`). The stub files use a module-level `pytest.skip` which fires before fixture resolution and is the simpler path.
+- An autouse `expected_lingering_timers` fixture returns `True` to neutralise pytest-HA's lingering-timer detector. HA-core's legacy `device_tracker` schedules a 5-second `async_update_stale` timer inside `LegacyDeviceTracker` that doesn't reliably cancel at test teardown; it's not an integration concern.
+- `mock_smartcar_auth` patches the `async_get_access_token` *method* on the three auth classes (`ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, `ClientCredentialsAuthImpl`) rather than replacing the classes themselves. Earlier versions of this fixture used `patch(...)` with `autospec=True` to swap the class, and that broke a later test in the suite: pytest-HA can reimport the integration between tests, and `config_flow.py`'s `from .auth_impl import ClientCredentialsTokenManager` then rebinds to the active MagicMock. The MagicMock binding survives the patch unwinding in `sys.modules` because Python's module cache persists, and subsequent tests trying to use the real class get the leftover MagicMock. Patching the method keeps class identity stable.
+- `setup_with_data` patches `_async_update_data` on the coordinator and runs the integration's full `async_setup_entry`. Tests get real entities backed by canned data without paying for HTTP mocking. Use it whenever you'd otherwise need to construct a `/signals` JSON:API fixture.
+- `mock_config_entry` carries the V3 data shape and accepts a `vehicle_data` override fixture. Per-test overrides (e.g. the VW ID.7 fixture) work by redefining `vehicle_data` at module level.
 
 To run locally:
 
@@ -217,7 +228,7 @@ pytest tests/ --no-cov
 ## Out-of-scope / known limitations
 
 - **No subscription management API integration.** As above — would require capturing the Smartcar-side webhook ID.
-- **Platform tests pending fixture regeneration.** 9 test modules (`test_sensor.py`, `test_init.py`, etc.) are stubbed with module-level `pytest.skip` because their V2 fixtures reference paths and webhook shapes that no longer exist. The auth, config flow, and util tests are V3-native.
+- **Platform tests partially rebuilt.** 5 of 9 stubbed test modules (`test_device_tracker.py`, `test_init.py`, `test_lock.py`, `test_number.py`, `test_services.py`) remain stubbed with module-level `pytest.skip` because the VW ID.7 reference payload doesn't include the relevant signals (`location-preciselocation`, `closure-islocked`, charge-limit setters, service-call payloads). The other 4 — binary_sensor, sensor, switch, diagnostics — are rebuilt and active.
 - **Single-language translations.** `translations/en.json` and `translations/nl.json` only.
 - **VIN handling is degenerate.** We use `vehicle_id` (UUID) as the unique identifier in place of VIN. This is fine for the integration but means device identifiers in the registry are UUIDs, not actual VINs. If you want true VIN, fetch it via the `vehicleidentification-vin` signal (single-signal endpoint) and store separately — but be ready to handle the case where the signal returns `status: ERROR`.
 - **No `manifest.json` `version` bump strategy documented.** Currently at `2.0.0` to signal the V3 break. Future versions should follow semver against this baseline.
