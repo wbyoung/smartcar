@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from . import const as smartcar_const
 from .const import DOMAIN
-from .coordinator import DATAPOINT_ENTITY_KEY_MAP, SmartcarVehicleCoordinator
+from .coordinator import SmartcarVehicleCoordinator
 from .types import SmartcarAPIError
 from .util import async_request_with_retry, key_path_get
 
@@ -170,6 +170,10 @@ class SmartcarEntity[ValueT, RawValueT](
         ``command_path`` is appended to ``vehicles/{id}/commands/`` — for
         example, ``"security/lock"`` or ``"charge/start"``. Body defaults to
         an empty JSON object since most V3 commands take no parameters.
+
+        Returns:
+            ``True`` on success, ``False`` if the command failed in a way
+            the integration recognises (auth / API error).
         """
         try:
             return await async_send_command(self.coordinator, command_path, payload)
@@ -202,7 +206,7 @@ class IndirectDescriptor:
             return IndirectDescriptor.DEFAULT
         return entity_description.key in self._collection
 
-    def __set__(self, obj: Self, value: Any) -> None:
+    def __set__(self, obj: Self, value: Any) -> None:  # noqa: ANN401
         if value == IndirectDescriptor.DEFAULT:
             return
         msg = f"readonly; configure via smartcar.const.{self._collection_name}"
@@ -267,6 +271,14 @@ async def async_send_command(
 
     The full URL ends up as
     ``POST /v3/vehicles/{vehicleId}/commands/{command_path}``.
+
+    Returns:
+        ``True`` if Smartcar accepted the command, ``False`` otherwise.
+
+    Raises:
+        SmartcarAPIError: For non-recoverable command failures returned by
+            the Smartcar API.
+        ClientResponseError: For other unhandled HTTP errors after retries.
     """
     full_path = f"vehicles/{coordinator.vehicle_id}/commands/{command_path}"
     _LOGGER.info("Sending command %s for %s", command_path, coordinator.vin)

@@ -42,7 +42,12 @@ async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str
 
 
 def update_meta_coordinator_data[F: Callable[..., Any], ReturnT](fn: F) -> F:
-    """Capture the last webhook request/response into the meta coordinator."""
+    """Capture the last webhook request/response into the meta coordinator.
+
+    Returns:
+        The wrapped function with its response data mirrored into the meta
+        coordinator for diagnostic / debugging visibility.
+    """
 
     @wraps(fn)
     async def wrapper(*args, **kwargs) -> ReturnT:  # noqa: ANN002, ANN003
@@ -76,7 +81,13 @@ async def handle_webhook(
     *,
     config_entry: ConfigEntry,
 ) -> web.Response:
-    """Process an incoming Smartcar V3 webhook."""
+    """Process an incoming Smartcar V3 webhook.
+
+    Returns:
+        An HTTP response. ``200`` is returned for processed payloads and for
+        Smartcar's URL-verification handshake; ``400``/``401`` for malformed
+        or unauthenticated requests.
+    """
     try:
         body = await request.text()
         message = json.loads(body)
@@ -231,11 +242,7 @@ def _handle_webhook_signals(
                 fetched_at = meta.get("retrievedAt") if not is_error else None
                 unit = body.pop("unit", None)
                 unit_system = (
-                    "imperial"
-                    if unit in IMPERIAL_UNITS
-                    else "metric"
-                    if unit
-                    else None
+                    "imperial" if unit in IMPERIAL_UNITS else "metric" if unit else None
                 )
 
                 # Webhook timestamps are ms-since-epoch (numeric); /signals

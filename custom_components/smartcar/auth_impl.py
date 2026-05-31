@@ -24,9 +24,8 @@ This module provides:
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
 
 from aiohttp import BasicAuth, ClientResponseError, ClientSession
 from homeassistant.util import dt as dt_util
@@ -61,11 +60,15 @@ class ClientCredentialsTokenManager:
         self._client_id = client_id
         self._client_secret = client_secret
         self._token: str | None = None
-        self._expires_at = None
+        self._expires_at: datetime | None = None
         self._lock = asyncio.Lock()
 
     async def async_get_access_token(self) -> str:
-        """Return a valid app-level access token, fetching/refreshing as needed."""
+        """Return a valid app-level access token, fetching/refreshing as needed.
+
+        Returns:
+            The current cached access token, refreshing first if expired.
+        """
         async with self._lock:
             if self._token is None or self._is_expiring_soon():
                 await self._fetch_token()
@@ -73,6 +76,7 @@ class ClientCredentialsTokenManager:
             return self._token
 
     def _is_expiring_soon(self) -> bool:
+        """Return whether the cached token is within the expiry buffer."""
         if self._expires_at is None:
             return True
         return self._expires_at - dt_util.utcnow() <= _TOKEN_EXPIRY_BUFFER
@@ -84,6 +88,11 @@ class ClientCredentialsTokenManager:
         Smartcar's IAM endpoint also accepts ``client_secret_post`` per their
         docs, but Basic is the safer default since the V2-style endpoint
         required it.
+
+        Raises:
+            InvalidAuthError: If Smartcar rejects the credentials (401/403) or
+                returns a malformed response.
+            ClientResponseError: For other non-success HTTP statuses.
         """
         _LOGGER.debug("Requesting new client_credentials token from %s", IAM_TOKEN_URL)
         auth = BasicAuth(self._client_id, self._client_secret)
@@ -98,7 +107,7 @@ class ClientCredentialsTokenManager:
         except ClientResponseError as err:
             # 401 / 403 here mean the V3 client_id+secret are wrong; raise as
             # auth failure so the config flow / coordinator can react.
-            if err.status in (401, 403):
+            if err.status in {401, 403}:
                 msg = f"Smartcar IAM rejected credentials: {err.status} {err.message}"
                 raise InvalidAuthError(msg) from err
             raise
@@ -151,7 +160,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         """Return a valid V3 application access token."""
         return await self._token_manager.async_get_access_token()
 
-    async def async_get_user_id(self) -> str | None:  # noqa: RUF029
+    async def async_get_user_id(self) -> str | None:
         """Return the Smartcar user id captured during Connect."""
         return self._user_id
 
@@ -186,7 +195,7 @@ class ClientCredentialsAuthImpl(AbstractAuth):
         """Return a valid V3 application access token."""
         return await self._token_manager.async_get_access_token()
 
-    async def async_get_user_id(self) -> str | None:  # noqa: RUF029
+    async def async_get_user_id(self) -> str | None:
         """Return the user id (may be None during the first ``/connections`` call)."""
         return self._user_id
 

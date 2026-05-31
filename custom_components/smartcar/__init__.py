@@ -7,6 +7,7 @@ on demand, and read the captured ``sc_user_id`` directly from the entry data.
 
 from __future__ import annotations
 
+import contextlib
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -54,6 +55,9 @@ async def async_setup(  # noqa: RUF029
 
     Registers services and the OAuth callback view. The view is shared across
     all Smartcar config entries (only one is needed for the whole component).
+
+    Returns:
+        Always ``True`` — there is no failure path at the component level.
     """
     async_setup_services(hass)
     async_register_view(hass)
@@ -61,7 +65,15 @@ async def async_setup(  # noqa: RUF029
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Smartcar config entry."""
+    """Set up a Smartcar config entry.
+
+    Returns:
+        ``True`` on successful setup.
+
+    Raises:
+        ConfigEntryError: If two config entries reference the same VIN, which
+            would create overlapping devices.
+    """
     websession = async_get_clientsession(hass)
 
     # One token manager per entry — caches the IAM access token between calls
@@ -176,7 +188,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload a config entry.
+
+    Returns:
+        ``True`` if every platform unloaded cleanly, ``False`` otherwise.
+    """
     if CONF_WEBHOOK_ID in entry.data:
         webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return bool(await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
@@ -187,10 +203,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if CONF_WEBHOOK_ID in entry.data and (
         cloud.async_active_subscription(hass) or entry.data.get(CONF_CLOUDHOOK, False)
     ):
-        try:
+        with contextlib.suppress(cloud.CloudNotAvailable):
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
-        except cloud.CloudNotAvailable:
-            pass
 
 
 async def async_update_listener(
@@ -220,6 +234,10 @@ def vehicle_vins_in_use(
     }
 
 
+_MISSING_USER_ID_MSG = "Missing sc_user_id; the Connect callback didn't return user_id"
+_CONNECTIONS_AUTH_MSG = "Auth error fetching connections"
+
+
 async def populate_entry_data(data: dict, auth: AbstractAuth) -> None:
     """Populate ``vehicles`` and ``CONF_SCOPES`` via ``/v3/connections``.
 
@@ -234,10 +252,15 @@ async def populate_entry_data(data: dict, auth: AbstractAuth) -> None:
     own ``vehicle_id`` (a UUID) as the unique identifier. The field is still
     called ``vin`` in storage for backwards compatibility with the rest of
     the integration's code paths.
+
+    Raises:
+        InvalidAuthError: If the stored user id is missing or Smartcar rejects
+            the access token while fetching connections.
+        EmptyVehicleListError: If Smartcar returns no connections for the user.
     """
     user_id = data.get(CONF_SC_USER_ID)
     if not user_id:
-        raise InvalidAuthError("Missing sc_user_id; the Connect callback didn't return userId")
+        raise InvalidAuthError(_MISSING_USER_ID_MSG)
 
     connections = await _fetch_connections(auth, user_id)
     if not connections:
@@ -266,16 +289,25 @@ async def populate_entry_data(data: dict, auth: AbstractAuth) -> None:
     data["vehicles"] = vehicles
 
 
-async def _fetch_connections(
-    auth: AbstractAuth, user_id: str
-) -> list[dict[str, Any]]:
-    """Return all connections for the given user, with retry on transient errors."""
+async def _fetch_connections(auth: AbstractAuth, user_id: str) -> list[dict[str, Any]]:
+    """Return all connections for the given user, with retry on transient errors.
+
+    Returns:
+        A list of connection resources from the ``/v3/connections`` endpoint,
+        possibly spanning multiple pages.
+
+    Raises:
+        InvalidAuthError: If Smartcar returns 401 Unauthorized.
+        ClientResponseError: For other non-success HTTP statuses.
+    """
     all_connections: list[dict[str, Any]] = []
     page = 1
     while True:
         try:
             resp = await async_request_with_retry(
-                lambda p=page: auth.request(
+                # mypy can't infer the lambda's return type without the
+                # explicit annotation because of the default-argument capture.
+                lambda p=page: auth.request(  # type: ignore[misc]
                     "get",
                     f"connections?filter[userId]={user_id}&page[number]={p}&page[size]=50",
                 ),
@@ -290,7 +322,7 @@ async def _fetch_connections(
 
         if resp.status == HTTPStatus.UNAUTHORIZED:
             resp.release()
-            raise InvalidAuthError("Auth error fetching connections")
+            raise InvalidAuthError(_CONNECTIONS_AUTH_MSG)
         resp.raise_for_status()
         payload = await resp.json()
         all_connections.extend(payload.get("data") or [])
@@ -305,11 +337,12 @@ async def _fetch_connections(
 
 
 def _vehicle_id_from_connection(connection: dict[str, Any]) -> str | None:
-    return (
-        connection.get("relationships", {})
-        .get("vehicle", {})
-        .get("data", {})
-        .get("id")
+    """Extract the vehicle id from a JSON:API connection resource.
+
+    Returns:
+        The vehicle id string if present and well-typed, otherwise ``None``.
+    """
+    value = (
+        connection.get("relationships", {}).get("vehicle", {}).get("data", {}).get("id")
     )
-
-
+    return value if isinstance(value, str) else None

@@ -77,9 +77,7 @@ async def _send_security_command(
 
     coordinator = entry.runtime_data.coordinators[vin]
     description = next(
-        d
-        for d in LOCK_ENTITY_DESCRIPTIONS
-        if d.key == EntityDescriptionKey.DOOR_LOCK
+        d for d in LOCK_ENTITY_DESCRIPTIONS if d.key == EntityDescriptionKey.DOOR_LOCK
     )
 
     # V3 command paths: commands/security/lock and commands/security/unlock

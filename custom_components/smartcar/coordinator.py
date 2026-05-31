@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import datetime as dt
@@ -16,10 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .auth import AbstractAuth
@@ -176,9 +173,7 @@ DATAPOINT_ENTITY_KEY_MAP: dict[EntityDescriptionKey, DatapointConfig] = {
     EntityDescriptionKey.REAR_TRUNK_LOCK: DatapointConfig(
         "closure-reartrunk", ["read_security"]
     ),
-    EntityDescriptionKey.SUNROOF: DatapointConfig(
-        "closure-sunroof", ["read_security"]
-    ),
+    EntityDescriptionKey.SUNROOF: DatapointConfig("closure-sunroof", ["read_security"]),
     EntityDescriptionKey.ENGINE_COVER: DatapointConfig(
         "closure-enginecover", ["read_security"]
     ),
@@ -248,11 +243,9 @@ def normalize_signal_body_percent(code: str | None, body: dict[str, Any]) -> Non
         return
     if "values" in body:
         item_key = SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP.get(code) or "value"
-        body["values"] = [
-            v | {item_key: v[item_key] / 100} for v in body["values"]
-        ]
+        body["values"] = [v | {item_key: v[item_key] / 100} for v in body["values"]]
     elif "value" in body and body["value"] is not None:
-        body["value"] = body["value"] / 100
+        body["value"] /= 100
     body.pop("unit", None)
 
 
@@ -336,7 +329,20 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         return False
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch all signals for this vehicle."""
+        """Fetch all signals for this vehicle.
+
+        Returns:
+            The new coordinator data dict (signal-keyed). Returns the
+            previously-stored data unchanged when polling is disabled or
+            no entities are active.
+
+        Raises:
+            ConfigEntryAuthFailed: On 400/401/403 from Smartcar — triggers
+                HA's reauth flow.
+            UpdateFailed: On exhausted retries against 429/5xx, on network
+                failures, and on malformed responses.
+            ClientResponseError: For other HTTP errors not handled above.
+        """
         if self.config_entry.pref_disable_polling:
             _LOGGER.debug("Coordinator %s: polling disabled, skipping", self.name)
             return self.data
@@ -390,15 +396,16 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
 
         return self._merge_signals_data(payload["data"])
 
-    def _merge_signals_data(
-        self, signals: list[dict[str, Any]]
-    ) -> dict[str, Any]:
+    def _merge_signals_data(self, signals: list[dict[str, Any]]) -> dict[str, Any]:
         """Apply a list of signal resources to ``self.data``.
 
         The V3 ``GET /signals`` resource format nests ``code``, ``body``, and
         ``status`` inside ``attributes`` (JSON:API style), unlike webhook
         payloads where they are flat. We normalise here and reuse the same
         ``_DataAdder.from_response_body`` logic that webhooks use.
+
+        Returns:
+            The updated coordinator data dict.
         """
         with self.create_updated_data() as (add, updated_data):
             for item in signals:
@@ -421,8 +428,10 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
                     normalize_signal_body_percent(code, body)
                     unit = body.pop("unit", None)
                     unit_system = (
-                        "imperial" if unit in IMPERIAL_UNITS
-                        else "metric" if unit
+                        "imperial"
+                        if unit in IMPERIAL_UNITS
+                        else "metric"
+                        if unit
                         else None
                     )
                     data_age = meta.get("oemUpdatedAt")
@@ -496,7 +505,7 @@ class _DataAdder:
         entity_description_key: EntityDescriptionKey,
         value_key_path: str,
         *,
-        value: Any,
+        value: Any,  # noqa: ANN401
         data_age: dt.datetime | None = None,
         fetched_at: dt.datetime | None = None,
         unit_system: str | None = None,

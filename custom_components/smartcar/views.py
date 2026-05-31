@@ -65,9 +65,15 @@ def register_state(hass: HomeAssistant, state: str, flow_id: str) -> None:
 
 
 def pop_state(hass: HomeAssistant, state: str) -> str | None:
-    """Look up and remove a parked flow id by its state token."""
+    """Look up and remove a parked flow id by its state token.
+
+    Returns:
+        The flow id previously parked under ``state``, or ``None`` if no
+        active flow matches (expired, replayed, or never registered).
+    """
     pending = hass.data.get(DOMAIN, {}).get(DATA_PENDING_FLOWS, {})
-    return pending.pop(state, None)
+    value = pending.pop(state, None)
+    return value if isinstance(value, str) else None
 
 
 class SmartcarConnectCallbackView(HomeAssistantView):
@@ -77,8 +83,14 @@ class SmartcarConnectCallbackView(HomeAssistantView):
     name = "smartcar:callback"
     requires_auth = False
 
-    async def get(self, request: web.Request) -> web.Response:
-        """Resume the config flow with the user id from the redirect URL."""
+    async def get(self, request: web.Request) -> web.Response:  # noqa: PLR6301
+        """Resume the config flow with the user id from the redirect URL.
+
+        Returns:
+            An HTTP response. Always 200 with a "you can close this window"
+            page on the happy path; 400 if the state parameter is missing
+            or no longer matches an active flow.
+        """
         hass: HomeAssistant = request.app["hass"]
 
         state = request.query.get("state")
@@ -133,8 +145,8 @@ class SmartcarConnectCallbackView(HomeAssistantView):
             content_type="text/html",
             text=(
                 "<!doctype html><html><head><title>Smartcar authorization</title>"
-                "<meta charset=\"utf-8\"></head><body style=\"font-family:sans-serif;"
-                "padding:2rem;\">"
+                '<meta charset="utf-8"></head><body style="font-family:sans-serif;'
+                'padding:2rem;">'
                 "<h2>Authorization complete</h2>"
                 "<p>You can close this window and return to Home Assistant.</p>"
                 "<script>setTimeout(function(){window.close();},1500);</script>"

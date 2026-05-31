@@ -46,14 +46,15 @@ async def async_request_with_retry(
 
     The caller is responsible for calling ``raise_for_status()`` on the
     returned response and handling any remaining error status code.
+    Network exceptions (``ClientConnectionError``, ``TimeoutError``) and
+    retry-exhausted error statuses propagate to the caller.
 
     Returns:
         The response on success, or after retries are exhausted.
 
     Raises:
-        ClientConnectionError, TimeoutError: If all retries fail with a
-            transient network error.
-        AssertionError: Should never be raised; satisfies the type checker.
+        AssertionError: Never raised in practice — guards an unreachable
+            return path for the type checker.
     """
     for attempt in range(max_retries + 1):
         try:

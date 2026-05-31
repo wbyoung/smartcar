@@ -25,10 +25,10 @@ class AbstractAuth(ABC):
     """Abstract base for making authenticated Smartcar V3 requests.
 
     Two implementations exist:
-      * :class:`AsyncConfigEntryAuth` for the runtime path, which wraps
-        Home Assistant's ``OAuth2Session`` so access tokens are refreshed
-        automatically when they expire.
-      * :class:`AccessTokenAuthImpl` for the brief bootstrap during the
+      * :class:`AsyncConfigEntryAuth` (in ``auth_impl``) for the runtime path,
+        backed by a :class:`ClientCredentialsTokenManager` that mints
+        application-level tokens at IAM on demand.
+      * :class:`ClientCredentialsAuthImpl` for the brief bootstrap during the
         config flow, when no config entry exists yet.
     """
 
@@ -43,25 +43,28 @@ class AbstractAuth(ABC):
 
     @abstractmethod
     async def async_get_user_id(self) -> str | None:
-        """Return the Smartcar ``userId`` used as ``sc-user-id``.
+        """Return the Smartcar user id used as the ``sc-user-id`` header.
 
-        May be ``None`` for requests that don't require it (notably
-        ``GET /connections`` and ``GET /vehicles/{id}/vin`` when called
-        with a per-user OAuth token, where the token itself identifies
-        the user).
+        May be ``None`` during the brief bootstrap window of the config flow,
+        before the Connect callback has populated it.
         """
 
     async def request(
         self,
         method: str,
         path: str,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ANN401
     ) -> ClientResponse:
         """Send an authenticated request to the Smartcar V3 API.
 
         The ``Authorization`` header is set from the current access token
         and the ``sc-user-id`` header is set from the stored user id (when
         available). Callers should not set these headers themselves.
+
+        Returns:
+            The ``ClientResponse`` from aiohttp. Callers are responsible for
+            calling ``raise_for_status()`` and ``release()`` / ``read()`` as
+            appropriate.
         """
         access_token = await self.async_get_access_token()
         user_id = await self.async_get_user_id()

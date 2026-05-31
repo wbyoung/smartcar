@@ -59,7 +59,6 @@ from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_CLOUDHOOK,
-    CONF_SCOPES,
     CONFIGURABLE_SCOPES,
     DEFAULT_NAME,
     DEFAULT_SCOPES,
@@ -130,8 +129,11 @@ def _build_redirect_uri(hass: HomeAssistant) -> str | None:
       * other publicly-reachable URLs HA knows about.
 
     Internal URLs and IP-only addresses are rejected — Smartcar's redirect
-    target must be a publicly reachable HTTPS URL. Returns ``None`` if no
-    such URL is available.
+    target must be a publicly reachable HTTPS URL.
+
+    Returns:
+        The fully-qualified callback URL, or ``None`` if no publicly
+        reachable URL is configured.
     """
     try:
         url = get_url(
@@ -147,7 +149,7 @@ def _build_redirect_uri(hass: HomeAssistant) -> str | None:
     return f"{url.rstrip('/')}{CALLBACK_PATH}"
 
 
-class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
+class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Smartcar V3 config flow."""
 
     VERSION = 1
@@ -160,6 +162,7 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
         self._scope_data: dict[str, Any] = {}
         self._state: str | None = None
         self._user_id: str | None = None
+        self._oauth_error: str | None = None
 
     @staticmethod
     @callback
@@ -176,7 +179,12 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """First step: collect & verify the three Smartcar credentials."""
+        """First step: collect & verify the three Smartcar credentials.
+
+        Returns:
+            A form result with validation errors when credentials are
+            invalid, otherwise advances to the webhooks step.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -222,10 +230,13 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"redirect_url": redirect_uri},
         )
 
-    async def _test_credentials(
-        self, client_id: str, client_secret: str
-    ) -> None:
-        """Mint a token at the IAM endpoint to verify the V3 client creds."""
+    async def _test_credentials(self, client_id: str, client_secret: str) -> None:
+        """Mint a token at the IAM endpoint to verify the V3 client creds.
+
+        Propagates whatever the token manager raises:
+        :class:`InvalidAuthError` for 401/403 from Smartcar, and the various
+        aiohttp ``ClientError`` subclasses for network failures.
+        """
         session = async_get_clientsession(self.hass)
         manager = ClientCredentialsTokenManager(
             session, client_id.strip(), client_secret.strip()
@@ -236,7 +247,12 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_webhooks(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step 2: webhook configuration (optional)."""
+        """Step 2: webhook configuration (optional).
+
+        Returns:
+            A form result with validation errors, or advances to the scopes
+            step on valid input.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -248,17 +264,11 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_scopes()
             user_input = input_copy
 
-        prefill = (
-            {CONF_USE_WEBHOOKS: False}
-            if user_input is None
-            else user_input
-        )
+        prefill = {CONF_USE_WEBHOOKS: False} if user_input is None else user_input
 
         return self.async_show_form(
             step_id="webhooks",
-            data_schema=self.add_suggested_values_to_schema(
-                WEBHOOKS_SCHEMA, prefill
-            ),
+            data_schema=self.add_suggested_values_to_schema(WEBHOOKS_SCHEMA, prefill),
             errors=errors,
             last_step=False,
         )
@@ -266,7 +276,12 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_scopes(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step 3: select scopes to request from Connect."""
+        """Step 3: select scopes to request from Connect.
+
+        Returns:
+            A form result with validation errors, or advances to the
+            authorize step when at least one scope is selected.
+        """
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -299,22 +314,23 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
         view and contains either ``{"userId": "...", "code": "..."}`` (happy
         path) or ``{"error": "..."}`` (Connect surfaced an error).
 
-        On the resume we return :meth:`async_external_step_done` rather than
-        invoking the next step directly. The framework then dispatches to
-        ``async_step_finish`` itself, which keeps the flow state machine
-        consistent — calling the next step directly from a resumed
-        external-step handler can cause the framework to double-dispatch
-        the result, which in turn calls ``async_setup_entry`` twice.
+        On the resume we *always* return :meth:`async_external_step_done` —
+        even for error cases. Returning a CREATE_ENTRY or ABORT directly
+        from a resumed external step would violate the flow framework's
+        state-machine contract (it must transition to EXTERNAL_STEP_DONE
+        first). The next step (``async_step_finish``) consults the data we
+        stashed and decides whether to create the entry or abort.
+
+        Returns:
+            An external-step result that pauses the flow until the callback
+            view resumes it, or — on resume — an external-step-done signal
+            that hands control to ``async_step_finish``.
         """
         if user_input is not None:
             if "error" in user_input:
-                return self.async_abort(
-                    reason="oauth_error",
-                    description_placeholders={"error": user_input["error"]},
-                )
-            self._user_id = user_input.get("userId")
-            if not self._user_id:
-                return self.async_abort(reason="missing_user_id")
+                self._oauth_error = user_input["error"]
+            else:
+                self._user_id = user_input.get("userId")
             return self.async_external_step_done(next_step_id="finish")
 
         # First time through: confirm we have an external URL, generate state,
@@ -347,9 +363,26 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
         return f"{OAUTH2_AUTHORIZE}?{urlencode(params)}"
 
     async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None  # noqa: ARG002
+        self,
+        user_input: dict[str, Any] | None = None,  # noqa: ARG002
     ) -> ConfigFlowResult:
-        """Step 5: discover vehicles via /connections and create the entry."""
+        """Step 5: discover vehicles via /connections and create the entry.
+
+        Returns:
+            A create-entry result on success, or an abort result with a
+            specific reason on any of the failure modes (no vehicles, auth
+            failure, duplicates, cloud not connected, etc.).
+        """
+        # Errors deferred from async_step_authorize (resumed-external-step
+        # handlers cannot abort directly).
+        if self._oauth_error:
+            return self.async_abort(
+                reason="oauth_error",
+                description_placeholders={"error": self._oauth_error},
+            )
+        if not self._user_id:
+            return self.async_abort(reason="missing_user_id")
+
         assert self._user_id is not None
         assert self._credentials
 
@@ -448,13 +481,22 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         entry_data: Mapping[str, Any],  # noqa: ARG002
     ) -> ConfigFlowResult:
-        """Start a reauth flow."""
+        """Start a reauth flow.
+
+        Returns:
+            The reauth-confirm step.
+        """
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm and re-run credential entry."""
+        """Confirm and re-run credential entry.
+
+        Returns:
+            Either a confirmation form, or — on confirmation — the user step
+            of the regular flow which collects credentials afresh.
+        """
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
@@ -465,6 +507,7 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @property
     def _selected_scopes(self) -> list[Scope]:
+        """Return the user-selected optional scopes, sorted alphabetically."""
         return sorted(
             [
                 cast("Scope", scope)
@@ -475,6 +518,7 @@ class SmartcarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @property
     def _requested_scopes(self) -> list[Scope]:
+        """Return ``REQUIRED_SCOPES`` plus the user-selected optional scopes."""
         return REQUIRED_SCOPES + self._selected_scopes
 
 
@@ -484,11 +528,22 @@ class SmartcarOptionsFlow(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Entry point for the options flow.
+
+        Returns:
+            The webhooks step result.
+        """
         return await self.async_step_webhooks(user_input)
 
     async def async_step_webhooks(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Allow toggling webhooks and rotating the application management token.
+
+        Returns:
+            A form, abort, or create-entry result depending on whether the
+            user submitted valid input.
+        """
         entry_data = {**self.config_entry.data}
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -508,9 +563,7 @@ class SmartcarOptionsFlow(OptionsFlow):
                 )
             except cloud.CloudNotConnected:
                 return self.async_abort(reason="cloud_not_connected")
-            entry_data.update(
-                {CONF_WEBHOOK_ID: webhook_id, CONF_CLOUDHOOK: cloudhook}
-            )
+            entry_data.update({CONF_WEBHOOK_ID: webhook_id, CONF_CLOUDHOOK: cloudhook})
             description_placeholders["webhook_url"] = webhook_url
         else:
             entry_data.pop(CONF_WEBHOOK_ID, None)
@@ -547,6 +600,12 @@ class SmartcarOptionsFlow(OptionsFlow):
 async def _get_webhook_details(
     hass: HomeAssistant, webhook_id: str | None = None
 ) -> tuple[str, str, bool]:
+    """Generate (or reuse) a webhook id and resolve its public URL.
+
+    Returns:
+        A 3-tuple of ``(webhook_id, public_url, is_cloudhook)``. ``is_cloudhook``
+        is ``True`` when the URL was generated via Nabu Casa Cloud.
+    """
     if webhook_id is None:
         webhook_id = webhook.async_generate_id()
     url, cloudhook = await webhook_url_from_id(hass, webhook_id)
