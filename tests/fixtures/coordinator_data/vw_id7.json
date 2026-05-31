@@ -1,0 +1,65 @@
+{
+  "tractionbattery-stateofcharge": {
+    "value": 0.8
+  },
+  "tractionbattery-stateofcharge:data_age": "2026-05-31T10:15:06+00:00",
+  "tractionbattery-stateofcharge:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-detailedchargingstatus": {
+    "value": "FULLY_CHARGED"
+  },
+  "charge-detailedchargingstatus:data_age": "2026-05-31T10:15:06+00:00",
+  "charge-detailedchargingstatus:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "odometer-traveleddistance": {
+    "value": 16342
+  },
+  "odometer-traveleddistance:unit_system": "metric",
+  "odometer-traveleddistance:data_age": "2026-05-31T10:16:51.098000+00:00",
+  "odometer-traveleddistance:fetched_at": "2026-05-31T10:17:40.987000+00:00",
+  "tractionbattery-range": {
+    "value": 472,
+    "type": "DEFAULT",
+    "additionalValues": []
+  },
+  "tractionbattery-range:unit_system": "metric",
+  "tractionbattery-range:data_age": "2026-05-31T10:15:06+00:00",
+  "tractionbattery-range:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-wattage": {
+    "value": 0
+  },
+  "charge-wattage:unit_system": "metric",
+  "charge-wattage:data_age": "2026-05-31T10:15:06+00:00",
+  "charge-wattage:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-timetocomplete": {
+    "value": 0
+  },
+  "charge-timetocomplete:data_age": "2026-05-31T10:15:06+00:00",
+  "charge-timetocomplete:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-ischarging": {
+    "value": false
+  },
+  "charge-ischarging:data_age": "2026-05-31T10:15:06+00:00",
+  "charge-ischarging:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-ischargingcableconnected": {
+    "value": true
+  },
+  "charge-ischargingcableconnected:data_age": "2026-05-31T10:15:01+00:00",
+  "charge-ischargingcableconnected:fetched_at": "2026-05-31T10:17:42.364000+00:00",
+  "charge-chargelimits": {
+    "value": null
+  },
+  "charge-chargerate": {
+    "value": null
+  },
+  "charge-chargerate:unit_system": "metric",
+  "charge-chargerate:data_age": "2026-05-31T10:11:11+00:00",
+  "charge-chargerate:fetched_at": "2026-05-31T10:11:41.541000+00:00",
+  "charge-energyadded": {
+    "value": null
+  },
+  "closure-islocked": {
+    "value": null
+  },
+  "location-preciselocation": {
+    "value": null
+  }
+}
