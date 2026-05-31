@@ -1,0 +1,245 @@
+{
+  "eventId": "bead8cd7-6527-62c1-ecd5-0e293943907f",
+  "eventType": "VEHICLE_STATE",
+  "data": {
+    "user": {
+      "id": "00000000-0000-0000-0000-000000000099"
+    },
+    "vehicle": {
+      "id": "00000000-0000-0000-0000-0000000000aa",
+      "make": "VOLKSWAGEN",
+      "model": "ID.7",
+      "year": 2025,
+      "mode": "live",
+      "powertrainType": null
+    },
+    "signals": [
+      {
+        "code": "odometer-traveleddistance",
+        "name": "TraveledDistance",
+        "group": "Odometer",
+        "body": {
+          "value": 16342,
+          "unit": "km"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222611098,
+          "retrievedAt": 1780222660987
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "vehicleidentification-vin",
+        "name": "VIN",
+        "group": "VehicleIdentification",
+        "body": {
+          "value": "1XKYP49X1RJ701910"
+        },
+        "meta": {
+          "oemUpdatedAt": 0,
+          "retrievedAt": 0
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "tractionbattery-stateofcharge",
+        "name": "StateOfCharge",
+        "group": "TractionBattery",
+        "body": {
+          "value": 80,
+          "unit": "percent"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "tractionbattery-range",
+        "name": "Range",
+        "group": "TractionBattery",
+        "body": {
+          "value": 472,
+          "type": "DEFAULT",
+          "additionalValues": [],
+          "unit": "km"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-ischargingcableconnected",
+        "name": "IsChargingCableConnected",
+        "group": "Charge",
+        "body": {
+          "value": true
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222501000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-ischargingcablelatched",
+        "name": "IsChargingCableLatched",
+        "group": "Charge",
+        "body": {
+          "value": true
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222501000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-chargeportstatuscolor",
+        "name": "ChargePortStatusColor",
+        "group": "Charge",
+        "body": {
+          "value": "green"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222501000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-ischarging",
+        "name": "IsCharging",
+        "group": "Charge",
+        "body": {
+          "value": false
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-detailedchargingstatus",
+        "name": "DetailedChargingStatus",
+        "group": "Charge",
+        "body": {
+          "value": "FULLY_CHARGED"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-wattage",
+        "name": "Wattage",
+        "group": "Charge",
+        "body": {
+          "value": 0,
+          "unit": "watts"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      },
+      {
+        "code": "charge-chargerate",
+        "name": "ChargeRate",
+        "group": "Charge",
+        "body": {
+          "value": 30,
+          "unit": "km/h"
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222271000,
+          "retrievedAt": 1780222301541
+        },
+        "status": {
+          "value": "ERROR",
+          "error": {
+            "type": "VEHICLE_STATE",
+            "code": "NOT_CHARGING"
+          }
+        }
+      },
+      {
+        "code": "charge-timetocomplete",
+        "name": "TimeToComplete",
+        "group": "Charge",
+        "body": {
+          "value": 0
+        },
+        "meta": {
+          "oemUpdatedAt": 1780222506000,
+          "retrievedAt": 1780222662364
+        },
+        "status": {
+          "value": "SUCCESS"
+        }
+      }
+    ]
+  },
+  "triggers": [
+    {
+      "type": "SIGNAL_UPDATED",
+      "signal": {
+        "name": "IsCharging",
+        "code": "charge-ischarging",
+        "group": "Charge"
+      }
+    },
+    {
+      "type": "SIGNAL_UPDATED",
+      "signal": {
+        "name": "StateOfCharge",
+        "code": "tractionbattery-stateofcharge",
+        "group": "TractionBattery"
+      }
+    },
+    {
+      "type": "SIGNAL_UPDATED",
+      "signal": {
+        "name": "Wattage",
+        "code": "charge-wattage",
+        "group": "Charge"
+      }
+    }
+  ],
+  "meta": {
+    "deliveryId": "54e2e1a8-37ce-4988-8925-50963662792c",
+    "deliveredAt": 1780222662654,
+    "version": "4.0",
+    "webhookId": "cfa94613-bc6c-49ca-8df5-01509119f9ad",
+    "webhookName": "AutoData",
+    "mode": "LIVE",
+    "signalCount": 12
+  }
+}
