@@ -166,16 +166,33 @@ The integration verifies incoming webhook payloads using HMAC-SHA256 with the **
 
 ## Testing changes
 
-The integration has a test suite from the original V2 version (in the original repo). The V3 rebuild does not yet have updated tests — `pytest-homeassistant-custom-component` would need rebuilding around the new auth model. For now, the project ships without test coverage of the V3 changes. Don't be misled by `pyproject.toml`'s pytest config — running it as-is will fail.
+The integration has a partial V3 test suite. The split:
 
-Practical validation flow:
+**Active V3 tests** (40 tests, all passing locally):
+- `tests/test_util.py` — pure utility tests for HTTP retry, HMAC, key-path helpers. Unchanged from the V2 suite (`util.py` is V3-clean).
+- `tests/test_auth_impl.py` — 8 tests for `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, `ClientCredentialsAuthImpl`. Covers token caching, expiry refresh, 401/403 handling, malformed responses, invalidation, and the bootstrap auth's `with_user_id()` rebinding.
+- `tests/test_config_flow.py` — 6 tests covering: the happy path (credentials → webhooks → scopes → Connect external step → callback resume → finish), IAM-rejecting-credentials at the user step, network failure at the user step, missing-external-URL abort at the authorize step, missing-user-id from the callback (deferred abort via `_oauth_error`), and the webhooks step rejecting an enable-without-token.
 
-1. Drop the files into a real HA instance under `config/custom_components/smartcar/`.
-2. Restart HA.
-3. Delete any previous Smartcar config entry.
-4. Set up fresh.
-5. Verify entities populate after enabling auto-enrollment on the Smartcar dashboard.
-6. Restart HA — confirm no "already been setup" errors.
+**Stubbed pending V3 fixture work** (9 modules, module-level `pytest.skip`):
+- `test_binary_sensor.py`, `test_device_tracker.py`, `test_diagnostics.py`, `test_init.py`, `test_lock.py`, `test_number.py`, `test_sensor.py`, `test_services.py`, `test_switch.py`
+
+These need regenerated fixture data: the V2 suite's `tests/fixtures/api/*.json` files describe per-endpoint mocks against `/v2.0/vehicles/{id}/...` paths; V3 uses a single `/v3/vehicles/{id}/signals` returning JSON:API attributes. The webhook payload fixtures (`tests/fixtures/webhooks/*.json`) similarly need rebuilding against actual V3 webhook payloads from Smartcar.
+
+The recommended rebuild order, once webhook payloads are flowing in production: capture a representative webhook payload per signal group (charge, location, odometer, etc.), use that as the `tests/fixtures/webhooks/<make>_<scenario>.json` shape, regenerate `tests/snapshots/` via `pytest --snapshot-update`, then rebuild the sensor tests one platform at a time.
+
+**Quirks worth knowing:**
+
+- `tests/conftest.py` includes a session-scoped `_aiohttp_thread_warmup` fixture that creates and discards an aiohttp `ClientSession` before any test runs. This is to pre-spawn aiohttp's `_run_safe_shutdown_loop` daemon thread, which the pytest-HA leak detector would otherwise flag as a leak the first time a test creates a session.
+- `mock_smartcar_auth` patches `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, and `ClientCredentialsAuthImpl` at the import sites in `__init__.py` and `config_flow.py`. If you rename or relocate those classes, update the patch paths in the fixture.
+- `mock_config_entry` carries the V3 data shape (Application ID, V3 Client ID, V3 Client Secret, `sc_user_id`, `vehicles` dict). No `token` blob or `auth_implementation` field.
+- The `pytest_collection_modifyitems` hook in `conftest.py` auto-skips any test that names V2-only fixtures (`vehicle`, `vehicle_fixture`, `vehicle_attributes`, `api_response_type`, `webhook_scenario`, `webhook_body`, `webhook_headers`, `init_integration`). The stub files use a module-level `pytest.skip` which fires before fixture resolution and is the simpler path.
+
+To run locally:
+
+```bash
+pip install pytest pytest-homeassistant-custom-component freezegun
+pytest tests/ --no-cov
+```
 
 ## Common requests and how to handle them
 
@@ -200,7 +217,7 @@ Practical validation flow:
 ## Out-of-scope / known limitations
 
 - **No subscription management API integration.** As above — would require capturing the Smartcar-side webhook ID.
-- **No test suite for the V3 changes.** Would be nice; isn't there.
-- **Single-language translations.** `translations/en.json` only.
+- **Platform tests pending fixture regeneration.** 9 test modules (`test_sensor.py`, `test_init.py`, etc.) are stubbed with module-level `pytest.skip` because their V2 fixtures reference paths and webhook shapes that no longer exist. The auth, config flow, and util tests are V3-native.
+- **Single-language translations.** `translations/en.json` and `translations/nl.json` only.
 - **VIN handling is degenerate.** We use `vehicle_id` (UUID) as the unique identifier in place of VIN. This is fine for the integration but means device identifiers in the registry are UUIDs, not actual VINs. If you want true VIN, fetch it via the `vehicleidentification-vin` signal (single-signal endpoint) and store separately — but be ready to handle the case where the signal returns `status: ERROR`.
 - **No `manifest.json` `version` bump strategy documented.** Currently at `2.0.0` to signal the V3 break. Future versions should follow semver against this baseline.
