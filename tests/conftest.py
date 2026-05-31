@@ -33,7 +33,11 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import (
 )
 from syrupy.assertion import SnapshotAssertion
 
-from custom_components.smartcar.auth import AbstractAuth
+from custom_components.smartcar.auth_impl import (
+    AsyncConfigEntryAuth,
+    ClientCredentialsAuthImpl,
+    ClientCredentialsTokenManager,
+)
 from custom_components.smartcar.const import (
     CONF_APPLICATION_ID,
     CONF_CLIENT_ID,
@@ -45,7 +49,7 @@ from custom_components.smartcar.const import (
     Scope,
 )
 
-from . import MOCK_API_ENDPOINT, MOCK_UTC_NOW
+from . import MOCK_UTC_NOW
 from .syrupy import SmartcarSnapshotExtension
 
 
@@ -94,6 +98,22 @@ def pytest_configure(config) -> None:
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations for every test."""
     return
+
+
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Allow timers from HA-core's legacy ``device_tracker`` to linger.
+
+    The ``device_tracker`` platform schedules a 5-second interval timer
+    (``DeviceTracker.async_update_stale``) inside ``LegacyDeviceTracker``
+    that isn't reliably cancelled at test teardown. It's an HA-core
+    concern, not the integration's, and flipping the pytest-HA leak
+    detector from a fail to a warning is the documented escape hatch.
+
+    Returns:
+        ``True`` to tell pytest-HA the suite expects lingering timers.
+    """
+    return True
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -159,45 +179,40 @@ def aioclient_mock() -> Generator[AiohttpClientMocker]:
 
 @pytest.fixture
 def mock_smartcar_auth() -> Generator[AsyncMock]:
-    """Replace the V3 token manager with a deterministic fake.
+    """Bypass the IAM round-trip by patching ``async_get_access_token``.
 
-    The fake returns a fixed access token and the mock user id without ever
-    hitting the IAM endpoint. Tests that exercise the IAM round trip should
-    use ``aioclient_mock`` directly rather than this fixture.
+    The patches target *methods on the existing class objects* rather than
+    replacing the classes themselves. Replacing the class via
+    ``patch("...ClientCredentialsTokenManager", autospec=True)`` is unsafe
+    here because pytest-homeassistant-custom-component can re-import the
+    integration during another test's setup, and config_flow's
+    ``from .auth_impl import ClientCredentialsTokenManager`` would then
+    rebind to the active MagicMock. That binding survives the patch
+    unwinding in ``sys.modules`` and breaks subsequent tests that try to
+    use the real class. Patching the method keeps the class identity
+    stable while still short-circuiting the network call.
     """
-
-    class _MockAuth(AbstractAuth):
-        def __init__(self, websession, host, user_id):
-            super().__init__(websession, host)
-            self._user_id = user_id
-
-        async def async_get_access_token(self) -> str:  # noqa: PLR6301
-            return "mock-token"
-
-        async def async_get_user_id(self) -> str | None:
-            return self._user_id
-
     with (
-        patch(
-            "custom_components.smartcar.auth_impl.ClientCredentialsTokenManager",
-            autospec=True,
-        ) as mock_manager,
-        patch(
-            "custom_components.smartcar.AsyncConfigEntryAuth",
-            new=lambda session, _manager, _host, user_id: _MockAuth(
-                session, MOCK_API_ENDPOINT, user_id
-            ),
+        patch.object(
+            ClientCredentialsTokenManager,
+            "async_get_access_token",
+            new_callable=AsyncMock,
+            return_value="mock-token",
+        ) as mock_token,
+        patch.object(
+            AsyncConfigEntryAuth,
+            "async_get_access_token",
+            new_callable=AsyncMock,
+            return_value="mock-token",
         ),
-        patch(
-            "custom_components.smartcar.config_flow.ClientCredentialsAuthImpl",
-            new=lambda session, _manager, _host, user_id=None: _MockAuth(
-                session, MOCK_API_ENDPOINT, user_id
-            ),
+        patch.object(
+            ClientCredentialsAuthImpl,
+            "async_get_access_token",
+            new_callable=AsyncMock,
+            return_value="mock-token",
         ),
     ):
-        instance = mock_manager.return_value
-        instance.async_get_access_token = AsyncMock(return_value="mock-token")
-        yield instance
+        yield mock_token
 
 
 @pytest.fixture(name="enabled_scopes")
@@ -206,10 +221,25 @@ def mock_enabled_scopes() -> list[Scope]:
     return list(Scope)
 
 
+@pytest.fixture(name="vehicle_data")
+def mock_vehicle_data() -> dict[str, Any]:
+    """Default vehicle metadata for ``mock_config_entry``.
+
+    Tests that need a specific vehicle should override this fixture.
+    """
+    return {
+        "make": "Volkswagen",
+        "model": "ID.4",
+        "year": 2023,
+        "vin": MOCK_VEHICLE_ID,
+    }
+
+
 @pytest.fixture
 def mock_config_entry(
     enabled_scopes: list[Scope],
     enabled_entities: set[EntityDescriptionKey],
+    vehicle_data: dict[str, Any],
 ) -> MockConfigEntry:
     """Return a V3-shaped config entry for a single mock vehicle.
 
@@ -229,14 +259,7 @@ def mock_config_entry(
             CONF_CLIENT_SECRET: MOCK_CLIENT_SECRET,
             CONF_SC_USER_ID: MOCK_USER_ID,
             CONF_SCOPES: sorted(s.value for s in enabled_scopes),
-            "vehicles": {
-                MOCK_VEHICLE_ID: {
-                    "make": "Volkswagen",
-                    "model": "ID.4",
-                    "year": 2023,
-                    "vin": MOCK_VEHICLE_ID,
-                },
-            },
+            "vehicles": {MOCK_VEHICLE_ID: vehicle_data},
         },
     )
 
@@ -279,34 +302,34 @@ def mock_entity_registry_enabled_default(
         yield mock
 
 
-def _legacy_fixture_skip(reason: str) -> Any:
-    """Decorator-friendly helper for legacy V2 fixture-only skips."""
-    return pytest.mark.skip(reason=reason)
+@pytest.fixture
+def setup_with_data(
+    hass: HomeAssistant,
+    mock_smartcar_auth: AsyncMock,
+):
+    """Return an async helper that sets up the integration with canned coordinator data.
 
+    Patches :meth:`SmartcarVehicleCoordinator._async_update_data` to return
+    a caller-supplied dict, then runs ``async_setup_entry`` end-to-end so
+    entities are added to ``hass`` with the canned state already loaded.
 
-# The legacy parameterised vehicle / api fixtures from the V2 suite are not
-# yet available for V3. Tests that depend on them are skipped at collection
-# time via the marker registered below.
-def pytest_collection_modifyitems(
-    config: pytest.Config,
-    items: list[pytest.Item],
-) -> None:
-    """Auto-skip tests that depend on V2-only fixtures."""
-    skip_marker = pytest.mark.skip(
-        reason="V2-only fixtures (vehicle / api_response_type / webhook_scenario) "
-        "have not been rebuilt for V3. See CLAUDE.md."
-    )
-    legacy_fixture_names = {
-        "vehicle",
-        "vehicle_fixture",
-        "vehicle_attributes",
-        "api_response_type",
-        "webhook_scenario",
-        "webhook_body",
-        "webhook_headers",
-        "init_integration",
-    }
-    for item in items:
-        fixture_names = set(getattr(item, "fixturenames", ()))
-        if fixture_names & legacy_fixture_names:
-            item.add_marker(skip_marker)
+    Use this in tests that want to exercise the entity layer (sensor,
+    binary_sensor, lock, switch, diagnostics) without paying the cost of
+    standing up an HTTP mock for the V3 ``/signals`` endpoint. The
+    coordinator's first refresh runs as part of setup and pulls from the
+    patched method.
+    """
+    from .__init__ import setup_integration  # noqa: PLC0415
+
+    async def _run(
+        entry: MockConfigEntry, coordinator_data: dict[str, Any]
+    ) -> MockConfigEntry:
+        with patch(
+            "custom_components.smartcar.coordinator."
+            "SmartcarVehicleCoordinator._async_update_data",
+            return_value=coordinator_data,
+        ):
+            await setup_integration(hass, entry)
+        return entry
+
+    return _run
