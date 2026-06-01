@@ -29,6 +29,22 @@ from .types import SmartcarData
 
 _LOGGER = logging.getLogger(__name__)
 
+# Smartcar error ``type`` values that describe a transient or
+# configuration-stable condition rather than something the user or operator
+# can act on. These shouldn't reach the error log:
+#
+#   * ``VEHICLE_STATE`` — the signal can't be read because the vehicle isn't
+#     in the relevant state. Example: ``ChargeRate`` reports
+#     ``VEHICLE_STATE:NOT_CHARGING`` whenever the car isn't actively
+#     charging, which happens every time a normal charging session ends and
+#     would otherwise spam the error log on every subsequent webhook.
+#
+# The corresponding entity still goes ``unavailable`` (we still set
+# ``body = {"value": None}`` in the merge path), which is the right
+# behaviour — the message just gets logged at ``debug`` instead of
+# ``error`` so it doesn't surface as a problem.
+_INFORMATIONAL_ERROR_TYPES = frozenset({"VEHICLE_STATE"})
+
 
 async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str, bool]:
     """Return (url, is_cloudhook) for the configured webhook id."""
@@ -226,10 +242,22 @@ def _handle_webhook_signals(
             meta = signal.get("meta", {})
 
             if is_error:
+                error_obj = status.get("error", {})
+                # An error from Smartcar gets logged at error-level only
+                # when it's both (a) for a signal we actually surface as
+                # an entity and (b) something the user/operator could act
+                # on. Vehicle-state-derived errors (e.g.
+                # ``VEHICLE_STATE:NOT_CHARGING`` for ChargeRate after a
+                # charging session ends) are normal and recurring; they
+                # drop to debug.
+                is_actionable = (
+                    _is_integrated(signal)
+                    and error_obj.get("type") not in _INFORMATIONAL_ERROR_TYPES
+                )
                 _handle_webhook_signal_error(
                     name,
-                    status.get("error", {}),
-                    level="error" if _is_integrated(signal) else "debug",
+                    error_obj,
+                    level="error" if is_actionable else "debug",
                 )
                 body = {"value": None}
 
