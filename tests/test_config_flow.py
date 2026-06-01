@@ -37,7 +37,11 @@ from custom_components.smartcar.const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_POLL_INTERVAL,
+    CONF_POLL_INTERVAL_CHARGING,
     CONF_SC_USER_ID,
+    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
+    DEFAULT_POLL_INTERVAL_MINUTES,
     DOMAIN,
     IAM_TOKEN_URL,
     OAUTH2_AUTHORIZE,
@@ -187,6 +191,13 @@ async def test_full_flow_happy_path(
     assert result["data"][CONF_CLIENT_SECRET] == MOCK_CLIENT_SECRET
     assert result["data"][CONF_SC_USER_ID] == MOCK_USER_ID
     assert MOCK_VEHICLE_ID in result["data"]["vehicles"]
+    # Poll intervals fall through to the schema defaults when the user
+    # doesn't override them.
+    assert result["data"][CONF_POLL_INTERVAL] == DEFAULT_POLL_INTERVAL_MINUTES
+    assert (
+        result["data"][CONF_POLL_INTERVAL_CHARGING]
+        == DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
+    )
 
 
 async def test_user_step_invalid_credentials(
@@ -317,3 +328,110 @@ async def test_webhook_step_requires_management_token(
     assert result["errors"] == {
         CONF_APPLICATION_MANAGEMENT_TOKEN: "no_management_token",
     }
+
+
+async def test_webhook_step_rejects_poll_interval_below_minimum(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Polling intervals below 5 minutes are rejected at the schema layer.
+
+    The ``NumberSelector`` enforces the floor in the UI and the
+    underlying voluptuous schema's ``vol.Range`` enforces it server-side.
+    HA's flow framework wraps the voluptuous error as
+    :class:`~homeassistant.data_entry_flow.InvalidData`. Either way the
+    user can't push a sub-5-minute interval through the flow.
+    """
+    from homeassistant.data_entry_flow import InvalidData  # noqa: PLC0415
+
+    _mock_iam_ok(aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_APPLICATION_ID: MOCK_APPLICATION_ID,
+            CONF_CLIENT_ID: MOCK_CLIENT_ID,
+            CONF_CLIENT_SECRET: MOCK_CLIENT_SECRET,
+        },
+    )
+    # 3 minutes is below the 5-minute floor; the schema rejects it.
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USE_WEBHOOKS: False,
+                CONF_POLL_INTERVAL: 3,
+                CONF_POLL_INTERVAL_CHARGING: 3,
+            },
+        )
+
+
+async def test_webhook_step_accepts_custom_poll_intervals(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_external_url: None,
+) -> None:
+    """User-supplied poll intervals are persisted on the config entry."""
+    _mock_iam_ok(aioclient_mock)
+
+    # 6 minutes for both — above the 5-minute floor.
+    custom_idle = 120
+    custom_charging = 6
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_APPLICATION_ID: MOCK_APPLICATION_ID,
+            CONF_CLIENT_ID: MOCK_CLIENT_ID,
+            CONF_CLIENT_SECRET: MOCK_CLIENT_SECRET,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USE_WEBHOOKS: False,
+            CONF_POLL_INTERVAL: custom_idle,
+            CONF_POLL_INTERVAL_CHARGING: custom_charging,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], _MOCK_SCOPE_INPUT
+    )
+
+    # Provide signals-mock and stubbed populate_entry_data, finish the flow.
+    aioclient_mock.get(
+        f"https://vehicle.api.smartcar.com/v3/vehicles/{MOCK_VEHICLE_ID}/signals",
+        json={"data": []},
+    )
+
+    async def fake_populate(data: dict[str, Any], _auth: object) -> None:  # noqa: RUF029
+        data["vehicles"] = {
+            MOCK_VEHICLE_ID: {
+                "make": "Volkswagen",
+                "model": "ID.4",
+                "year": 2023,
+                "vin": MOCK_VEHICLE_ID,
+            },
+        }
+        data["scopes"] = sorted({Scope.READ_BATTERY.value})
+
+    with patch(
+        "custom_components.smartcar.config_flow.populate_entry_data",
+        side_effect=fake_populate,
+    ):
+        flow_id = hass.config_entries.flow.async_progress()[0]["flow_id"]
+        await hass.config_entries.flow.async_configure(
+            flow_id, {"userId": MOCK_USER_ID}
+        )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(flow_id, None)
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_POLL_INTERVAL] == custom_idle
+    assert result["data"][CONF_POLL_INTERVAL_CHARGING] == custom_charging
