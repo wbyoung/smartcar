@@ -1,118 +1,124 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Account is already configured",
-            "already_in_progress": "Configuration flow is already in progress",
-            "cannot_connect": "Failed to connect to Smartcar.",
-            "cloud_not_connected": "Not connected to Home Assistant Cloud.",
-            "duplicate_vehicles": "Vehicles may only be set up once. The following VINs {vins} are already configured.",
-            "external_url_required": "Home Assistant needs a publicly reachable HTTPS URL so Smartcar can redirect back. Either enable Home Assistant Cloud (Nabu Casa), or set an `external_url` under Settings \u2192 System \u2192 Network.",
-            "invalid_auth": "The Client ID or Client Secret is wrong. Verify them on the Smartcar dashboard.",
-            "missing_user_id": "The Smartcar callback did not include a user id. The integration cannot continue without it.",
-            "no_vehicles": "No vehicles were returned by Smartcar for this user.",
-            "oauth_error": "Smartcar returned an error during authorization: {error}",
-            "reauth_successful": "Re-authentication was successful",
-            "unknown": "Unexpected error",
-            "wrong_vehicles": "The vehicles must match the original selections. Existing VINs: {vins}."
-        },
-        "create_entry": {
-            "default": "Smartcar setup complete.\n\nIf you enabled webhooks, register this URL as the *Vehicle data callback URI* on your Smartcar dashboard:\n\n`{webhook_url}`"
-        },
-        "error": {
-            "no_scopes": "Select at least one permission scope",
-            "no_management_token": "Missing application management token",
-            "extraneous_management_token": "Do not provide an application management token unless webhooks are enabled",
-            "invalid_auth": "Smartcar rejected the credentials. Check the V3 Client ID and Client Secret.",
-            "cannot_connect": "Could not reach Smartcar to verify the credentials."
-        },
-        "step": {
-            "user": {
-                "title": "Smartcar credentials",
-                "description": "Enter the three values from your Smartcar dashboard.\n\nThe **Application ID** is shown on the application's overview page. The **Client ID** and **Client Secret** are on the *API Credentials* tab. These are separate values.\n\nMake sure your Home Assistant's redirect URI `{redirect_url}` is registered under *Authorized redirect URIs* on the application page before continuing.",
-                "data": {
-                    "application_id": "Application ID",
-                    "client_id": "V3 Client ID",
-                    "client_secret": "V3 Client Secret"
-                }
-            },
-            "webhooks": {
-                "title": "Webhooks (optional)",
-                "description": "Webhooks let Smartcar push vehicle data to Home Assistant in real time instead of relying on polling.\n\nIf you want to use webhooks, paste your **Application Management Token** from the Smartcar dashboard. You'll get the callback URL to register on Smartcar after setup completes.",
-                "data": {
-                    "use_webhooks": "Use webhooks",
-                    "application_management_token": "Application Management Token (only if using webhooks)"
-                }
-            },
-            "scopes": {
-                "title": "Permissions",
-                "description": "Select which Smartcar permissions to request from your vehicle.",
-                "data": {
-                    "control_charge": "Control charging (start/stop & target charge)",
-                    "control_security": "Lock or unlock vehicle",
-                    "read_battery": "EV/PHEV battery level, capacity & range",
-                    "read_charge": "Charging cable / charging state",
-                    "read_engine_oil": "Engine oil life",
-                    "read_fuel": "Fuel tank level",
-                    "read_location": "Vehicle location",
-                    "read_odometer": "Total distance traveled",
-                    "read_security": "Door / window / lock state",
-                    "read_tires": "Tire pressures"
-                }
-            },
-            "reauth_confirm": {
-                "title": "Re-authenticate Smartcar",
-                "description": "The Smartcar integration needs to be re-authenticated."
-            }
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "cannot_connect": "Failed to connect to Smartcar.",
+      "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+      "duplicate_vehicles": "Vehicles may only be set up once. The following VINs {vins} are already configured.",
+      "external_url_required": "Home Assistant needs a publicly reachable HTTPS URL so Smartcar can redirect back. Either enable Home Assistant Cloud (Nabu Casa), or set an `external_url` under Settings → System → Network.",
+      "invalid_auth": "The Client ID or Client Secret is wrong. Verify them on the Smartcar dashboard.",
+      "missing_user_id": "The Smartcar callback did not include a user id. The integration cannot continue without it.",
+      "no_vehicles": "No vehicles were returned by Smartcar for this user.",
+      "oauth_error": "Smartcar returned an error during authorization: {error}",
+      "reauth_successful": "Re-authentication was successful",
+      "unknown": "Unexpected error",
+      "wrong_vehicles": "The vehicles must match the original selections. Existing VINs: {vins}."
     },
-    "options": {
-        "abort": {
-            "cloud_not_connected": "Not connected to Home Assistant Cloud.",
-            "unknown": "Unexpected error"
-        },
-        "error": {
-            "no_management_token": "Missing application management token",
-            "extraneous_management_token": "Do not provide an application management token unless webhooks are enabled"
-        },
-        "step": {
-            "webhooks": {
-                "title": "Webhooks",
-                "description": "Webhook callback URL (register this on the Smartcar dashboard as the *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nIf no URL is shown, complete setup first and revisit this screen.",
-                "data": {
-                    "use_webhooks": "Use webhooks",
-                    "application_management_token": "Application Management Token (only if using webhooks)"
-                }
-            }
-        }
+    "create_entry": {
+      "default": "Smartcar setup complete.\n\nIf you enabled webhooks, register this URL as the *Vehicle data callback URI* on your Smartcar dashboard:\n\n`{webhook_url}`"
     },
-    "services": {
-        "lock_doors": {
-            "description": "Lock doors for a vehicle.",
-            "fields": {
-                "config_entry": {
-                    "description": "The config entry to use for this service.",
-                    "name": "Config entry"
-                },
-                "vin": {
-                    "description": "The VIN of the vehicle to target.",
-                    "name": "VIN"
-                }
-            },
-            "name": "Lock doors"
-        },
-        "unlock_doors": {
-            "description": "Unlock doors for a vehicle.",
-            "fields": {
-                "config_entry": {
-                    "description": "The config entry to use for this service.",
-                    "name": "Config entry"
-                },
-                "vin": {
-                    "description": "The VIN of the vehicle to target.",
-                    "name": "VIN"
-                }
-            },
-            "name": "Unlock doors"
+    "error": {
+      "no_scopes": "Select at least one permission scope",
+      "no_management_token": "Missing application management token",
+      "extraneous_management_token": "Do not provide an application management token unless webhooks are enabled",
+      "invalid_auth": "Smartcar rejected the credentials. Check the V3 Client ID and Client Secret.",
+      "cannot_connect": "Could not reach Smartcar to verify the credentials.",
+      "poll_interval_too_low": "Polling interval must be at least 5 minutes.",
+      "poll_interval_invalid": "Polling interval must be a whole number of minutes."
+    },
+    "step": {
+      "user": {
+        "title": "Smartcar credentials",
+        "description": "Enter the three values from your Smartcar dashboard.\n\nThe **Application ID** is shown on the application's overview page. The **Client ID** and **Client Secret** are on the *API Credentials* tab. These are separate values.\n\nMake sure your Home Assistant's redirect URI `{redirect_url}` is registered under *Authorized redirect URIs* on the application page before continuing.",
+        "data": {
+          "application_id": "Application ID",
+          "client_id": "V3 Client ID",
+          "client_secret": "V3 Client Secret"
         }
+      },
+      "webhooks": {
+        "title": "Webhooks (optional)",
+        "description": "Webhooks let Smartcar push vehicle data to Home Assistant in real time instead of relying on polling.\n\nIf you want to use webhooks, paste your **Application Management Token** from the Smartcar dashboard. You'll get the callback URL to register on Smartcar after setup completes.\n\nIf webhooks are not enabled, the integration falls back to polling the Smartcar API. You can set the cadence below in minutes (lower bound: 5). A shorter interval while charging lets you track charging progress without burning quota the rest of the day.",
+        "data": {
+          "use_webhooks": "Use webhooks",
+          "application_management_token": "Application Management Token (only if using webhooks)",
+          "poll_interval": "Poll interval (minutes) when not charging",
+          "poll_interval_charging": "Poll interval (minutes) while charging"
+        }
+      },
+      "scopes": {
+        "title": "Permissions",
+        "description": "Select which Smartcar permissions to request from your vehicle.",
+        "data": {
+          "control_charge": "Control charging (start/stop & target charge)",
+          "control_security": "Lock or unlock vehicle",
+          "read_battery": "EV/PHEV battery level, capacity & range",
+          "read_charge": "Charging cable / charging state",
+          "read_engine_oil": "Engine oil life",
+          "read_fuel": "Fuel tank level",
+          "read_location": "Vehicle location",
+          "read_odometer": "Total distance traveled",
+          "read_security": "Door / window / lock state",
+          "read_tires": "Tire pressures"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Smartcar",
+        "description": "The Smartcar integration needs to be re-authenticated."
+      }
     }
+  },
+  "options": {
+    "abort": {
+      "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+      "unknown": "Unexpected error"
+    },
+    "error": {
+      "no_management_token": "Missing application management token",
+      "extraneous_management_token": "Do not provide an application management token unless webhooks are enabled"
+    },
+    "step": {
+      "webhooks": {
+        "title": "Webhooks",
+        "description": "Webhook callback URL (register this on the Smartcar dashboard as the *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nIf no URL is shown, complete setup first and revisit this screen.\n\nIf webhooks are not enabled, the integration falls back to polling the Smartcar API. You can set the cadence below in minutes (lower bound: 5). A shorter interval while charging lets you track charging progress without burning quota the rest of the day.",
+        "data": {
+          "use_webhooks": "Use webhooks",
+          "application_management_token": "Application Management Token (only if using webhooks)",
+          "poll_interval": "Poll interval (minutes) when not charging",
+          "poll_interval_charging": "Poll interval (minutes) while charging"
+        }
+      }
+    }
+  },
+  "services": {
+    "lock_doors": {
+      "description": "Lock doors for a vehicle.",
+      "fields": {
+        "config_entry": {
+          "description": "The config entry to use for this service.",
+          "name": "Config entry"
+        },
+        "vin": {
+          "description": "The VIN of the vehicle to target.",
+          "name": "VIN"
+        }
+      },
+      "name": "Lock doors"
+    },
+    "unlock_doors": {
+      "description": "Unlock doors for a vehicle.",
+      "fields": {
+        "config_entry": {
+          "description": "The config entry to use for this service.",
+          "name": "Config entry"
+        },
+        "vin": {
+          "description": "The VIN of the vehicle to target.",
+          "name": "VIN"
+        }
+      },
+      "name": "Unlock doors"
+    }
+  }
 }

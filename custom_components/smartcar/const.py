@@ -39,6 +39,18 @@ CONF_CLOUDHOOK = "cloudhook"
 CONF_SC_USER_ID = "sc_user_id"  # Smartcar user id; sent as sc-user-id header.
 CONF_SCOPES = "scopes"  # Permissions returned from /connections after Connect.
 
+# Polling cadence. The integration switches between two values based on
+# whether the vehicle is currently charging (``charge-ischarging: true``).
+# Both are user-configurable via the webhooks step in the config and options
+# flows. They only take effect when webhooks aren't configured — when a
+# management token is present, ``update_interval`` is ``None`` and the
+# coordinator is fed from the webhook handler instead.
+CONF_POLL_INTERVAL = "poll_interval"  # minutes between polls when idle
+CONF_POLL_INTERVAL_CHARGING = "poll_interval_charging"  # minutes while charging
+DEFAULT_POLL_INTERVAL_MINUTES = 360  # 6h — preserves prior behaviour.
+DEFAULT_POLL_INTERVAL_CHARGING_MINUTES = 15
+MIN_POLL_INTERVAL_MINUTES = 5
+
 
 class Scope(StrEnum):
     """Smartcar permission scope."""

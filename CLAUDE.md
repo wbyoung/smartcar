@@ -164,19 +164,36 @@ Two webhooks are involved, with different IDs:
 
 The integration verifies incoming webhook payloads using HMAC-SHA256 with the **Application Management Token** (a third Smartcar credential, separate from the V3 Client ID/Secret). Captured during setup if webhooks are enabled. Logic is in `webhooks.py`.
 
+## Polling cadence
+
+When webhooks aren't configured, the coordinator polls `/v3/vehicles/{id}/signals` periodically. Two configurable intervals apply:
+
+- `CONF_POLL_INTERVAL` (default 360 minutes — preserves the prior 6h cadence)
+- `CONF_POLL_INTERVAL_CHARGING` (default 15 minutes)
+
+Both are persisted on the config entry's `data` dict (filled in by the webhooks step in both the config and options flow). The lower bound is `MIN_POLL_INTERVAL_MINUTES = 5` and the upper bound is 24 h, enforced both by the `NumberSelector` in the UI and by `vol.Range` in the schema.
+
+The switch between the two is data-driven: `SmartcarVehicleCoordinator._compute_update_interval(data)` looks at `data["charge-ischarging"]["value"]`. Only literal `True` selects the charging interval — anything else (`False`, `None`, missing key, weird payload shape) falls through to the idle interval. `_refresh_update_interval(data)` is called from both data paths:
+
+- After the polling path's `_merge_signals_data`, inside `_async_update_data`.
+- After the webhook merge path, by an overridden `async_set_updated_data`.
+
+When `CONF_APPLICATION_MANAGEMENT_TOKEN` is in `entry.data`, `_compute_update_interval` returns `None` and polling is disabled entirely. The poll interval values are still persisted in that case (the user might disable webhooks later), but they don't take effect.
+
 ## Testing changes
 
 The integration has a partial V3 test suite. The split:
 
-**Active V3 tests** (51 tests, all passing locally):
+**Active V3 tests** (59 tests, all passing locally):
 
 - `tests/test_util.py` — 26 pure utility tests for HTTP retry, HMAC, key-path helpers. Unchanged from the V2 suite (`util.py` is V3-clean).
 - `tests/test_auth_impl.py` — 8 tests for `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, `ClientCredentialsAuthImpl`. Covers token caching, expiry refresh, 401/403 handling, malformed responses, invalidation, and the bootstrap auth's `with_user_id()` rebinding.
-- `tests/test_config_flow.py` — 6 tests covering: the happy path (credentials → webhooks → scopes → Connect external step → callback resume → finish), IAM-rejecting-credentials at the user step, network failure at the user step, missing-external-URL abort at the authorize step, missing-user-id from the callback (deferred abort via `_oauth_error`), and the webhooks step rejecting an enable-without-token.
+- `tests/test_config_flow.py` — 8 tests covering: the happy path (credentials → webhooks → scopes → Connect external step → callback resume → finish), IAM-rejecting-credentials at the user step, network failure at the user step, missing-external-URL abort at the authorize step, missing-user-id from the callback (deferred abort via `_oauth_error`), the webhooks step rejecting an enable-without-token, sub-5-minute poll intervals rejected by the schema, and custom poll intervals persisted to the entry data end-to-end.
 - `tests/test_binary_sensor.py` — 3 tests built from a real VW ID.7 webhook payload. Verifies that populated signals surface on their entities (charging cable plugged in), that closure signals absent from the payload render as `unavailable`, and that meta signals (online, asleep, etc.) render as `unavailable` when no data is present.
 - `tests/test_sensor.py` — 3 tests against the same fixture. Verifies battery (80%), range (472 km), odometer (16342 km), charging_status (`FULLY_CHARGED`), charging_power (0 W) and time_to_complete (0). Separately checks that signals arriving with `status: ERROR` (`charge-chargerate` here, with error code `NOT_CHARGING`) render as `unavailable`, and that signals not present in the payload (engine oil, fuel, tire pressure) likewise render as `unavailable`.
 - `tests/test_switch.py` — 3 tests for the charging switch. Initial state (`off`, derived from `charge-ischarging: false`), `turn_on` dispatches `commands/charge/start`, `turn_off` dispatches `commands/charge/stop`.
 - `tests/test_diagnostics.py` — 2 tests. Verifies that the diagnostics dump redacts the VIN and never includes the application management token or cloudhook secret, and that the coordinator data is present in the dump.
+- `tests/test_coordinator_interval.py` — 6 tests for the dynamic polling cadence. Covers default values, custom values from entry data, transitions in and out of charging, the management-token-disables-polling rule, and the webhook path also refreshing the interval.
 
 **Stubbed pending V3 fixture work** (5 modules, module-level `pytest.skip`):
 

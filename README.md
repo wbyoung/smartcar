@@ -130,9 +130,9 @@ Each entity exposes `age` and `fetched_at` attributes when Smartcar provides the
 
 ## Rate limits and polling
 
-- With webhooks subscribed, the integration relies almost entirely on push delivery. Polling runs every 6 hours as a safety net.
-- Without webhooks, polling is the only source of data. Smartcar's free tier is limited to ~500 API calls per vehicle per month, and each polling cycle is one call. 6-hour polling fits comfortably under that.
-- You can disable polling entirely under *Settings → Devices & Services → Smartcar → ⋯ → System Options → Enable polling for changes*, and trigger refreshes from automations via `homeassistant.update_entity`. The V3 `/signals` endpoint returns all signals in one call, so a single `update_entity` refreshes everything at once — there's no per-entity batching to worry about as there was in V2.
+- With webhooks subscribed, the integration relies almost entirely on push delivery. Polling is disabled in that case.
+- Without webhooks, polling is the only source of data. Smartcar's free tier is limited to ~500 API calls per vehicle per month, and each polling cycle is one call. The default polling cadence is 6 hours when the vehicle isn't charging and 15 minutes while charging, configurable from the *Webhooks* step in setup or from *Settings → Devices & Services → Smartcar → Configure* afterwards. The lower bound is 5 minutes. Pick values that fit your monthly call budget — at the defaults a daily charging session of ~2 hours stays well inside the free tier.
+- You can also disable polling entirely under *Settings → Devices & Services → Smartcar → ⋯ → System Options → Enable polling for changes*, and trigger refreshes from automations via `homeassistant.update_entity`. The V3 `/signals` endpoint returns all signals in one call, so a single `update_entity` refreshes everything at once — there's no per-entity batching to worry about as there was in V2.
 
 ## What's different from V2
 

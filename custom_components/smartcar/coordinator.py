@@ -13,7 +13,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,7 +22,11 @@ from homeassistant.util import dt as dt_util
 from .auth import AbstractAuth
 from .const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
+    CONF_POLL_INTERVAL,
+    CONF_POLL_INTERVAL_CHARGING,
     CONF_SCOPES,
+    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
+    DEFAULT_POLL_INTERVAL_MINUTES,
     DOMAIN,
     EntityDescriptionKey,
 )
@@ -34,8 +38,6 @@ VEHICLE_FRONT_ROW = 0
 VEHICLE_BACK_ROW = 1
 VEHICLE_LEFT_COLUMN = 0
 VEHICLE_RIGHT_COLUMN = 1
-
-UPDATE_INTERVAL = timedelta(hours=6)
 
 # Smartcar returns values in either imperial or metric depending on the
 # vehicle/account. Signal bodies use these unit strings to flag imperial,
@@ -279,12 +281,83 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{vin}",
-            update_interval=(
-                UPDATE_INTERVAL
-                if CONF_APPLICATION_MANAGEMENT_TOKEN not in entry.data
-                else None
-            ),
+            update_interval=self._compute_update_interval(),
         )
+
+    def _compute_update_interval(
+        self, data: dict[str, Any] | None = None
+    ) -> timedelta | None:
+        """Return the right polling interval for the given (or current) data.
+
+        ``None`` disables polling entirely — used when a webhook
+        application-management token is configured, since the webhook path
+        keeps the coordinator data fresh and a parallel poll would just
+        waste API quota.
+
+        Otherwise picks ``CONF_POLL_INTERVAL_CHARGING`` if the vehicle is
+        currently charging, falling back to ``CONF_POLL_INTERVAL`` for
+        idle / driving / parked states. Both values are read from the
+        config entry's ``data`` (where the config flow stores them),
+        falling through to module-level defaults that preserve the prior
+        6h-everywhere behaviour for entries created before this knob
+        existed.
+
+        Args:
+            data: The coordinator data to read charging state from. If
+                omitted, the live ``self.data`` is used — appropriate at
+                ``__init__`` time when ``self.data`` is still empty.
+
+        Returns:
+            The interval to use for the next scheduled refresh, or
+            ``None`` when polling should be disabled.
+        """
+        if CONF_APPLICATION_MANAGEMENT_TOKEN in self.entry.data:
+            return None
+
+        source = data if data is not None else self.data
+        is_charging = (source.get("charge-ischarging") or {}).get("value") is True
+        key = CONF_POLL_INTERVAL_CHARGING if is_charging else CONF_POLL_INTERVAL
+        default = (
+            DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
+            if is_charging
+            else DEFAULT_POLL_INTERVAL_MINUTES
+        )
+        minutes = int(self.entry.data.get(key, default))
+        return timedelta(minutes=minutes)
+
+    def _refresh_update_interval(self, data: dict[str, Any] | None = None) -> None:
+        """Recompute and apply the update interval based on (new) data.
+
+        Called after each successful coordinator refresh (poll *or*
+        webhook merge) so a state transition into or out of charging
+        immediately changes how often we poll next. The base
+        ``DataUpdateCoordinator`` reads ``self.update_interval`` when
+        scheduling the next refresh, so just reassigning it is enough.
+        """
+        new_interval = self._compute_update_interval(data)
+        if new_interval != self.update_interval:
+            _LOGGER.debug(
+                "Coordinator %s: adjusting update_interval %s -> %s",
+                self.name,
+                self.update_interval,
+                new_interval,
+            )
+            self.update_interval = new_interval
+
+    @callback
+    def async_set_updated_data(self, data: dict[str, Any]) -> None:
+        """Override to refresh the update interval after webhook merges.
+
+        The webhook handler in ``webhooks.py`` writes new signal data into
+        the coordinator via this method. By recomputing the interval here,
+        a vehicle that just started or finished charging gets the matching
+        polling cadence applied immediately, even if polling is currently
+        active in parallel (which it normally isn't when webhooks are
+        enabled, but the override is cheap and keeps the behaviour
+        consistent between the two data paths).
+        """
+        super().async_set_updated_data(data)
+        self._refresh_update_interval(data)
 
     def is_scope_enabled(
         self,
@@ -394,7 +467,9 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
             msg = "Invalid signals response: missing 'data' array"
             raise UpdateFailed(msg)
 
-        return self._merge_signals_data(payload["data"])
+        merged = self._merge_signals_data(payload["data"])
+        self._refresh_update_interval(merged)
+        return merged
 
     def _merge_signals_data(self, signals: list[dict[str, Any]]) -> dict[str, Any]:
         """Apply a list of signal resources to ``self.data``.
