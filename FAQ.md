@@ -76,6 +76,14 @@ Two likely reasons:
 2. **The signal isn't included in your Smartcar plan.** Some signals are only available on paid plans. The free tier currently exposes about 9 trigger signals and 9 data signals (subject to change). Check your [Smartcar billing page](https://dashboard.smartcar.com/team/billing) and compare against the [pricing page](https://smartcar.com/pricing#pricing).
 3. **Your vehicle doesn't support the signal.** Even with the right plan, signal support varies by make/model/year. The [compatibility table](https://smartcar.com/product/compatible-vehicles) shows what's available.
 
+### `error for signal X: VEHICLE_STATE:...` in the log
+
+This is normal, not a problem. Smartcar uses `VEHICLE_STATE` errors to say "this signal can't be read because the vehicle isn't in the relevant state right now". The most common one is `VEHICLE_STATE:NOT_CHARGING` for the `ChargeRate` signal: every time you unplug, the next webhook reports that this datapoint has no value. The integration handles it by setting the corresponding entity to unavailable, which is the right behaviour.
+
+The integration logs these at DEBUG rather than ERROR (since v2.0.x), so they don't appear in your error log unless debug logging is on. If you see them at error level, you're on an older build — pull the latest.
+
+Errors with other `type` values (`PERMISSION`, `UPSTREAM`, `INTEGRATION`, etc.) are *not* demoted — those still log at error level because they're things you can act on.
+
 ### Repeated `REAUTHENTICATE` errors
 
 Known issue on Smartcar's side, often associated with the `VehicleUserAccount` signal group. Workaround: disable both the `VehicleUserAccount` triggers and data signals in your webhook configuration. Reference: [original integration issue #51](https://github.com/wbyoung/smartcar/issues/51).
@@ -86,7 +94,7 @@ This shouldn't happen — the token manager fetches a fresh token on demand. If 
 
 ### Polling fetches return empty data but webhooks work
 
-If webhooks are enabled and arriving, polling is largely redundant. The 6-hour periodic poll is a safety net for missed webhooks. If you want to disable it entirely (and rely solely on webhooks), use *Settings → Devices & Services → Smartcar → ⋯ → System Options → Disable polling*.
+If webhooks are enabled and arriving, polling is disabled — the integration treats the management-token-configured case as "webhooks are the source of truth" and doesn't poll in parallel. If you've disabled webhooks and rely on polling, the default cadence is 6 hours idle / 15 minutes while charging; both are configurable from *Settings → Devices & Services → Smartcar → Configure* with a 5-minute minimum.
 
 ## Diagnostics
 
