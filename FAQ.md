@@ -94,7 +94,7 @@ This shouldn't happen — the token manager fetches a fresh token on demand. If 
 
 ### Polling fetches return empty data but webhooks work
 
-If webhooks are enabled and arriving, polling is disabled — the integration treats the management-token-configured case as "webhooks are the source of truth" and doesn't poll in parallel. If you've disabled webhooks and rely on polling, the default cadence is 6 hours idle / 15 minutes while charging; both are configurable from *Settings → Devices & Services → Smartcar → Configure* with a 5-minute minimum.
+If webhooks are enabled, polling is off by default — the integration relies on push delivery. If you've found that webhook delivery is unreliable on your setup, enable *Use polling as backup* under *Settings → Devices & Services → Smartcar → Configure*. That makes the integration poll the API every hour as a safety net while webhooks are on, and every 15 minutes during active charging (the time when missed state hurts most).
 
 ## Diagnostics
 
