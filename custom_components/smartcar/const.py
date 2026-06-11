@@ -39,17 +39,23 @@ CONF_CLOUDHOOK = "cloudhook"
 CONF_SC_USER_ID = "sc_user_id"  # Smartcar user id; sent as sc-user-id header.
 CONF_SCOPES = "scopes"  # Permissions returned from /connections after Connect.
 
-# Polling cadence. The integration switches between two values based on
-# whether the vehicle is currently charging (``charge-ischarging: true``).
-# Both are user-configurable via the webhooks step in the config and options
-# flows. They only take effect when webhooks aren't configured — when a
-# management token is present, ``update_interval`` is ``None`` and the
-# coordinator is fed from the webhook handler instead.
-CONF_POLL_INTERVAL = "poll_interval"  # minutes between polls when idle
-CONF_POLL_INTERVAL_CHARGING = "poll_interval_charging"  # minutes while charging
-DEFAULT_POLL_INTERVAL_MINUTES = 360  # 6h — preserves prior behaviour.
-DEFAULT_POLL_INTERVAL_CHARGING_MINUTES = 15
-MIN_POLL_INTERVAL_MINUTES = 5
+# Polling cadence. All intervals are fixed constants — users can't tune
+# them in the UI, just toggle whether backup polling runs at all when
+# webhooks are configured.
+#
+#   * Idle (always polling, regardless of webhook configuration) →
+#     ``POLL_INTERVAL_MINUTES`` (1 h). Smartcar's API ceiling under the
+#     free tier is ~500 calls/vehicle/month; 1 h hits ~720/month for
+#     full-time idle, ~480 in practice once charging windows take over.
+#   * Charging → ``POLL_INTERVAL_CHARGING_MINUTES`` (15 min). Charging
+#     is when missed state hurts most, so the faster cadence applies.
+#   * Webhooks + backup polling disabled (default) → no polling.
+#
+# ``CONF_WEBHOOK_BACKUP_POLLING`` is a boolean exposed in the config and
+# options flows; it has no effect when webhooks aren't configured.
+CONF_WEBHOOK_BACKUP_POLLING = "webhook_backup_polling"
+POLL_INTERVAL_MINUTES = 60
+POLL_INTERVAL_CHARGING_MINUTES = 15
 
 
 class Scope(StrEnum):
@@ -145,6 +151,7 @@ class EntityDescriptionKey(StrEnum):
     CHARGE_FAST_CHARGER_PRESENT = auto()
     FIRMWARE_VERSION = auto()
     LAST_WEBHOOK_RECEIVED = auto()
+    LAST_POLLED = auto()
 
 
 DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS = {

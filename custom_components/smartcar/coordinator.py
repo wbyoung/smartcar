@@ -22,12 +22,11 @@ from homeassistant.util import dt as dt_util
 from .auth import AbstractAuth
 from .const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
-    CONF_POLL_INTERVAL,
-    CONF_POLL_INTERVAL_CHARGING,
     CONF_SCOPES,
-    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
-    DEFAULT_POLL_INTERVAL_MINUTES,
+    CONF_WEBHOOK_BACKUP_POLLING,
     DOMAIN,
+    POLL_INTERVAL_CHARGING_MINUTES,
+    POLL_INTERVAL_MINUTES,
     EntityDescriptionKey,
 )
 from .util import async_request_with_retry, key_path_update
@@ -276,6 +275,13 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         self.vin = vin
         self.entry = entry
         self.data: dict[str, Any] = {}
+        # Timestamp of the last successful HTTP poll against
+        # ``/v3/vehicles/{id}/signals``. Distinct from
+        # ``last_update_success_at`` (HA's base-class attribute), which
+        # also ticks on webhook-driven data updates — ``last_poll_time``
+        # only changes when the coordinator's own polling path runs and
+        # succeeds. Exposed as a per-vehicle "Last Polled" sensor.
+        self.last_poll_time: dt.datetime | None = None
 
         super().__init__(
             hass,
@@ -289,18 +295,20 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
     ) -> timedelta | None:
         """Return the right polling interval for the given (or current) data.
 
-        ``None`` disables polling entirely — used when a webhook
-        application-management token is configured, since the webhook path
-        keeps the coordinator data fresh and a parallel poll would just
-        waste API quota.
+        Intervals are fixed; only the boolean ``CONF_WEBHOOK_BACKUP_POLLING``
+        flag (default ``False``) gates whether polling happens at all when
+        webhooks are configured.
 
-        Otherwise picks ``CONF_POLL_INTERVAL_CHARGING`` if the vehicle is
-        currently charging, falling back to ``CONF_POLL_INTERVAL`` for
-        idle / driving / parked states. Both values are read from the
-        config entry's ``data`` (where the config flow stores them),
-        falling through to module-level defaults that preserve the prior
-        6h-everywhere behaviour for entries created before this knob
-        existed.
+        Selection:
+
+          * Webhooks configured + backup toggle off (default) → ``None``
+            (no polling — user is on webhooks-only).
+          * Charging (in any mode where polling is enabled) →
+            ``POLL_INTERVAL_CHARGING_MINUTES`` (15 min).
+          * Idle (in any mode where polling is enabled) →
+            ``POLL_INTERVAL_MINUTES`` (1 h). Same value whether or not
+            webhooks are also active: there's no reason to poll more
+            slowly when the user has explicitly asked for backup polling.
 
         Args:
             data: The coordinator data to read charging state from. If
@@ -311,19 +319,18 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
             The interval to use for the next scheduled refresh, or
             ``None`` when polling should be disabled.
         """
-        if CONF_APPLICATION_MANAGEMENT_TOKEN in self.entry.data:
-            return None
-
         source = data if data is not None else self.data
         is_charging = (source.get("charge-ischarging") or {}).get("value") is True
-        key = CONF_POLL_INTERVAL_CHARGING if is_charging else CONF_POLL_INTERVAL
-        default = (
-            DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
-            if is_charging
-            else DEFAULT_POLL_INTERVAL_MINUTES
-        )
-        minutes = int(self.entry.data.get(key, default))
-        return timedelta(minutes=minutes)
+        has_webhooks = CONF_APPLICATION_MANAGEMENT_TOKEN in self.entry.data
+        backup_polling = bool(self.entry.data.get(CONF_WEBHOOK_BACKUP_POLLING, False))
+
+        if has_webhooks and not backup_polling:
+            return None
+
+        if is_charging:
+            return timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
+
+        return timedelta(minutes=POLL_INTERVAL_MINUTES)
 
     def _refresh_update_interval(self, data: dict[str, Any] | None = None) -> None:
         """Recompute and apply the update interval based on (new) data.
@@ -469,6 +476,7 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
 
         merged = self._merge_signals_data(payload["data"])
         self._refresh_update_interval(merged)
+        self.last_poll_time = dt_util.utcnow()
         return merged
 
     def _merge_signals_data(self, signals: list[dict[str, Any]]) -> dict[str, Any]:

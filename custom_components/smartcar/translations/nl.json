@@ -23,9 +23,7 @@
       "no_management_token": "Application Management Token ontbreekt",
       "extraneous_management_token": "Geef geen Application Management Token op als webhooks niet zijn ingeschakeld",
       "invalid_auth": "Smartcar accepteert de inloggegevens niet. Controleer de V3 Client ID en het Client Secret.",
-      "cannot_connect": "Kan Smartcar niet bereiken om de inloggegevens te controleren.",
-      "poll_interval_too_low": "Het polinterval moet minstens 5 minuten zijn.",
-      "poll_interval_invalid": "Het polinterval moet een heel aantal minuten zijn."
+      "cannot_connect": "Kan Smartcar niet bereiken om de inloggegevens te controleren."
     },
     "step": {
       "user": {
@@ -39,12 +37,11 @@
       },
       "webhooks": {
         "title": "Webhooks (optioneel)",
-        "description": "Met webhooks kan Smartcar voertuiggegevens in realtime naar Home Assistant sturen, in plaats van te vertrouwen op periodiek pollen.\n\nAls je webhooks wilt gebruiken, plak dan hier je **Application Management Token** uit het Smartcar-dashboard. De callback-URL die je in Smartcar moet registreren krijg je na afloop van de configuratie te zien.\n\nAls je geen webhooks gebruikt, vraagt de integratie de Smartcar-API periodiek op. Stel het interval hieronder in minuten in (ondergrens: 5). Een kortere interval tijdens het opladen laat je de voortgang volgen zonder je quotum de rest van de dag op te branden.",
+        "description": "Met webhooks kan Smartcar voertuiggegevens in realtime naar Home Assistant sturen, in plaats van te vertrouwen op periodiek pollen.\n\nAls je webhooks wilt gebruiken, plak dan hier je **Application Management Token** uit het Smartcar-dashboard. De callback-URL die je in Smartcar moet registreren krijg je na afloop van de configuratie te zien.\n\nDe bezorging van webhooks is niet altijd betrouwbaar — Smartcar kan berichten laten vallen zonder dat dit in hun dashboardlogs zichtbaar is. Schakel onderstaand selectievakje in om ook elk uur de API te raadplegen terwijl webhooks aan staan, als vangnet. Polling verbruikt API-quota; laat het uit (de standaardinstelling) als je hebt vastgesteld dat de webhook-bezorging in jouw opstelling betrouwbaar is.",
         "data": {
           "use_webhooks": "Webhooks gebruiken",
           "application_management_token": "Application Management Token (alleen bij gebruik van webhooks)",
-          "poll_interval": "Polinterval (minuten) wanneer niet wordt opgeladen",
-          "poll_interval_charging": "Polinterval (minuten) tijdens opladen"
+          "webhook_backup_polling": "Polling als backup gebruiken wanneer webhooks zijn ingeschakeld"
         }
       },
       "scopes": {
@@ -81,12 +78,11 @@
     "step": {
       "webhooks": {
         "title": "Webhooks",
-        "description": "Webhook-callback-URL (registreer deze in het Smartcar-dashboard als de *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nAls er geen URL wordt weergegeven, voltooi dan eerst de configuratie en kom hier later terug.\n\nAls je geen webhooks gebruikt, vraagt de integratie de Smartcar-API periodiek op. Stel het interval hieronder in minuten in (ondergrens: 5). Een kortere interval tijdens het opladen laat je de voortgang volgen zonder je quotum de rest van de dag op te branden.",
+        "description": "Webhook-callback-URL (registreer deze in het Smartcar-dashboard als de *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nAls er geen URL wordt weergegeven, voltooi dan eerst de configuratie en kom hier later terug.\n\nDe bezorging van webhooks is niet altijd betrouwbaar — Smartcar kan berichten laten vallen zonder dat dit in hun dashboardlogs zichtbaar is. Schakel onderstaand selectievakje in om ook elk uur de API te raadplegen terwijl webhooks aan staan, als vangnet. Polling verbruikt API-quota; laat het uit (de standaardinstelling) als je hebt vastgesteld dat de webhook-bezorging in jouw opstelling betrouwbaar is.",
         "data": {
           "use_webhooks": "Webhooks gebruiken",
           "application_management_token": "Application Management Token (alleen bij gebruik van webhooks)",
-          "poll_interval": "Polinterval (minuten) wanneer niet wordt opgeladen",
-          "poll_interval_charging": "Polinterval (minuten) tijdens opladen"
+          "webhook_backup_polling": "Polling als backup gebruiken wanneer webhooks zijn ingeschakeld"
         }
       }
     }
@@ -119,6 +115,13 @@
         }
       },
       "name": "Deuren ontgrendelen"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_polled": {
+        "name": "Laatst gepold"
+      }
     }
   }
 }

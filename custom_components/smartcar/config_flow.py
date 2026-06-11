@@ -44,9 +44,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
+    BooleanSelector,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -62,15 +60,11 @@ from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_CLOUDHOOK,
-    CONF_POLL_INTERVAL,
-    CONF_POLL_INTERVAL_CHARGING,
+    CONF_WEBHOOK_BACKUP_POLLING,
     CONFIGURABLE_SCOPES,
     DEFAULT_NAME,
-    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
-    DEFAULT_POLL_INTERVAL_MINUTES,
     DEFAULT_SCOPES,
     DOMAIN,
-    MIN_POLL_INTERVAL_MINUTES,
     OAUTH2_AUTHORIZE,
     REQUIRED_SCOPES,
     SMARTCAR_MODE,
@@ -84,21 +78,6 @@ from .webhooks import webhook_url_from_id
 _LOGGER = logging.getLogger(__name__)
 
 CONF_USE_WEBHOOKS = "use_webhooks"
-
-# Upper bound on the configurable polling interval. 24h matches the
-# practical cadence of OEM telemetry refreshes and keeps the slider
-# sensible; users wanting "never" should configure webhooks instead.
-_MAX_POLL_INTERVAL_MINUTES = 24 * 60
-
-_POLL_INTERVAL_SELECTOR = NumberSelector(
-    NumberSelectorConfig(
-        min=MIN_POLL_INTERVAL_MINUTES,
-        max=_MAX_POLL_INTERVAL_MINUTES,
-        step=1,
-        unit_of_measurement="min",
-        mode=NumberSelectorMode.BOX,
-    )
-)
 
 CREDENTIALS_SCHEMA = vol.Schema(
     {
@@ -120,14 +99,7 @@ WEBHOOKS_SCHEMA = vol.Schema(
         vol.Optional(CONF_APPLICATION_MANAGEMENT_TOKEN): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(
-            CONF_POLL_INTERVAL,
-            default=DEFAULT_POLL_INTERVAL_MINUTES,
-        ): _POLL_INTERVAL_SELECTOR,
-        vol.Required(
-            CONF_POLL_INTERVAL_CHARGING,
-            default=DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
-        ): _POLL_INTERVAL_SELECTOR,
+        vol.Required(CONF_WEBHOOK_BACKUP_POLLING, default=False): BooleanSelector(),
     }
 )
 
@@ -136,13 +108,12 @@ def _validate_webhook_input(
     user_input: dict[str, Any],
     errors: dict[str, str],
 ) -> None:
-    """Validate the webhooks step, including the polling intervals.
+    """Validate the webhooks step.
 
-    The polling-interval fields are bounded by the ``NumberSelector``'s
-    ``min``/``max`` config in the UI, but defence-in-depth: anything that
-    arrives below ``MIN_POLL_INTERVAL_MINUTES`` (5) is rejected here too,
-    in case the form is bypassed (e.g. by a YAML import in some future
-    iteration, or a malformed API call).
+    The webhook backup-polling toggle has no validation beyond what the
+    schema enforces (it's a boolean). The only real check is that an
+    application management token is present when ``use_webhooks`` is set
+    — without it, webhook delivery can't be configured at all.
     """
     use_webhooks = user_input[CONF_USE_WEBHOOKS]
     management_token = user_input.get(CONF_APPLICATION_MANAGEMENT_TOKEN)
@@ -154,20 +125,11 @@ def _validate_webhook_input(
     if not management_token:
         user_input.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
 
-    # The NumberSelector returns floats; persist them as ints so the
-    # coordinator's ``timedelta(minutes=int(...))`` doesn't surprise on
-    # subsequent reads.
-    for key in (CONF_POLL_INTERVAL, CONF_POLL_INTERVAL_CHARGING):
-        if key not in user_input:
-            continue
-        try:
-            minutes = int(user_input[key])
-        except (TypeError, ValueError):
-            errors[key] = "poll_interval_invalid"
-            continue
-        if minutes < MIN_POLL_INTERVAL_MINUTES:
-            errors[key] = "poll_interval_too_low"
-        user_input[key] = minutes
+    # The backup-polling toggle only meaningfully applies when webhooks
+    # are configured. When the user explicitly disabled webhooks, drop
+    # the value rather than persisting a dead flag in entry data.
+    if not use_webhooks:
+        user_input.pop(CONF_WEBHOOK_BACKUP_POLLING, None)
 
 
 def _build_redirect_uri(hass: HomeAssistant) -> str | None:
@@ -633,11 +595,8 @@ class SmartcarOptionsFlow(OptionsFlow):
 
         prefill = {
             CONF_USE_WEBHOOKS: bool(entry_data.get(CONF_APPLICATION_MANAGEMENT_TOKEN)),
-            CONF_POLL_INTERVAL: entry_data.get(
-                CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL_MINUTES
-            ),
-            CONF_POLL_INTERVAL_CHARGING: entry_data.get(
-                CONF_POLL_INTERVAL_CHARGING, DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
+            CONF_WEBHOOK_BACKUP_POLLING: bool(
+                entry_data.get(CONF_WEBHOOK_BACKUP_POLLING)
             ),
             **{
                 k: entry_data[k]

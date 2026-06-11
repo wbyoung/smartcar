@@ -23,9 +23,7 @@
       "no_management_token": "Missing application management token",
       "extraneous_management_token": "Do not provide an application management token unless webhooks are enabled",
       "invalid_auth": "Smartcar rejected the credentials. Check the V3 Client ID and Client Secret.",
-      "cannot_connect": "Could not reach Smartcar to verify the credentials.",
-      "poll_interval_too_low": "Polling interval must be at least 5 minutes.",
-      "poll_interval_invalid": "Polling interval must be a whole number of minutes."
+      "cannot_connect": "Could not reach Smartcar to verify the credentials."
     },
     "step": {
       "user": {
@@ -39,12 +37,11 @@
       },
       "webhooks": {
         "title": "Webhooks (optional)",
-        "description": "Webhooks let Smartcar push vehicle data to Home Assistant in real time instead of relying on polling.\n\nIf you want to use webhooks, paste your **Application Management Token** from the Smartcar dashboard. You'll get the callback URL to register on Smartcar after setup completes.\n\nIf webhooks are not enabled, the integration falls back to polling the Smartcar API. You can set the cadence below in minutes (lower bound: 5). A shorter interval while charging lets you track charging progress without burning quota the rest of the day.",
+        "description": "Webhooks let Smartcar push vehicle data to Home Assistant in real time instead of relying on polling.\n\nIf you want to use webhooks, paste your **Application Management Token** from the Smartcar dashboard. You'll get the callback URL to register on Smartcar after setup completes.\n\nWebhook delivery isn't always reliable — Smartcar can drop sends without surfacing the failure in their dashboard logs. Enable the checkbox below to also poll the API hourly while webhooks are on, as a safety net. Polling adds API quota usage; leave it off (the default) if you've verified webhook delivery is reliable for your setup.",
         "data": {
           "use_webhooks": "Use webhooks",
           "application_management_token": "Application Management Token (only if using webhooks)",
-          "poll_interval": "Poll interval (minutes) when not charging",
-          "poll_interval_charging": "Poll interval (minutes) while charging"
+          "webhook_backup_polling": "Use polling as backup when webhooks are enabled"
         }
       },
       "scopes": {
@@ -81,12 +78,11 @@
     "step": {
       "webhooks": {
         "title": "Webhooks",
-        "description": "Webhook callback URL (register this on the Smartcar dashboard as the *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nIf no URL is shown, complete setup first and revisit this screen.\n\nIf webhooks are not enabled, the integration falls back to polling the Smartcar API. You can set the cadence below in minutes (lower bound: 5). A shorter interval while charging lets you track charging progress without burning quota the rest of the day.",
+        "description": "Webhook callback URL (register this on the Smartcar dashboard as the *Vehicle data callback URI*):\n\n`{webhook_url}`\n\nIf no URL is shown, complete setup first and revisit this screen.\n\nWebhook delivery isn't always reliable — Smartcar can drop sends without surfacing the failure in their dashboard logs. Enable the checkbox below to also poll the API hourly while webhooks are on, as a safety net. Polling adds API quota usage; leave it off (the default) if you've verified webhook delivery is reliable for your setup.",
         "data": {
           "use_webhooks": "Use webhooks",
           "application_management_token": "Application Management Token (only if using webhooks)",
-          "poll_interval": "Poll interval (minutes) when not charging",
-          "poll_interval_charging": "Poll interval (minutes) while charging"
+          "webhook_backup_polling": "Use polling as backup when webhooks are enabled"
         }
       }
     }
@@ -119,6 +115,13 @@
         }
       },
       "name": "Unlock doors"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_polled": {
+        "name": "Last Polled"
+      }
     }
   }
 }
