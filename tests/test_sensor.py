@@ -131,3 +131,52 @@ async def test_signals_absent_from_payload_render_unavailable(
             f"{entity_id} expected unavailable (signal not in payload), "
             f"got {state.state!r}"
         )
+
+
+@pytest.mark.usefixtures("enable_all_entities")
+async def test_last_polled_sensor_renders_unknown_when_no_poll_yet(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    coordinator_data: dict[str, Any],
+    setup_with_data,
+) -> None:
+    """The ``last_polled`` sensor exists and is ``unknown`` until a poll succeeds.
+
+    ``setup_with_data`` patches the coordinator's ``_async_update_data``
+    method so the integration's setup-time first refresh never executes
+    the real HTTP path — which means ``last_poll_time`` is never set,
+    even though entity state gets populated. The sensor should
+    correctly reflect that no polls have happened yet.
+    """
+    await setup_with_data(mock_config_entry, coordinator_data)
+    state = hass.states.get(f"{_BASE}_last_polled")
+    assert state is not None, "expected a last_polled sensor on the vehicle device"
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("enable_all_entities")
+async def test_last_polled_sensor_updates_when_coordinator_polls(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    coordinator_data: dict[str, Any],
+    setup_with_data,
+) -> None:
+    """When the coordinator's ``last_poll_time`` updates, the sensor reflects it."""
+    from datetime import UTC, datetime  # noqa: PLC0415
+
+    await setup_with_data(mock_config_entry, coordinator_data)
+
+    # Find the coordinator and stamp the last_poll_time directly, then
+    # tell HA the coordinator data changed so entity state refreshes.
+    coordinator = mock_config_entry.runtime_data.coordinators[
+        "00000000-0000-0000-0000-0000000000aa"
+    ]
+    stamp = datetime(2026, 5, 31, 12, 0, 0, tzinfo=UTC)
+    coordinator.last_poll_time = stamp
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{_BASE}_last_polled")
+    assert state is not None
+    # HA serialises TIMESTAMP sensors as ISO-8601 UTC strings.
+    assert state.state == stamp.isoformat()

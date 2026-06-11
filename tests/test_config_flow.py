@@ -37,11 +37,8 @@ from custom_components.smartcar.const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_POLL_INTERVAL,
-    CONF_POLL_INTERVAL_CHARGING,
     CONF_SC_USER_ID,
-    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
-    DEFAULT_POLL_INTERVAL_MINUTES,
+    CONF_WEBHOOK_BACKUP_POLLING,
     DOMAIN,
     IAM_TOKEN_URL,
     OAUTH2_AUTHORIZE,
@@ -191,13 +188,9 @@ async def test_full_flow_happy_path(
     assert result["data"][CONF_CLIENT_SECRET] == MOCK_CLIENT_SECRET
     assert result["data"][CONF_SC_USER_ID] == MOCK_USER_ID
     assert MOCK_VEHICLE_ID in result["data"]["vehicles"]
-    # Poll intervals fall through to the schema defaults when the user
-    # doesn't override them.
-    assert result["data"][CONF_POLL_INTERVAL] == DEFAULT_POLL_INTERVAL_MINUTES
-    assert (
-        result["data"][CONF_POLL_INTERVAL_CHARGING]
-        == DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
-    )
+    # The backup-polling toggle wasn't shown (use_webhooks=False), so its
+    # key shouldn't be persisted.
+    assert CONF_WEBHOOK_BACKUP_POLLING not in result["data"]
 
 
 async def test_user_step_invalid_credentials(
@@ -330,56 +323,13 @@ async def test_webhook_step_requires_management_token(
     }
 
 
-async def test_webhook_step_rejects_poll_interval_below_minimum(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Polling intervals below 5 minutes are rejected at the schema layer.
-
-    The ``NumberSelector`` enforces the floor in the UI and the
-    underlying voluptuous schema's ``vol.Range`` enforces it server-side.
-    HA's flow framework wraps the voluptuous error as
-    :class:`~homeassistant.data_entry_flow.InvalidData`. Either way the
-    user can't push a sub-5-minute interval through the flow.
-    """
-    from homeassistant.data_entry_flow import InvalidData  # noqa: PLC0415
-
-    _mock_iam_ok(aioclient_mock)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_APPLICATION_ID: MOCK_APPLICATION_ID,
-            CONF_CLIENT_ID: MOCK_CLIENT_ID,
-            CONF_CLIENT_SECRET: MOCK_CLIENT_SECRET,
-        },
-    )
-    # 3 minutes is below the 5-minute floor; the schema rejects it.
-    with pytest.raises(InvalidData):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USE_WEBHOOKS: False,
-                CONF_POLL_INTERVAL: 3,
-                CONF_POLL_INTERVAL_CHARGING: 3,
-            },
-        )
-
-
-async def test_webhook_step_accepts_custom_poll_intervals(
+async def test_webhook_step_persists_backup_polling_toggle(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_external_url: None,
 ) -> None:
-    """User-supplied poll intervals are persisted on the config entry."""
+    """Enabling backup polling at setup persists it on the entry."""
     _mock_iam_ok(aioclient_mock)
-
-    # 6 minutes for both — above the 5-minute floor.
-    custom_idle = 120
-    custom_charging = 6
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -392,19 +342,21 @@ async def test_webhook_step_accepts_custom_poll_intervals(
             CONF_CLIENT_SECRET: MOCK_CLIENT_SECRET,
         },
     )
+    # Enable webhooks AND turn on backup polling.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_USE_WEBHOOKS: False,
-            CONF_POLL_INTERVAL: custom_idle,
-            CONF_POLL_INTERVAL_CHARGING: custom_charging,
+            CONF_USE_WEBHOOKS: True,
+            CONF_APPLICATION_MANAGEMENT_TOKEN: "mgmt-token-xyz",
+            CONF_WEBHOOK_BACKUP_POLLING: True,
         },
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], _MOCK_SCOPE_INPUT
     )
 
-    # Provide signals-mock and stubbed populate_entry_data, finish the flow.
+    # async_setup_entry will fire /signals as part of the background
+    # refresh; stub it so the test completes cleanly.
     aioclient_mock.get(
         f"https://vehicle.api.smartcar.com/v3/vehicles/{MOCK_VEHICLE_ID}/signals",
         json={"data": []},
@@ -433,5 +385,5 @@ async def test_webhook_step_accepts_custom_poll_intervals(
         result = await hass.config_entries.flow.async_configure(flow_id, None)
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_POLL_INTERVAL] == custom_idle
-    assert result["data"][CONF_POLL_INTERVAL_CHARGING] == custom_charging
+    assert result["data"][CONF_APPLICATION_MANAGEMENT_TOKEN] == "mgmt-token-xyz"
+    assert result["data"][CONF_WEBHOOK_BACKUP_POLLING] is True

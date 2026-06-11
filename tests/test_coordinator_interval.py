@@ -1,20 +1,16 @@
-"""Tests for the coordinator's dynamic ``update_interval`` behaviour.
+"""Tests for the coordinator's ``update_interval`` selection.
 
-The coordinator picks between two configured intervals based on whether
-the vehicle is currently charging. Both intervals are read from the
-config entry's ``data`` and default to module-level constants. When a
-webhook application-management token is configured, polling is disabled
-entirely (``update_interval is None``).
+Polling intervals are now fixed constants — only the
+``CONF_WEBHOOK_BACKUP_POLLING`` boolean influences behaviour when webhooks
+are configured. The selection logic:
 
-Coverage:
-
-  * Defaults applied when the entry data carries no overrides.
-  * Custom values from entry data taken when present.
-  * Switch from idle to charging shortens the interval immediately.
-  * Switch from charging back to idle lengthens it again.
-  * Token-driven polling disable still wins regardless of poll values.
-  * Sub-minimum entries don't crash (they just get bigger; the config
-    flow enforces the floor at input time).
+  * No webhooks (always poll):
+      * idle → ``POLL_INTERVAL_MINUTES`` (6 h)
+      * charging → ``POLL_INTERVAL_CHARGING_MINUTES`` (15 min)
+  * Webhooks + backup polling toggle off (default) → ``None`` (no polling)
+  * Webhooks + backup polling toggle on:
+      * idle → ``POLL_INTERVAL_MINUTES`` (now 1 h — same as the no-webhooks idle cadence)
+      * charging → ``POLL_INTERVAL_CHARGING_MINUTES`` (15 min)
 """
 
 from __future__ import annotations
@@ -28,10 +24,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.smartcar.const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
-    CONF_POLL_INTERVAL,
-    CONF_POLL_INTERVAL_CHARGING,
-    DEFAULT_POLL_INTERVAL_CHARGING_MINUTES,
-    DEFAULT_POLL_INTERVAL_MINUTES,
+    CONF_WEBHOOK_BACKUP_POLLING,
+    POLL_INTERVAL_CHARGING_MINUTES,
+    POLL_INTERVAL_MINUTES,
 )
 from custom_components.smartcar.coordinator import SmartcarVehicleCoordinator
 
@@ -62,111 +57,128 @@ def _entry(data: dict[str, Any]) -> MockConfigEntry:
     return MockConfigEntry(domain="smartcar", data=data, version=1, minor_version=0)
 
 
-async def test_defaults_when_entry_has_no_overrides(  # noqa: RUF029
+async def test_no_webhooks_idle_uses_fixed_interval(  # noqa: RUF029
     hass: HomeAssistant,
 ) -> None:
-    """No CONF_POLL_INTERVAL in entry → fall back to module defaults."""
+    """Without webhooks the idle cadence is the fixed 6 h."""
     coord = _make_coordinator(hass, _entry({}))
-
-    assert coord.update_interval == timedelta(minutes=DEFAULT_POLL_INTERVAL_MINUTES)
-
-    # Now simulate charging state and re-evaluate.
-    coord.data = {"charge-ischarging": {"value": True}}
-    coord._refresh_update_interval()
-    assert coord.update_interval == timedelta(
-        minutes=DEFAULT_POLL_INTERVAL_CHARGING_MINUTES
-    )
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
 
-async def test_custom_intervals_from_entry_data(  # noqa: RUF029
+async def test_no_webhooks_charging_uses_fixed_interval(  # noqa: RUF029
     hass: HomeAssistant,
 ) -> None:
-    """Entry-data overrides win over defaults for both states."""
-    coord = _make_coordinator(
-        hass,
-        _entry({CONF_POLL_INTERVAL: 120, CONF_POLL_INTERVAL_CHARGING: 10}),
-    )
-
-    # Idle (no data yet).
-    assert coord.update_interval == timedelta(minutes=120)
-
-    # Charging.
+    """Without webhooks the charging cadence is the fixed 15 min."""
+    coord = _make_coordinator(hass, _entry({}))
     coord._refresh_update_interval({"charge-ischarging": {"value": True}})
-    assert coord.update_interval == timedelta(minutes=10)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
 
 
-async def test_transition_idle_to_charging_and_back(  # noqa: RUF029
-    hass: HomeAssistant,
-) -> None:
-    """Refreshing the interval reflects every state transition."""
-    coord = _make_coordinator(
-        hass,
-        _entry({CONF_POLL_INTERVAL: 60, CONF_POLL_INTERVAL_CHARGING: 5}),
-    )
-    assert coord.update_interval == timedelta(minutes=60)
+async def test_no_webhooks_transitions(hass: HomeAssistant) -> None:  # noqa: RUF029
+    """Idle ↔ charging transitions update the interval each time."""
+    coord = _make_coordinator(hass, _entry({}))
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
-    # Plug in.
     coord._refresh_update_interval({"charge-ischarging": {"value": True}})
-    assert coord.update_interval == timedelta(minutes=5)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
 
-    # Unplug / charging complete.
     coord._refresh_update_interval({"charge-ischarging": {"value": False}})
-    assert coord.update_interval == timedelta(minutes=60)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
-    # Signal missing / null body → treated as not charging.
+    # Null/missing value also falls through to idle.
     coord._refresh_update_interval({"charge-ischarging": {"value": None}})
-    assert coord.update_interval == timedelta(minutes=60)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
 
-async def test_management_token_disables_polling(  # noqa: RUF029
+async def test_webhooks_default_disables_polling(  # noqa: RUF029
     hass: HomeAssistant,
 ) -> None:
-    """A configured application-management token → no polling at all."""
+    """Webhooks configured + backup toggle absent (default off) → no polling."""
+    coord = _make_coordinator(
+        hass,
+        _entry({CONF_APPLICATION_MANAGEMENT_TOKEN: "secret-mgmt"}),
+    )
+    assert coord.update_interval is None
+
+    # Charging doesn't override — the toggle says "no polling at all".
+    coord._refresh_update_interval({"charge-ischarging": {"value": True}})
+    assert coord.update_interval is None
+
+
+async def test_webhooks_with_backup_toggle_on_idle(  # noqa: RUF029
+    hass: HomeAssistant,
+) -> None:
+    """Webhooks + backup toggle on → idle uses the 1 h backup cadence."""
     coord = _make_coordinator(
         hass,
         _entry(
             {
                 CONF_APPLICATION_MANAGEMENT_TOKEN: "secret-mgmt",
-                CONF_POLL_INTERVAL: 30,
-                CONF_POLL_INTERVAL_CHARGING: 5,
+                CONF_WEBHOOK_BACKUP_POLLING: True,
             }
         ),
     )
-    assert coord.update_interval is None
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
-    # Even if charging state flips, polling stays off — webhooks handle it.
+
+async def test_webhooks_with_backup_toggle_on_charging(  # noqa: RUF029
+    hass: HomeAssistant,
+) -> None:
+    """Webhooks + backup toggle on + charging → faster cadence applies."""
+    coord = _make_coordinator(
+        hass,
+        _entry(
+            {
+                CONF_APPLICATION_MANAGEMENT_TOKEN: "secret-mgmt",
+                CONF_WEBHOOK_BACKUP_POLLING: True,
+            }
+        ),
+    )
     coord._refresh_update_interval({"charge-ischarging": {"value": True}})
-    assert coord.update_interval is None
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
+
+
+async def test_webhooks_with_backup_toggle_transitions(  # noqa: RUF029
+    hass: HomeAssistant,
+) -> None:
+    """Idle → charging → idle cycles between backup and charging cadences."""
+    coord = _make_coordinator(
+        hass,
+        _entry(
+            {
+                CONF_APPLICATION_MANAGEMENT_TOKEN: "secret-mgmt",
+                CONF_WEBHOOK_BACKUP_POLLING: True,
+            }
+        ),
+    )
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
+
+    coord._refresh_update_interval({"charge-ischarging": {"value": True}})
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
+
+    coord._refresh_update_interval({"charge-ischarging": {"value": False}})
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
 
 async def test_async_set_updated_data_refreshes_interval(  # noqa: RUF029
     hass: HomeAssistant,
 ) -> None:
     """The webhook merge path triggers an interval recompute."""
-    coord = _make_coordinator(
-        hass,
-        _entry({CONF_POLL_INTERVAL: 60, CONF_POLL_INTERVAL_CHARGING: 5}),
-    )
-    assert coord.update_interval == timedelta(minutes=60)
+    coord = _make_coordinator(hass, _entry({}))
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
 
     coord.async_set_updated_data({"charge-ischarging": {"value": True}})
-    assert coord.update_interval == timedelta(minutes=5)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
 
 
-async def test_refresh_with_bogus_value_falls_through_to_idle(  # noqa: RUF029
+async def test_non_boolean_ischarging_treated_as_idle(  # noqa: RUF029
     hass: HomeAssistant,
 ) -> None:
-    """A non-boolean ``charge-ischarging.value`` is treated as not charging.
+    """A non-bool ``charge-ischarging.value`` falls through to idle behaviour.
 
-    The integration's existing normalisation in ``coordinator.py`` already
-    coerces ``charge-ischarging.value`` to a real boolean from the wire
-    format, but the interval logic shouldn't blow up if a future payload
-    arrives in a different shape — e.g. a truthy string. Strictly
-    matching ``is True`` keeps the behaviour predictable.
+    The integration normalises wire payloads, but the interval logic
+    should be robust to a malformed value anyway.
     """
-    coord = _make_coordinator(
-        hass,
-        _entry({CONF_POLL_INTERVAL: 60, CONF_POLL_INTERVAL_CHARGING: 5}),
-    )
+    coord = _make_coordinator(hass, _entry({}))
     coord._refresh_update_interval({"charge-ischarging": {"value": "yes"}})
-    assert coord.update_interval == timedelta(minutes=60)
+    assert coord.update_interval == timedelta(minutes=POLL_INTERVAL_MINUTES)
