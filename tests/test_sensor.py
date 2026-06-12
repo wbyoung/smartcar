@@ -180,3 +180,17 @@ async def test_last_polled_sensor_updates_when_coordinator_polls(
     assert state is not None
     # HA serialises TIMESTAMP sensors as ISO-8601 UTC strings.
     assert state.state == stamp.isoformat()
+
+
+@pytest.mark.usefixtures("enable_all_entities")
+async def test_charge_port_status_color_reflects_signal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    coordinator_data: dict[str, Any],
+    setup_with_data,
+) -> None:
+    """``charge-chargeportstatuscolor: "green"`` surfaces as the sensor state."""
+    await setup_with_data(mock_config_entry, coordinator_data)
+    state = hass.states.get(f"{_BASE}_charge_port_status_color")
+    assert state is not None, "expected charge_port_status_color sensor to exist"
+    assert state.state == "green"

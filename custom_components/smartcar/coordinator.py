@@ -93,6 +93,12 @@ DATAPOINT_ENTITY_KEY_MAP: dict[EntityDescriptionKey, DatapointConfig] = {
     EntityDescriptionKey.PLUG_STATUS: DatapointConfig(
         "charge-ischargingcableconnected", ["read_charge"]
     ),
+    EntityDescriptionKey.PLUG_LATCHED: DatapointConfig(
+        "charge-ischargingcablelatched", ["read_charge"]
+    ),
+    EntityDescriptionKey.CHARGE_PORT_STATUS_COLOR: DatapointConfig(
+        "charge-chargeportstatuscolor", ["read_charge"]
+    ),
     EntityDescriptionKey.CHARGE_LIMIT: DatapointConfig(
         "charge-chargelimits", ["read_charge", "control_charge"]
     ),

@@ -121,6 +121,14 @@
     "sensor": {
       "last_polled": {
         "name": "Last Polled"
+      },
+      "charge_port_status_color": {
+        "name": "Charge Port Status Color"
+      }
+    },
+    "binary_sensor": {
+      "plug_latched": {
+        "name": "Charging Cable Latched"
       }
     }
   }

@@ -111,3 +111,17 @@ async def test_meta_signals_render_unavailable(
         state = hass.states.get(entity_id)
         assert state is not None, f"{entity_id} should be registered"
         assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("enable_all_entities")
+async def test_charging_cable_latched_reflects_signal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    coordinator_data: dict[str, Any],
+    setup_with_data,
+) -> None:
+    """``charge-ischargingcablelatched: true`` surfaces as state ``on``."""
+    await setup_with_data(mock_config_entry, coordinator_data)
+    state = hass.states.get(f"{_BASE}_charging_cable_latched")
+    assert state is not None, "expected charging_cable_latched binary sensor to exist"
+    assert state.state == STATE_ON

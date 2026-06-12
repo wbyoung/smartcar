@@ -98,6 +98,17 @@ SENSOR_TYPES: tuple[SmartcarSensorDescription, ...] = (
         icon="mdi:ev-station",
     ),
     SmartcarSensorDescription(
+        key=EntityDescriptionKey.CHARGE_PORT_STATUS_COLOR,
+        name="Charge Port Status Color",
+        value_key_path="charge-chargeportstatuscolor.value",
+        # String enum: typically "green" (ready/charging fine),
+        # "red" (fault), "blue" (active session), "yellow" (warning).
+        # Exact value set varies by OEM. ENUM device_class would require
+        # us to enumerate all values up front, which we don't have a
+        # canonical list for — leave it as a free-form string.
+        icon="mdi:lightbulb-on",
+    ),
+    SmartcarSensorDescription(
         key=EntityDescriptionKey.CHARGE_CHARGERATE,
         name="Charge Rate",
         value_key_path="charge-chargerate.value",

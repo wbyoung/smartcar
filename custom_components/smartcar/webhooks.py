@@ -29,21 +29,25 @@ from .types import SmartcarData
 
 _LOGGER = logging.getLogger(__name__)
 
-# Smartcar error ``type`` values that describe a transient or
-# configuration-stable condition rather than something the user or operator
-# can act on. These shouldn't reach the error log:
+# Smartcar signal-error types that warrant ``error``-level logging.
+# Anything else lands at ``debug``. We invert the previous "demote
+# these" approach because the list of normal/transient error types
+# keeps growing as users report new ones (``VEHICLE_STATE:NOT_CHARGING``,
+# ``UPSTREAM:INVALID_DATA`` when charging is suspended, …) — none of
+# them are actionable. The only types a user can actually do something
+# about are:
 #
-#   * ``VEHICLE_STATE`` — the signal can't be read because the vehicle isn't
-#     in the relevant state. Example: ``ChargeRate`` reports
-#     ``VEHICLE_STATE:NOT_CHARGING`` whenever the car isn't actively
-#     charging, which happens every time a normal charging session ends and
-#     would otherwise spam the error log on every subsequent webhook.
+#   * ``PERMISSION`` — a granted scope is missing on the dashboard. The
+#     user can re-authorise to fix it.
+#   * ``AUTHENTICATION`` — the access token is invalid. Same fix path.
 #
-# The corresponding entity still goes ``unavailable`` (we still set
-# ``body = {"value": None}`` in the merge path), which is the right
-# behaviour — the message just gets logged at ``debug`` instead of
-# ``error`` so it doesn't surface as a problem.
-_INFORMATIONAL_ERROR_TYPES = frozenset({"VEHICLE_STATE"})
+# Everything else (``VEHICLE_STATE``, ``UPSTREAM``, ``INTEGRATION``,
+# ``RATE_LIMIT``, ``COMPATIBILITY``, ``CONNECTION``, …) is transient or
+# Smartcar-side and the user can't fix it from the HA UI; those go to
+# debug. The corresponding entity still goes ``unavailable`` either way
+# (we set ``body = {"value": None}`` in the merge path), which is the
+# right behaviour — only the log level changes.
+_ACTIONABLE_ERROR_TYPES = frozenset({"PERMISSION", "AUTHENTICATION"})
 
 
 async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str, bool]:
@@ -245,14 +249,13 @@ def _handle_webhook_signals(
                 error_obj = status.get("error", {})
                 # An error from Smartcar gets logged at error-level only
                 # when it's both (a) for a signal we actually surface as
-                # an entity and (b) something the user/operator could act
-                # on. Vehicle-state-derived errors (e.g.
-                # ``VEHICLE_STATE:NOT_CHARGING`` for ChargeRate after a
-                # charging session ends) are normal and recurring; they
-                # drop to debug.
+                # an entity and (b) of a type the user can do something
+                # about. Everything else — vehicle-state errors,
+                # OEM upstream blips, rate limits, etc. — is informational
+                # and goes to debug.
                 is_actionable = (
                     _is_integrated(signal)
-                    and error_obj.get("type") not in _INFORMATIONAL_ERROR_TYPES
+                    and error_obj.get("type") in _ACTIONABLE_ERROR_TYPES
                 )
                 _handle_webhook_signal_error(
                     name,

@@ -121,6 +121,14 @@
     "sensor": {
       "last_polled": {
         "name": "Laatst gepold"
+      },
+      "charge_port_status_color": {
+        "name": "Laadpoort statuskleur"
+      }
+    },
+    "binary_sensor": {
+      "plug_latched": {
+        "name": "Laadkabel vergrendeld"
       }
     }
   }

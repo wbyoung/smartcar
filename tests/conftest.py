@@ -94,13 +94,13 @@ def pytest_configure(config) -> None:
     logging.getLogger("asyncio").setLevel(logging.ERROR)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # noqa: RUF076
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations for every test."""
     return
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)  # noqa: RUF076
 def expected_lingering_timers() -> bool:
     """Allow timers from HA-core's legacy ``device_tracker`` to linger.
 
@@ -116,7 +116,7 @@ def expected_lingering_timers() -> bool:
     return True
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=True)  # noqa: RUF076
 def _aiohttp_thread_warmup() -> None:
     """Create and tear down an aiohttp session once before any test runs.
 

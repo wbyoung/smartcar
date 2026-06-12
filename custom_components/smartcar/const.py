@@ -98,6 +98,8 @@ class EntityDescriptionKey(StrEnum):
     """Entity description key enumeration."""
 
     PLUG_STATUS = auto()
+    PLUG_LATCHED = auto()
+    CHARGE_PORT_STATUS_COLOR = auto()
     LOCATION = auto()
     DOOR_LOCK = auto()
     DOOR_BACK_LEFT = auto()

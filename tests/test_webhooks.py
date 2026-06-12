@@ -1,21 +1,27 @@
 """Tests for how the webhook handler classifies Smartcar signal errors.
 
 Smartcar V3 webhook payloads carry a per-signal ``status`` field. When
-``status.value == "ERROR"``, ``status.error`` describes why. Some of those
-``error.type`` values are normal, recurring conditions (the vehicle just
-isn't in the right state to read this signal), not problems the user can
-act on. Those should not be logged at error level.
+``status.value == "ERROR"``, ``status.error`` describes why. Most of
+those error types are normal, recurring conditions (the vehicle just
+isn't in the right state, Smartcar's upstream OEM connection hiccupped,
+the OEM returned data that didn't parse, etc.) — none of them are
+things the user can act on. They should not be logged at error level.
 
-What we exercise here:
+The integration's rule: only ``PERMISSION`` and ``AUTHENTICATION``
+errors trigger error-level logging — those map to "re-authorise to grant
+the missing scope or refresh the token". Everything else is debug.
 
-  * ``VEHICLE_STATE`` errors on an integrated signal log at ``debug`` —
-    the case the user actually reported, where ``ChargeRate`` reports
-    ``VEHICLE_STATE:NOT_CHARGING`` every time the car isn't actively
-    charging.
-  * Non-``VEHICLE_STATE`` errors on an integrated signal still log at
-    ``error`` — we don't want to silently swallow actionable failures.
-  * Errors on non-integrated signals always log at ``debug``, regardless
-    of error type. (Preserves the prior behaviour.)
+What we exercise:
+
+  * ``VEHICLE_STATE`` on an integrated signal → ``debug`` (the case
+    reported as `ChargeRate / NOT_CHARGING` after unplugging).
+  * ``UPSTREAM`` on an integrated signal → ``debug`` (the
+    `TimeToComplete / UPSTREAM:INVALID_DATA` case reported when charging
+    is suspended).
+  * ``PERMISSION`` on an integrated signal → ``error`` (re-auth path).
+  * ``AUTHENTICATION`` on an integrated signal → ``error``.
+  * Errors on non-integrated signals always log at ``debug``,
+    regardless of error type.
 """
 
 from __future__ import annotations
@@ -30,9 +36,6 @@ def _make_coordinator() -> MagicMock:
     """Build a coordinator stub with the minimum surface ``_handle_webhook_signals`` uses."""
     coord = MagicMock()
     coord.data = {}
-    # ``create_updated_data`` is a context manager yielding (adder, dict).
-    # Return a no-op adder so signal-error log routing is the only thing
-    # we exercise here.
     fake_adder = MagicMock()
     coord.create_updated_data.return_value.__enter__.return_value = (fake_adder, {})
     coord.create_updated_data.return_value.__exit__.return_value = False
@@ -73,13 +76,43 @@ def test_vehicle_state_error_on_integrated_signal_logs_debug(
     )
 
 
-def test_other_error_type_on_integrated_signal_still_logs_error(
+def test_upstream_error_on_integrated_signal_logs_debug(
     caplog: object,
 ) -> None:
-    """A non-VEHICLE_STATE error on an integrated signal stays at error level.
+    """``UPSTREAM:INVALID_DATA`` on TimeToComplete (charging suspended) → DEBUG.
 
-    These are actionable: permission revoked, OEM upstream broken, etc.
-    Burying them in debug would be a regression.
+    Reproduces the issue reported with the suspended-charging case:
+    Smartcar returns ``UPSTREAM:INVALID_DATA`` for TimeToComplete while
+    charging is in the suspended state. The user can't fix that and
+    doesn't need an error-log entry for every webhook delivery that
+    happens during the suspension.
+    """
+    coord = _make_coordinator()
+    signal = _make_signal(
+        "charge-timetocomplete",
+        "UPSTREAM",
+        "INVALID_DATA",
+        name="TimeToComplete",
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar.webhooks"):
+        _handle_webhook_signals(coord, [signal])
+
+    matching = [r for r in caplog.records if "TimeToComplete" in r.getMessage()]
+    assert matching
+    assert all(r.levelno == logging.DEBUG for r in matching), (
+        f"expected DEBUG-level only, got {[r.levelname for r in matching]}"
+    )
+
+
+def test_permission_error_on_integrated_signal_logs_error(
+    caplog: object,
+) -> None:
+    """A PERMISSION error stays at error level — that's actionable.
+
+    Missing-scope failures are the kind of thing a user can fix from the
+    Smartcar dashboard by re-authorising. Burying them in debug would
+    leave them mysteriously stuck.
     """
     coord = _make_coordinator()
     signal = _make_signal(
@@ -95,7 +128,31 @@ def test_other_error_type_on_integrated_signal_still_logs_error(
     matching = [r for r in caplog.records if "ChargeRate" in r.getMessage()]
     assert matching
     assert any(r.levelno == logging.ERROR for r in matching), (
-        f"expected ERROR-level for PERMISSION error, got {[r.levelname for r in matching]}"
+        f"expected ERROR-level for PERMISSION error, got "
+        f"{[r.levelname for r in matching]}"
+    )
+
+
+def test_authentication_error_on_integrated_signal_logs_error(
+    caplog: object,
+) -> None:
+    """An AUTHENTICATION error also stays at error level — also actionable."""
+    coord = _make_coordinator()
+    signal = _make_signal(
+        "charge-chargerate",
+        "AUTHENTICATION",
+        "INVALID_TOKEN",
+        name="ChargeRate",
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar.webhooks"):
+        _handle_webhook_signals(coord, [signal])
+
+    matching = [r for r in caplog.records if "ChargeRate" in r.getMessage()]
+    assert matching
+    assert any(r.levelno == logging.ERROR for r in matching), (
+        f"expected ERROR-level for AUTHENTICATION error, got "
+        f"{[r.levelname for r in matching]}"
     )
 
 
@@ -103,7 +160,10 @@ def test_error_on_non_integrated_signal_always_debug(caplog: object) -> None:
     """A signal we don't expose as an entity logs at debug regardless of type."""
     coord = _make_coordinator()
     signal = _make_signal(
-        "some-unmapped-code", "INTEGRATION", "UNKNOWN", name="WeirdSignal"
+        "some-unmapped-code",
+        "PERMISSION",
+        "INSUFFICIENT_PERMISSIONS",
+        name="WeirdSignal",
     )
 
     with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar.webhooks"):

@@ -76,13 +76,11 @@ Two likely reasons:
 2. **The signal isn't included in your Smartcar plan.** Some signals are only available on paid plans. The free tier currently exposes about 9 trigger signals and 9 data signals (subject to change). Check your [Smartcar billing page](https://dashboard.smartcar.com/team/billing) and compare against the [pricing page](https://smartcar.com/pricing#pricing).
 3. **Your vehicle doesn't support the signal.** Even with the right plan, signal support varies by make/model/year. The [compatibility table](https://smartcar.com/product/compatible-vehicles) shows what's available.
 
-### `error for signal X: VEHICLE_STATE:...` in the log
+### `error for signal X: ...` in the log
 
-This is normal, not a problem. Smartcar uses `VEHICLE_STATE` errors to say "this signal can't be read because the vehicle isn't in the relevant state right now". The most common one is `VEHICLE_STATE:NOT_CHARGING` for the `ChargeRate` signal: every time you unplug, the next webhook reports that this datapoint has no value. The integration handles it by setting the corresponding entity to unavailable, which is the right behaviour.
+These are usually normal. Smartcar's webhook payloads carry per-signal errors when a particular reading can't be made — vehicle in the wrong state (`VEHICLE_STATE:NOT_CHARGING` for `ChargeRate` after you unplug), OEM upstream blip (`UPSTREAM:INVALID_DATA` for `TimeToComplete` while charging is suspended), and so on. The integration sets the corresponding entity to `unavailable`, which is the right behaviour.
 
-The integration logs these at DEBUG rather than ERROR (since v2.0.x), so they don't appear in your error log unless debug logging is on. If you see them at error level, you're on an older build — pull the latest.
-
-Errors with other `type` values (`PERMISSION`, `UPSTREAM`, `INTEGRATION`, etc.) are *not* demoted — those still log at error level because they're things you can act on.
+Since v2.0.x the integration only logs at ERROR level for signal errors of types `PERMISSION` or `AUTHENTICATION` — those map to "re-authorise to fix it". Everything else (`VEHICLE_STATE`, `UPSTREAM`, `INTEGRATION`, `COMPATIBILITY`, `RATE_LIMIT`, etc.) drops to DEBUG. If you still see signal errors at ERROR level on the latest build, check that the error `type` really is `PERMISSION` or `AUTHENTICATION`; everything else should be silent unless you've enabled debug logging.
 
 ### Repeated `REAUTHENTICATE` errors
 

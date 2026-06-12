@@ -189,7 +189,7 @@ When the user disables webhooks during the options flow, `_validate_webhook_inpu
 
 The integration has a partial V3 test suite. The split:
 
-**Active V3 tests** (66 tests, all passing locally):
+**Active V3 tests** (70 tests, all passing locally):
 
 - `tests/test_util.py` — 26 pure utility tests for HTTP retry, HMAC, key-path helpers. Unchanged from the V2 suite (`util.py` is V3-clean).
 - `tests/test_auth_impl.py` — 8 tests for `ClientCredentialsTokenManager`, `AsyncConfigEntryAuth`, `ClientCredentialsAuthImpl`. Covers token caching, expiry refresh, 401/403 handling, malformed responses, invalidation, and the bootstrap auth's `with_user_id()` rebinding.

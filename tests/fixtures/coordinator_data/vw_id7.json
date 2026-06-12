@@ -61,5 +61,11 @@
   },
   "location-preciselocation": {
     "value": null
+  },
+  "charge-ischargingcablelatched": {
+    "value": true
+  },
+  "charge-chargeportstatuscolor": {
+    "value": "green"
   }
 }
