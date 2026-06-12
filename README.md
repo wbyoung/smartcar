@@ -161,3 +161,12 @@ Apache 2.0 — same as the original wbyoung/smartcar integration. See [LICENSE.m
 ## Credits
 
 This is a V3 rewrite of [wbyoung/smartcar](https://github.com/wbyoung/smartcar), maintained by [@wbyoung](https://github.com/wbyoung) and [@tube0013](https://github.com/tube0013). The entity model, naming conventions, and the bulk of the platform code (`sensor.py`, `binary_sensor.py`, etc.) come from the original. The auth, config flow, coordinator, and webhook layers are reworked for V3.
+[hacs]: https://hacs.xyz/
+[hacs-repo]: https://github.com/hacs/integration
+[hacs-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
+[hacs-open]: https://my.home-assistant.io/redirect/hacs_repository/?owner=wbyoung&repository=smartcar&category=integration
+[releases]: https://github.com/wbyoung/smartcar/releases
+[config-flow-start]: https://my.home-assistant.io/redirect/config_flow_start/?domain=smartcar
+[smartcar-dashboard]: https://dashboard.smartcar.com/team/applications
+[ha-remote-access]: https://www.home-assistant.io/docs/configuration/remote/
+[gh-sponsors]: https://github.com/sponsors/wbyoung
