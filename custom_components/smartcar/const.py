@@ -1,8 +1,13 @@
 from enum import StrEnum, auto
 
+from .types import APIVersion
+
 DOMAIN = "smartcar"
 DEFAULT_NAME = "Smartcar"
-API_HOST = "https://api.smartcar.com"
+API_ENDPOINT = "https://vehicle.api.smartcar.com/v3"
+API_ENDPOINT_LEGACY = "https://api.smartcar.com/v2.0"
+API_ENDPOINTS: dict[APIVersion, str] = {"v2": API_ENDPOINT_LEGACY, "v3": API_ENDPOINT}
+
 
 PLATFORMS = [
     "sensor",
@@ -14,11 +19,14 @@ PLATFORMS = [
 ]
 
 OAUTH2_AUTHORIZE = "https://connect.smartcar.com/oauth/authorize"
-OAUTH2_TOKEN = "https://auth.smartcar.com/oauth/token"  # noqa: S105
+OAUTH2_TOKEN = "https://iam.smartcar.com/oauth2/token"  # noqa: S105
+OAUTH2_TOKEN_LEGACY = "https://auth.smartcar.com/oauth/token"  # noqa: S105
 SMARTCAR_MODE = "live"
 
+CONF_APPLICATION_ID = "application_id"
 CONF_APPLICATION_MANAGEMENT_TOKEN = "application_management_token"  # noqa: S105
 CONF_CLOUDHOOK = "cloudhook"
+CONF_WEBHOOK_BACKUP_POLLING = "webhook_backup_polling"
 
 
 class Scope(StrEnum):
@@ -114,6 +122,9 @@ class EntityDescriptionKey(StrEnum):
     CHARGE_FAST_CHARGER_PRESENT = auto()
     FIRMWARE_VERSION = auto()
     LAST_WEBHOOK_RECEIVED = auto()
+    LAST_POLLED = auto()
+    PLUG_LATCHED = auto()
+    CHARGE_PORT_STATUS_COLOR = auto()
 
 
 DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS = {

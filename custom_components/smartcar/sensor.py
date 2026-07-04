@@ -98,6 +98,16 @@ SENSOR_TYPES: tuple[SmartcarSensorDescription, ...] = (
         icon="mdi:ev-station",
     ),
     SmartcarSensorDescription(
+        key=EntityDescriptionKey.CHARGE_PORT_STATUS_COLOR,
+        name="Charge Port Status Color",
+        value_key_path="charge-chargeportstatuscolor.value",
+        # String enum: typically "green" (ready/charging fine), "red"
+        # (fault), "blue" (active session), "yellow" (warning). Exact
+        # value set varies by OEM; no ENUM device_class since we don't
+        # have a canonical list.
+        icon="mdi:lightbulb-on",
+    ),
+    SmartcarSensorDescription(
         key=EntityDescriptionKey.CHARGE_CHARGERATE,
         name="Charge Rate",
         value_key_path="charge-chargerate.value",
@@ -358,20 +368,27 @@ async def async_setup_entry(  # noqa: RUF029
     )
     meta_coordinator = entry.runtime_data.meta_coordinator
     _LOGGER.debug("Setting up sensors for VINs: %s", list(coordinators.keys()))
-    entities = [
-        SmartcarSensor(coordinator, description)
-        for coordinator in coordinators.values()
-        for description in SENSOR_TYPES
-        if coordinator.is_scope_enabled(description.key, verbose=True)
-    ] + [
-        SmartcarMetaSensor(
-            meta_coordinator,
-            description,
-            {"identifiers": {(DOMAIN, vehicle_coordinator.vin)}},
-        )
-        for vehicle_coordinator in coordinators.values()
-        for description in META_SENSOR_TYPES
-    ]
+    entities = (
+        [
+            SmartcarSensor(coordinator, description)
+            for coordinator in coordinators.values()
+            for description in SENSOR_TYPES
+            if coordinator.is_scope_enabled(description.key, verbose=True)
+        ]
+        + [
+            SmartcarMetaSensor(
+                meta_coordinator,
+                description,
+                {"identifiers": {(DOMAIN, vehicle_coordinator.vin)}},
+            )
+            for vehicle_coordinator in coordinators.values()
+            for description in META_SENSOR_TYPES
+        ]
+        + [
+            SmartcarLastPolledSensor(coordinator)
+            for coordinator in coordinators.values()
+        ]
+    )
     _LOGGER.info("Adding %s Smartcar sensor entities", len(entities))
     async_add_entities(entities)
 
@@ -418,3 +435,41 @@ class SmartcarMetaSensor(CoordinatorEntity[DataUpdateCoordinator], SensorEntity)
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
+
+
+class SmartcarLastPolledSensor(
+    CoordinatorEntity[SmartcarVehicleCoordinator], SensorEntity
+):
+    """Per-vehicle sensor showing the time of the last successful HTTP poll.
+
+    Backed by ``SmartcarVehicleCoordinator.last_poll_time`` rather than
+    ``coordinator.data``, so it only ticks on actual polls — webhook
+    deliveries don't update it. That's the point: it tells the user
+    whether the polling pipeline is healthy independently of the webhook
+    pipeline. State is ``unknown`` until the first successful poll, which
+    is informative in webhooks-only mode (confirms no polls happening).
+    """
+
+    _attr_has_entity_name = True
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "last_polled"
+    _attr_name = "Last Polled"
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(self, coordinator: SmartcarVehicleCoordinator) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.vin}_{EntityDescriptionKey.LAST_POLLED}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.vin)},
+        )
+
+    @property
+    def native_value(self) -> dt.datetime | None:
+        return self.coordinator.last_poll_time
+
+    @property
+    def available(self) -> bool:
+        # Always available — ``None`` is a meaningful state ("never polled").
+        return True
+

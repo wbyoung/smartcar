@@ -39,6 +39,14 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PLUG,
     ),
     SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.PLUG_LATCHED,
+        name="Charging Cable Latched",
+        value_key_path="charge-ischargingcablelatched.value",
+        # No device_class fits cleanly. PLUG is about being connected
+        # (already covered by PLUG_STATUS) and LOCK's on/off semantics
+        # are inverted from "latched". Plain on/off is fine here.
+    ),
+    SmartcarBinarySensorDescription(
         key=EntityDescriptionKey.BATTERY_HEATER_ACTIVE,
         name="Battery Heater Active",
         value_key_path="tractionbattery-isheateractive.value",
