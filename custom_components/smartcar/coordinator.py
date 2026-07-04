@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+import copy
 from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 import numbers
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import ClientResponseError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import (
@@ -24,17 +25,47 @@ from homeassistant.util import dt as dt_util
 
 from . import util
 from .auth import AbstractAuth
-from .const import CONF_APPLICATION_MANAGEMENT_TOKEN, DOMAIN, EntityDescriptionKey
+from .const import (
+    CONF_APPLICATION_MANAGEMENT_TOKEN,
+    CONF_WEBHOOK_BACKUP_POLLING,
+    DOMAIN,
+    EntityDescriptionKey,
+)
 from .util import key_path_get, key_path_update
 
 _LOGGER = logging.getLogger(__name__)
+
+# values from the smartcar service that denote an imperial measurement and can
+# be converted by one of the imperial_conversion functions defined on an entity
+# description.
+_IMPERIAL_MEASUREMENTS = {"miles", "psi", "gallons"}
+
+
+_SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP: dict[str | None, str] = {
+    "charge-chargelimits": "limit",
+}
 
 VEHICLE_FRONT_ROW = 0
 VEHICLE_BACK_ROW = 1
 VEHICLE_LEFT_COLUMN = 0
 VEHICLE_RIGHT_COLUMN = 1
 
-UPDATE_INTERVAL = timedelta(hours=6)
+# Polling cadence. Both constants apply to the polling path only:
+#   * ``POLL_INTERVAL_MINUTES`` (2 h) — idle: no active charging session.
+#   * ``POLL_INTERVAL_CHARGING_MINUTES`` (1 h) — vehicle is charging.
+# Polling is enabled whenever there's no webhook management token, OR the
+# user has explicitly opted into ``CONF_WEBHOOK_BACKUP_POLLING`` on top of
+# webhooks. See ``SmartcarVehicleCoordinator._compute_update_interval``.
+POLL_INTERVAL_MINUTES = 120
+POLL_INTERVAL_CHARGING_MINUTES = 60
+
+# Smartcar signal-error types that warrant ``error``-level logging.
+# Anything else drops to ``debug``. ``VEHICLE_STATE`` (e.g. NOT_CHARGING
+# for ChargeRate after unplugging) and ``UPSTREAM`` (e.g. INVALID_DATA
+# for TimeToComplete during suspended charging) are transient conditions
+# the user can't act on; only permission and auth failures actually need
+# an operator response.
+_ACTIONABLE_ERROR_TYPES = frozenset({"PERMISSION", "AUTHENTICATION"})
 
 
 @dataclass
@@ -276,6 +307,18 @@ DATAPOINT_ENTITY_KEY_MAP = {
         "/charge",
         "isPluggedIn",
     ),
+    EntityDescriptionKey.PLUG_LATCHED: DatapointConfig(
+        "charge-ischargingcablelatched",
+        ["read_charge"],
+        None,
+        None,
+    ),
+    EntityDescriptionKey.CHARGE_PORT_STATUS_COLOR: DatapointConfig(
+        "charge-chargeportstatuscolor",
+        ["read_charge"],
+        None,
+        None,
+    ),
     EntityDescriptionKey.RANGE: DatapointConfig(
         "tractionbattery-range",
         ["read_battery"],
@@ -510,15 +553,84 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.batch_requests: set[EntityDescriptionKey] = set()
         self.data: dict[str, Any] = {}
+        # Stamped at the end of every successful HTTP poll; surfaced as
+        # the per-vehicle "Last Polled" diagnostic sensor. Distinct from
+        # HA's ``last_update_success_time`` (which also ticks on webhook
+        # merges) — this one is a polling-pipeline-only heartbeat.
+        self.last_poll_time: dt.datetime | None = None
 
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{vin}",
-            update_interval=UPDATE_INTERVAL
-            if CONF_APPLICATION_MANAGEMENT_TOKEN not in entry.data
-            else None,
+            update_interval=self._compute_update_interval(),
         )
+
+    def _compute_update_interval(
+        self, data: dict[str, Any] | None = None
+    ) -> timedelta | None:
+        """Pick the right polling interval for the current state.
+
+        Selection rule:
+          * Webhooks configured + backup toggle off (default) → ``None``
+            (no polling at all — pure webhooks mode).
+          * Charging (in any mode where polling is enabled) →
+            ``POLL_INTERVAL_CHARGING_MINUTES`` (1 h).
+          * Idle (in any mode where polling is enabled) →
+            ``POLL_INTERVAL_MINUTES`` (2 h).
+
+        Args:
+            data: Coordinator data to read charging state from. If
+                omitted, live ``self.data`` is used — appropriate during
+                ``__init__`` when it's still empty.
+
+        Returns:
+            The next-refresh interval, or ``None`` to disable polling.
+        """
+        source = data if data is not None else self.data
+        is_charging = (source.get("charge-ischarging") or {}).get("value") is True
+        has_webhooks = CONF_APPLICATION_MANAGEMENT_TOKEN in self.entry.data
+        backup_polling = bool(self.entry.data.get(CONF_WEBHOOK_BACKUP_POLLING, False))
+
+        if has_webhooks and not backup_polling:
+            return None
+
+        if is_charging:
+            return timedelta(minutes=POLL_INTERVAL_CHARGING_MINUTES)
+
+        return timedelta(minutes=POLL_INTERVAL_MINUTES)
+
+    def _refresh_update_interval(
+        self, data: dict[str, Any] | None = None
+    ) -> None:
+        """Recompute + reassign ``self.update_interval`` from (new) data.
+
+        Called after both the polling merge and the webhook merge so a
+        charging-state transition immediately changes how often we poll
+        next. ``DataUpdateCoordinator`` reads ``self.update_interval``
+        when scheduling — reassigning is enough.
+        """
+        new_interval = self._compute_update_interval(data)
+        if new_interval != self.update_interval:
+            _LOGGER.debug(
+                "Coordinator %s: update_interval %s -> %s",
+                self.name,
+                self.update_interval,
+                new_interval,
+            )
+            self.update_interval = new_interval
+
+
+    @callback
+    def async_set_updated_data(self, data: dict[str, Any]) -> None:
+        """Override to refresh the update interval after webhook merges.
+
+        The webhook handler pushes data via this method. Recomputing the
+        interval here means a charge start/stop reported via webhook
+        immediately changes how often we poll (in backup-polling mode).
+        """
+        super().async_set_updated_data(data)
+        self._refresh_update_interval(data)
 
     def is_scope_enabled(
         self, sensor_key: EntityDescriptionKey, *, verbose: bool = False
@@ -650,11 +762,22 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         )
 
         try:
-            response = await util.async_request_with_retry(
-                lambda: self.auth.request("post", request_path, json=request_body),
-                logger=_LOGGER,
-                context=f"Coordinator {self.name}",
-            )
+            if self.auth.version == "v2":
+                response = await util.async_request_with_retry(
+                    lambda: self.auth.request_v2(
+                        "post", request_path, json=request_body
+                    ),
+                    logger=_LOGGER,
+                    context=f"Coordinator {self.name}",
+                )
+            else:
+                assert self.auth.version == "v3"
+                request_path = f"vehicles/{self.vehicle_id}/signals"
+                response = await util.async_request_with_retry(
+                    lambda: self.auth.request_v3("get", request_path),
+                    logger=_LOGGER,
+                    context=f"Coordinator {self.name}",
+                )
 
         # response errors here for responses that have actually completed, i.e.
         # 4xx responses are for errors related to requests made in the
@@ -681,11 +804,17 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         response.raise_for_status()
         response_data = await response.json()
 
-        if "responses" not in response_data:
-            msg = "Invalid batch response format"
-            raise UpdateFailed(msg)
+        if self.auth.version == "v2":
+            if "responses" not in response_data:
+                msg = "Invalid batch response format"
+                raise UpdateFailed(msg)
 
-        return self._merge_batch_data(response_data)
+            return self._merge_batch_data(response_data)
+        assert self.auth.version == "v3"
+        merged = self._merge_signal_data(response_data)
+        self._refresh_update_interval(merged)
+        self.last_poll_time = dt_util.utcnow()
+        return merged
 
     def _merge_batch_data(self, batch_data: dict[str, Any]) -> dict[str, Any]:
         """Merge data from the responses from a batch request.
@@ -736,6 +865,20 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
 
             return updated_data
 
+    def _merge_signal_data(self, signal_data: dict[str, Any]) -> dict[str, Any]:
+        """Merge data response data from a v3 vehicle signals request.
+
+        Returns:
+            The newly merged data.
+        """
+        with self.create_updated_data() as (add, updated_data):
+            for signal in signal_data.get("data", []):
+                add.from_signal_attributes(signal.get("attributes", {}))
+
+            _LOGGER.debug("Coordinator %s: Signal polling update processed", self.name)
+
+            return updated_data
+
     @contextmanager
     def create_updated_data(
         self,
@@ -749,6 +892,67 @@ class _DataAdder:
     def __init__(self, data: dict[str, Any]) -> None:
         super().__init__()
         self.data = data
+        self._addition_made = False
+
+    @property
+    def addition_made(self) -> bool:
+        return self._addition_made
+
+    def from_signal_attributes(self, signal: dict) -> None:
+        name: str | None = signal.get("name")
+        status = signal.get("status", {})
+        is_error = status.get("value") == "ERROR"
+        code: str | None = signal.get("code")
+        body = copy.deepcopy(signal.get("body", {}))
+        meta = signal.get("meta", {})
+
+        if is_error:
+            error_obj = status.get("error", {})
+            # Only actionable error types (things the user can fix by
+            # re-authorising) log at ERROR. VEHICLE_STATE, UPSTREAM,
+            # RATE_LIMIT, COMPATIBILITY, INTEGRATION etc. drop to DEBUG.
+            is_actionable = (
+                _is_integrated(signal)
+                and error_obj.get("type") in _ACTIONABLE_ERROR_TYPES
+            )
+            _handle_webhook_signal_error(
+                name,
+                error_obj,
+                level="error" if is_actionable else "debug",
+            )
+
+            body = {"value": None}
+
+        if body.get("unit") == "percent":
+            _handle_percent_unit_conversion(code, body)
+
+        if code in DATAPOINT_CODE_MAP:
+            assert code is not None
+
+            data_age = meta.get("oemUpdatedAt") if not is_error else None
+            fetched_at = meta.get("retrievedAt") if not is_error else None
+            unit = body.pop("unit", None)
+            unit_system = (
+                "imperial"
+                if unit in _IMPERIAL_MEASUREMENTS
+                else "metric"
+                if unit
+                else None
+            )
+
+            if data_age:
+                data_age = dt_util.utc_from_timestamp(data_age / 1000)
+            if fetched_at:
+                fetched_at = dt_util.utc_from_timestamp(fetched_at / 1000)
+
+            self.from_response_body(
+                code,
+                body=body,
+                unit_system=unit_system,
+                data_age=data_age,
+                fetched_at=fetched_at,
+                can_clear_meta=not is_error,
+            )
 
     def from_response_body(
         self,
@@ -859,6 +1063,8 @@ class _DataAdder:
         unit_system: str | None,
         can_clear: bool,
     ) -> None:
+        self._addition_made = True
+
         for datapoint in datapoints:
             storage_key = datapoint.storage_key
 
@@ -876,3 +1082,33 @@ class _DataAdder:
                 self.data[f"{storage_key}:fetched_at"] = fetched_at
             elif can_clear:
                 self.data.pop(f"{storage_key}:fetched_at", None)
+
+
+def _is_integrated(signal: dict) -> bool:
+    code: str | None = signal.get("code")
+    return code in DATAPOINT_CODE_MAP
+
+
+def _handle_percent_unit_conversion(code: str | None, body: dict[str, Any]) -> None:
+    if "values" in body:
+        item_key = _SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP.get(code) or "value"
+        values = body["values"]
+        values = [value | {item_key: value[item_key] / 100} for value in values]
+        body["values"] = values
+        body.pop("unit")
+    else:
+        body["value"] /= 100
+        body.pop("unit")
+
+
+def _handle_webhook_signal_error(
+    signal_name: str | None,
+    error: dict,
+    *,
+    level: Literal["error", "debug"] = "error",
+) -> None:
+    error_type = error.get("type")
+    error_code = error.get("code")
+
+    logger_method = getattr(_LOGGER, level)
+    logger_method("error for signal %s: %s:%s", signal_name, error_type, error_code)

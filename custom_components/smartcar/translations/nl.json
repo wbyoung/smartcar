@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "webhooks": {
+        "data": {
+          "webhook_backup_polling": "Polling gebruiken als backup"
+        },
+        "data_description": {
+          "webhook_backup_polling": "Wanneer webhooks zijn ingeschakeld, ook periodiek de API opvragen als vangnet voor gemiste webhooks. Verbruikt API-quota; laat uit als de webhook-bezorging in jouw opstelling betrouwbaar is."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "webhooks": {
+        "data": {
+          "webhook_backup_polling": "Polling gebruiken als backup"
+        },
+        "data_description": {
+          "webhook_backup_polling": "Wanneer webhooks zijn ingeschakeld, ook periodiek de API opvragen als vangnet voor gemiste webhooks."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "last_polled": {
+        "name": "Laatst gepolled"
+      },
+      "charge_port_status_color": {
+        "name": "Laadpoort statuskleur"
+      }
+    },
+    "binary_sensor": {
+      "plug_latched": {
+        "name": "Laadkabel vergrendeld"
+      }
+    }
+  }
+}
