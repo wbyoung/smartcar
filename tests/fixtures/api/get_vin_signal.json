@@ -1,0 +1,39 @@
+{
+  "data": {
+    "id": "vehicleidentification-vin",
+    "type": "signal",
+    "attributes": {
+      "code": "vehicleidentification-vin",
+      "name": "VIN",
+      "group": "VehicleIdentification",
+      "status": {
+        "value": "SUCCESS"
+      },
+      "body": {
+        "value": "5YJSA1CN5DFP00101"
+      }
+    },
+    "meta": {
+      "ingestedAt": "2026-06-24T03:52:17.940Z"
+    },
+    "links": {
+      "self": "https://vehicle.api.smartcar.com/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin"
+    }
+  },
+  "included": {
+    "vehicle": {
+      "id": "36ab27d0-fd9d-4455-823a-ce30af709ffc",
+      "type": "vehicle",
+      "attributes": {
+        "make": "TESLA",
+        "model": "Model S",
+        "year": 2014,
+        "powertrainType": "BEV",
+        "mode": "live"
+      },
+      "links": {
+        "self": "https://vehicle.api.smartcar.com/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc"
+      }
+    }
+  }
+}

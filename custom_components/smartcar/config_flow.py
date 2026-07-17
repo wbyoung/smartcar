@@ -8,6 +8,7 @@ from aiohttp import ClientConnectorError, ClientError
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlowResult,
     OptionsFlow,
@@ -15,7 +16,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2FlowHandler,
+    AbstractOAuth2Implementation,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -26,7 +31,8 @@ import voluptuous as vol
 from . import populate_entry_data, vehicle_vins_in_use
 from .auth_impl import AccessTokenAuthImpl
 from .const import (
-    API_HOST,
+    API_ENDPOINTS,
+    CONF_APPLICATION_ID,
     CONF_APPLICATION_MANAGEMENT_TOKEN,
     CONF_CLOUDHOOK,
     CONFIGURABLE_SCOPES,
@@ -37,8 +43,16 @@ from .const import (
     SMARTCAR_MODE,
     Scope,
 )
-from .errors import EmptyVehicleListError, InvalidAuthError, MissingVINError
-from .util import unique_id_from_entry_data, vins_from_entry_data
+from .errors import (
+    EmptyVehicleListError,
+    InvalidAuthError,
+    UnsupportedUserConfigurationError,
+)
+from .util import (
+    api_version_for_client_id,
+    unique_id_from_entry_data,
+    vins_from_entry_data,
+)
 from .webhooks import webhook_url_from_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,10 +60,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_USE_WEBHOOKS = "use_webhooks"
 
 GENERAL_CONFIGURATION_SCHEMA = {
-    vol.Required(CONF_USE_WEBHOOKS, default=True): bool,
+    vol.Optional(CONF_APPLICATION_ID): TextSelector(
+        config=TextSelectorConfig(type=TextSelectorType.TEXT)
+    ),
     vol.Optional(CONF_APPLICATION_MANAGEMENT_TOKEN): TextSelector(
         config=TextSelectorConfig(type=TextSelectorType.TEXT)
     ),
+    vol.Required(CONF_USE_WEBHOOKS, default=True): bool,
 }
 BASE_DESCRIPTION_PLACEHOLDERS = {
     "webhook_url": "webhooks-not-enabled",
@@ -60,8 +77,10 @@ BASE_DESCRIPTION_PLACEHOLDERS = {
 
 def _validate_general_configuration_input(
     user_input: dict[str, Any],
+    flow_impl: AbstractOAuth2Implementation,
     errors: dict[str, str],
 ) -> None:
+    application_id = user_input.get(CONF_APPLICATION_ID)
     use_webhooks = user_input[CONF_USE_WEBHOOKS]
     management_token = user_input.get(CONF_APPLICATION_MANAGEMENT_TOKEN)
 
@@ -70,6 +89,9 @@ def _validate_general_configuration_input(
 
     if not use_webhooks and management_token:
         errors["base"] = "extraneous_management_token"
+
+    if not application_id and api_version_for_client_id(flow_impl.client_id) == "v3":
+        errors["base"] = "no_application_id"
 
     if not management_token:
         user_input.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
@@ -117,13 +139,43 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
 
+        assert self.entry_data is not None
+
         return {
             "mode": SMARTCAR_MODE,
             "scope": " ".join(self.requested_scopes),
-        }
+        } | (
+            {
+                # for v3, smartcar shifted to what they refer to as application-
+                # level access tokens. they use oauth to describe their auth
+                # scheme, but this is something seemingly much more customized
+                # or specific to their end goals as it's different from most
+                # flows. in particular:
+                #
+                #   - client_id is actually expected to be the application_id.
+                #   - client_id is not used here at all & instead only used
+                #     for token requests (which happen outside of the oauth
+                #     flow).
+                #   - the flow is used to add a connection for a user and a
+                #     vehicle.
+                #   - the resulting token is basically discarded.
+                #   - a non-standard `user_id` is included in the redirect URL
+                #     which they expect will be captured & used for future
+                #     requests. (this allows a backend app to determine the
+                #     correct end-user in multi-user app configurations).
+                "client_id": self.entry_data.get(CONF_APPLICATION_ID, ""),
+            }
+            if api_version_for_client_id(self.flow_impl.client_id) == "v3"
+            else {}
+        )
 
     def _initial_data(self) -> dict[str, Any]:
-        return self._get_reauth_entry().data if self.source == SOURCE_REAUTH else {}
+        result: dict[str, Any] = {}
+        if self.source == SOURCE_REAUTH:
+            result = self._get_reauth_entry().data
+        if self.source == SOURCE_RECONFIGURE:
+            result = self._get_reconfigure_entry().data
+        return result
 
     @property
     def selected_scopes(self) -> list[Scope]:
@@ -155,7 +207,7 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
 
         if user_input is not None:
             user_input = {**user_input}
-            _validate_general_configuration_input(user_input, errors)
+            _validate_general_configuration_input(user_input, self.flow_impl, errors)
 
         if user_input is not None and not errors:
             self.entry_data = {**user_input}
@@ -223,6 +275,20 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             return await self.async_step_webhooks()
         return await super().async_step_auth(user_input)
 
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,  # noqa: ARG002
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        Replays the customized flow (webhooks then scopes) before re-running
+        the OAuth authorization so permissions can be changed after setup.
+
+        Returns:
+            The config flow result.
+        """
+        return await self.async_step_user()
+
     async def async_step_reauth(
         self,
         entry_data: Mapping[str, Any],  # noqa: ARG002
@@ -252,7 +318,12 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
 
         session = async_get_clientsession(self.hass)
         token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-        auth = AccessTokenAuthImpl(session, token, API_HOST)
+        auth = AccessTokenAuthImpl(
+            session,
+            token,
+            API_ENDPOINTS,
+            version=api_version_for_client_id(self.flow_impl.client_id),
+        )
         data = {**self.entry_data, **data}
         data.pop(CONF_USE_WEBHOOKS, None)
         description_placeholders = {**BASE_DESCRIPTION_PLACEHOLDERS}
@@ -266,9 +337,11 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
         except EmptyVehicleListError:
             _LOGGER.exception("No vehicles returned")
             return self.async_abort(reason="no_vehicles")
-        except MissingVINError:
-            _LOGGER.exception("Missing vehicle VIN")
-            return self.async_abort(reason="unknown")
+        except UnsupportedUserConfigurationError:
+            _LOGGER.exception(
+                "Unsupported user configuration detected; expected single user"
+            )
+            return self.async_abort(reason="not_single_user_app")
         except InvalidAuthError:
             _LOGGER.exception("Failed to authenticate")
             return self.async_abort(reason="invalid_access_token")
@@ -278,14 +351,19 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
 
         await self.async_set_unique_id(unique_id_from_entry_data(data))
 
-        other_vins = vehicle_vins_in_use(
-            self.hass,
-            self._get_reauth_entry() if self.source == SOURCE_REAUTH else None,
+        current_entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+            if self.source == SOURCE_RECONFIGURE
+            else None
         )
+
+        other_vins = vehicle_vins_in_use(self.hass, current_entry)
         duplicate_vins = [
             details["vin"]
             for details in data.get("vehicles", {}).values()
-            if details["vin"] in other_vins
+            if details.get("vin") in other_vins
         ]
 
         if duplicate_vins:
@@ -295,8 +373,6 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             )
 
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-
             self._abort_if_unique_id_mismatch(
                 reason="wrong_vehicles",
                 description_placeholders={
@@ -305,16 +381,27 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             )
 
             return self.async_update_reload_and_abort(
-                reauth_entry, data={**self._initial_data(), **data}
+                current_entry, data={**self._initial_data(), **data}
             )
 
-        self._abort_if_unique_id_configured()
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(
+                reason="wrong_vehicles",
+                description_placeholders={
+                    "vins": vins_from_entry_data(self._initial_data())
+                },
+            )
+        else:
+            self._abort_if_unique_id_configured()
 
         # populate webhook details
         if CONF_APPLICATION_MANAGEMENT_TOKEN in data:
             try:
                 webhook_id, webhook_url, cloudhook = await _get_webhook_details(
-                    self.hass
+                    self.hass,
+                    self._initial_data().get(CONF_WEBHOOK_ID)
+                    if self.source == SOURCE_RECONFIGURE
+                    else None,
                 )
             except cloud.CloudNotConnected:
                 return self.async_abort(reason="cloud_not_connected")
@@ -327,6 +414,20 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 **description_placeholders,
                 "webhook_url": webhook_url,
             }
+
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_data = {**self._initial_data(), **data}
+            if CONF_APPLICATION_MANAGEMENT_TOKEN not in data:
+                # webhooks were disabled during reconfigure; drop stale details
+                reconfigure_data.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
+                reconfigure_data.pop(CONF_WEBHOOK_ID, None)
+                reconfigure_data.pop(CONF_CLOUDHOOK, None)
+
+            return self.async_update_reload_and_abort(
+                current_entry,
+                data=reconfigure_data,
+                reason="reconfigure_successful",
+            )
 
         return self.async_create_entry(
             title=DEFAULT_NAME,
@@ -368,7 +469,10 @@ class SmartcarOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             user_input = {**user_input}
-            _validate_general_configuration_input(user_input, errors)
+            impl = await async_get_config_entry_implementation(
+                self.hass, self.config_entry
+            )
+            _validate_general_configuration_input(user_input, impl, errors)
 
         if user_input is not None and not errors:
             entry_data.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)

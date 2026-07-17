@@ -16,17 +16,23 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import util
 from .auth import AbstractAuth
 from .auth_impl import AccessTokenAuthImpl, AsyncConfigEntryAuth
-from .const import API_HOST, CONF_CLOUDHOOK, DOMAIN, PLATFORMS, Scope
+from .const import API_ENDPOINTS, CONF_CLOUDHOOK, DOMAIN, PLATFORMS, Scope
 from .coordinator import SmartcarVehicleCoordinator
-from .errors import EmptyVehicleListError, InvalidAuthError, MissingVINError
+from .errors import (
+    EmptyVehicleListError,
+    InvalidAuthError,
+    UnsupportedUserConfigurationError,
+)
 from .services import async_setup_services
 from .types import SmartcarData
+from .util import api_version_for_client_id
 from .webhooks import handle_webhook, webhook_url_from_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,9 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ConfigEntryError: For overlapping VIN in config entries.
     """
     implementation = await async_get_config_entry_implementation(hass, entry)
+    version = api_version_for_client_id(implementation.client_id)
     websession = async_get_clientsession(hass)
     oauth_session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(websession, oauth_session, API_HOST)
+    auth = AsyncConfigEntryAuth(
+        websession,
+        implementation,
+        oauth_session,
+        API_ENDPOINTS,
+        user_id=entry.data.get("user_id"),
+    )
     coordinators: dict[str, SmartcarVehicleCoordinator] = {}
     meta_coordinator = DataUpdateCoordinator(
         hass, _LOGGER, name=f"{DOMAIN}_meta", config_entry=entry
@@ -73,29 +86,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     other_vins = vehicle_vins_in_use(hass, entry)
 
     for vehicle_id, details in entry.data.get("vehicles", {}).items():
-        vin = details["vin"]
+        vin = details.get("vin")
         make = details.get("make")
         model = details.get("model")
         year = details.get("year")
 
-        if vin in other_vins:
+        if vin is not None and vin in other_vins:
             msg = f"Cannot setup multiple config entries with VIN {vin}"
             raise ConfigEntryError(msg)
+
+        device_id = vehicle_id
+
+        if version == "v2" and vin:
+            device_id = vin
 
         # register device
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, vin)},
+            identifiers={(DOMAIN, device_id)},
             manufacturer=make,
             model=f"{model} ({year})" if model and year else model,
-            name=f"{make} {model}" if make and model else f"Smartcar {vin[-4:]}",
+            name=f"{make} {model}"
+            if make and model
+            else f"Smartcar {(vin or vehicle_id)[-4:]}",
         )
-        _LOGGER.info("Registered device for VIN: %s", vin)
+        _LOGGER.info("Registered device for %s (VIN: %s)", vehicle_id, vin)
 
         # create and store coordinator
-        coordinator = SmartcarVehicleCoordinator(hass, auth, vehicle_id, vin, entry)
-        coordinators[vin] = coordinator
-        _LOGGER.debug("Coordinator created and initial data fetched for VIN: %s", vin)
+        coordinators[vehicle_id] = SmartcarVehicleCoordinator(
+            hass,
+            auth=auth,
+            vehicle_id=vehicle_id,
+            vin=vin,
+            entry=entry,
+            version=version,
+        )
+        _LOGGER.debug(
+            "Coordinator created and initial data fetched for %s (VIN: %s)",
+            vehicle_id,
+            vin,
+        )
 
     # setup platforms before doing first refresh. this gets the entity registry
     # populated with the desired entities & allows the coordinator to determine
@@ -119,6 +149,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         _LOGGER.debug("Webhooks are not enabled")
 
+    if auth.version == "v2":
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"legacy_client_id_{entry.entry_id}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="legacy_client_id",
+            translation_placeholders={
+                "title": entry.title,
+                "docs_url": "https://github.com/wbyoung/smartcar#upgrading-from-legacy-v2-api-to-v3",
+            },
+        )
+
     await asyncio.gather(
         *[async_do_first_refresh(coordinator) for coordinator in coordinators.values()]
     )
@@ -140,7 +185,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_do_first_refresh(coordinator: SmartcarVehicleCoordinator) -> None:
     await coordinator.async_config_entry_first_refresh()
     _LOGGER.debug(
-        "Coordinator created and initial data fetched for VIN: %s", coordinator.vin
+        "Coordinator created and initial data fetched for %s (VIN: %s)",
+        coordinator.vehicle_id,
+        coordinator.vin,
     )
 
 
@@ -197,11 +244,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version == 1:
         old_data = config_entry.data
+        implementation = await async_get_config_entry_implementation(hass, config_entry)
         session = async_get_clientsession(hass)
         token = old_data[CONF_TOKEN]
         access_token = token[CONF_ACCESS_TOKEN]
         scopes = token["scope"].split(" ")
-        auth = AccessTokenAuthImpl(session, access_token, API_HOST)
+        auth = AccessTokenAuthImpl(
+            session,
+            access_token,
+            API_ENDPOINTS,
+            version=api_version_for_client_id(implementation.client_id),
+        )
 
         # copy old data & remove old keys
         new_data = {**old_data}
@@ -258,7 +311,8 @@ def vehicle_vins_in_use(
         vehicle["vin"]
         for other_entry in hass.config_entries.async_entries(DOMAIN)
         for vehicle in other_entry.data.get("vehicles", {}).values()
-        if not config_entry or other_entry.unique_id != config_entry.unique_id
+        if vehicle.get("vin")
+        and (not config_entry or other_entry.unique_id != config_entry.unique_id)
     }
 
 
@@ -286,6 +340,7 @@ async def _store_all_vehicles(
 
     Raises:
         EmptyVehicleListError: If no vehicles are found.
+        UnsupportedUserConfigurationError: If there is not exactly 1 user.
         InvalidAuthError: If the request cannot be authorized.
         ClientResponseError: If there is a request error.
     """
@@ -295,13 +350,48 @@ async def _store_all_vehicles(
     data["vehicles"] = {}
 
     try:
-        vehicle_list_resp = await auth.request(
-            "get",
-            "vehicles",
-        )
-        vehicle_list_resp.raise_for_status()
-        vehicle_list_data = await vehicle_list_resp.json()
-        vehicle_ids = vehicle_list_data.get("vehicles", [])
+        if auth.version == "v2":
+            vehicle_list_resp = await auth.request_v2("get", "vehicles")
+            vehicle_list_resp.raise_for_status()
+            vehicle_list_data = await vehicle_list_resp.json()
+            vehicle_ids = vehicle_list_data.get("vehicles", [])
+        else:
+            assert auth.version == "v3"
+            connections_list_resp = await auth.request_v3("get", "connections")
+            connections_list_resp.raise_for_status()
+            connections_list_data = await connections_list_resp.json()
+            vehicle_ids = [
+                vehicle_id
+                for connection in connections_list_data.get("data", [])
+                if (
+                    vehicle_id := connection.get("relationships", {})
+                    .get("vehicle", {})
+                    .get("data", {})
+                    .get("id", None)
+                )
+            ]
+            user_ids = {
+                user_id
+                for connection in connections_list_data.get("data", [])
+                if (
+                    user_id := connection.get("relationships", {})
+                    .get("user", {})
+                    .get("data", {})
+                    .get("id", None)
+                )
+            }
+
+            # check for an empty vehicle list first: with no connections at
+            # all, the user count check below would misreport the problem as
+            # a multi-user configuration issue.
+            if not vehicle_ids:
+                raise EmptyVehicleListError
+
+            if len(user_ids) != 1:
+                raise UnsupportedUserConfigurationError
+
+            auth.user_id = data["user_id"] = next(iter(user_ids))
+
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
             msg = f"Auth error fetching vehicle list: {err.status}"
@@ -326,47 +416,57 @@ async def _store_vehicle_details(
     """Fetch and store data for a single vehicle.
 
     Raises:
-        MissingVINError: If the VIN is not available.
         InvalidAuthError: If the request cannot be authorized.
         ClientResponseError: If there is a request error.
     """
 
     try:
         _LOGGER.debug("Fetching VIN for vehicle ID: %s", vehicle_id)
-        vin_resp = await auth.request(
-            "get",
-            f"vehicles/{vehicle_id}/vin",
-        )
-        vin_resp.raise_for_status()
-        vin_data = await vin_resp.json()
-        vin = vin_data.get("vin")
+        if auth.version == "v2":
+            vin_resp = await auth.request_v2("get", f"vehicles/{vehicle_id}/vin")
+            vin_resp.raise_for_status()
+            vin_data = await vin_resp.json()
+            vin = vin_data.get("vin")
+        else:
+            assert auth.version == "v3"
+            signals_resp = await auth.request_v3(
+                "get",
+                f"vehicles/{vehicle_id}/signals/vehicleidentification-vin",
+            )
+            signals_resp.raise_for_status()
+            signals_data = await signals_resp.json()
+            vehicle_info = (
+                signals_data.get("included", {})
+                .get("vehicle", {})
+                .get("attributes", {})
+            )
 
-        if not vin:
-            msg = f"No VIN for vehicle {vehicle_id}"
-            raise MissingVINError(msg)
+            vin = (
+                signals_data.get("data", {})
+                .get("attributes", {})
+                .get("body", {})
+                .get("value", None)
+            )
 
-        data["vehicles"][vehicle_id] = {
-            "vin": vin,
-        }
+        if auth.version == "v2":
+            _LOGGER.debug("Fetching attributes for vehicle ID: %s", vehicle_id)
+            attr_resp = await auth.request_v2("get", f"vehicles/{vehicle_id}")
+            attr_resp.raise_for_status()
+            vehicle_info = await attr_resp.json()
 
-        _LOGGER.debug("Fetching attributes for vehicle ID: %s", vehicle_id)
-        attr_resp = await auth.request(
-            "get",
-            f"vehicles/{vehicle_id}",
-        )
-        attr_resp.raise_for_status()
-        vehicle_info = await attr_resp.json()
         make = vehicle_info.get("make")
         model = vehicle_info.get("model")
-        year = vehicle_info.get("year")
+        year = str(vehicle_info.get("year"))
 
-        data["vehicles"][vehicle_id].update(
-            {
-                "make": make,
-                "model": model,
-                "year": year,
-            }
-        )
+        data["vehicles"][vehicle_id] = {
+            "make": make,
+            "model": model,
+            "year": year,
+        }
+
+        if vin:
+            data["vehicles"][vehicle_id]["vin"] = vin
+
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
             msg = f"Auth error [{err.status}] during vehicle setup"

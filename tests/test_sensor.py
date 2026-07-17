@@ -23,9 +23,10 @@ from pytest_homeassistant_custom_component.common import (
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
+from custom_components.smartcar import sensor as sensor_module
 from custom_components.smartcar.const import (
     DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS,
-    OAUTH2_TOKEN,
+    OAUTH2_TOKEN_LEGACY,
     REQUIRED_SCOPES,
     EntityDescriptionKey,
 )
@@ -37,8 +38,48 @@ from custom_components.smartcar.coordinator import (
 )
 from custom_components.smartcar.entity import SmartcarEntity
 from custom_components.smartcar.sensor import SmartcarSensorDescription
+from custom_components.smartcar.types import APIVersion
 
 from . import setup_added_integration, setup_integration
+
+
+def test_diag_status_cast() -> None:
+    """Test extraction of diagnostic statuses from webhook signal bodies."""
+    assert sensor_module._diag_status({"status": "OK"}) == "OK"
+    assert sensor_module._diag_status({"value": "WARNING"}) == "WARNING"
+    assert sensor_module._diag_status({}) is None
+    assert sensor_module._diag_status("OK") == "OK"
+    assert sensor_module._diag_status(None) is None
+
+
+def test_dtc_count_cast() -> None:
+    """Test extraction of trouble code counts from webhook signal bodies."""
+    assert sensor_module._dtc_count({"value": 2}) == 2
+    assert sensor_module._dtc_count({"count": 3}) == 3
+    assert sensor_module._dtc_count({}) is None
+    assert sensor_module._dtc_count(4) == 4
+    assert sensor_module._dtc_count(None) is None
+
+
+def test_dtc_list_cast() -> None:
+    """Test extraction of trouble code lists from webhook signal bodies."""
+    assert (
+        sensor_module._dtc_list({"value": [{"code": "P0100"}, "P0200"]})
+        == "P0100, P0200"
+    )
+    assert sensor_module._dtc_list({"values": ["P0300"]}) == "P0300"
+    assert sensor_module._dtc_list({"codes": ["P0400"]}) == "P0400"
+    assert sensor_module._dtc_list({"value": "P0500"}) == "P0500"
+    assert sensor_module._dtc_list({}) == "none"
+    assert sensor_module._dtc_list(None) is None
+
+
+def test_hvac_number_cast() -> None:
+    """Test extraction of HVAC numbers from webhook signal bodies."""
+    assert sensor_module._hvac_number({"value": 21.5}) == 21.5
+    assert sensor_module._hvac_number({}) is None
+    assert sensor_module._hvac_number(19) == 19
+    assert sensor_module._hvac_number(None) is None
 
 
 @pytest.mark.usefixtures("enable_all_entities")
@@ -473,7 +514,7 @@ async def test_expired_token_update_with_polling_disabled(
     )
 
     aioclient_mock.post(
-        OAUTH2_TOKEN,
+        OAUTH2_TOKEN_LEGACY,
         status=400,
         json={
             "error": "invalid_grant",
@@ -515,7 +556,7 @@ async def test_expired_token_invalid_update_with_polling_disabled(
     )
 
     aioclient_mock.post(
-        OAUTH2_TOKEN,
+        OAUTH2_TOKEN_LEGACY,
         status=500,
         json={
             "error": "server_error",
@@ -627,7 +668,7 @@ async def test_restore_sensor_save_state(
 
     await setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["vin"]]
+    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["id"]]
     coordinator.data = coordinator_data
 
     await async_mock_restore_state_shutdown_restart(hass)  # trigger saving state
@@ -680,7 +721,7 @@ async def test_restore_state(
 
     await setup_added_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["vin"]]
+    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["id"]]
     state = hass.states.get(entity_id)
     assert state
     assert state.state == sensor_state
@@ -787,7 +828,7 @@ async def test_restore_state_from_v2(
 
     await setup_added_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["vin"]]
+    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["id"]]
 
     coordinator_data = {
         key: data
@@ -814,7 +855,9 @@ async def test_async_update_internals(
 
     @dataclass(kw_only=True)
     class MockCoordinator:
+        vehicle_id: str | None = None
         vin: str | None = None
+        version: APIVersion | None = None
 
     @dataclass(kw_only=True)
     class MockEntityDescription:

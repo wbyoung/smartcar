@@ -3,6 +3,8 @@ import logging
 
 from aiohttp import ClientResponse, ClientSession
 
+from .types import APIVersion
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -14,20 +16,58 @@ _LOGGER = logging.getLogger(__name__)
 class AbstractAuth(ABC):
     """Abstract class to make authenticated requests."""
 
-    def __init__(self, websession: ClientSession, host: str) -> None:
+    def __init__(
+        self,
+        websession: ClientSession,
+        endpoints: dict[APIVersion, str],
+        *,
+        version: APIVersion,
+        user_id: str | None = None,
+    ) -> None:
         """Initialize the auth."""
         self._websession = websession
-        self._host = host
+        self._endpoints = endpoints
+        self._version = version
+        self._user_id = user_id
+
+    @property
+    def user_id(self) -> str | None:
+        return self._user_id
+
+    @user_id.setter
+    def user_id(self, user_id: str) -> None:
+        self._user_id = user_id
+
+    @property
+    def version(self) -> APIVersion:
+        """API version these credentials will work for."""
+        return self._version
 
     @abstractmethod
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
 
+    async def request_v2(
+        self,
+        method: str,
+        path: str,
+        **kwargs,  # noqa: ANN003
+    ) -> ClientResponse:
+        return await self.request(method, path, version="v2", **kwargs)
+
+    async def request_v3(
+        self,
+        method: str,
+        path: str,
+        **kwargs,  # noqa: ANN003
+    ) -> ClientResponse:
+        return await self.request(method, path, version="v3", **kwargs)
+
     async def request(
         self,
         method: str,
         path: str,
-        version: str = "2.0",
+        version: APIVersion,
         **kwargs,  # noqa: ANN003
     ) -> ClientResponse:
         """Make a request.
@@ -35,15 +75,21 @@ class AbstractAuth(ABC):
         Returns:
             The client response.
         """
+        assert version == self.version, (
+            f"Cannot use {version} API with {self.version} credentials"
+        )
+
         access_token = await self.async_get_access_token()
         headers = dict(kwargs.pop("headers", {}))
         headers["authorization"] = f"Bearer {access_token}"
 
+        if self.user_id is not None:
+            headers["sc-user-id"] = self.user_id
+
         _LOGGER.debug(
-            "HTTP %s request %s/v%s/%s %r headers=%r",
+            "HTTP %s request %s/%s %r headers=%r",
             method,
-            self._host,
-            version,
+            self._endpoints[version],
             path,
             kwargs,
             headers,
@@ -51,7 +97,7 @@ class AbstractAuth(ABC):
 
         return await self._websession.request(
             method,
-            f"{self._host}/v{version}/{path}",
+            f"{self._endpoints[version]}/{path}",
             **kwargs,
             headers=headers,
         )

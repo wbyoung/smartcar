@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_charging_limit[unknown_make-200-success-90-90-NoneType-1]
+# name: test_charging_limit[unknown_make-200-success-90-90-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -13,7 +13,25 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-401-unauthroized-90-80-NoneType-1]
+# name: test_charging_limit[unknown_make-200-success-90-90-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-401-unauthroized-90-80-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -27,7 +45,25 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-409-unreachable-90-80-NoneType-1]
+# name: test_charging_limit[unknown_make-401-unauthroized-90-80-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-409-unreachable-90-80-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -41,7 +77,25 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-500-server-90-80-NoneType-4]
+# name: test_charging_limit[unknown_make-409-unreachable-90-80-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-500-server-90-80-NoneType-4-v2]
   list([
     tuple(
       'post',
@@ -85,11 +139,79 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-None-None-110-80-ServiceValidationError-0]
+# name: test_charging_limit[unknown_make-500-server-90-80-NoneType-4-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-None-None-110-80-ServiceValidationError-0-v2]
   list([
   ])
 # ---
-# name: test_charging_limit[unknown_make-None-None-40-80-ServiceValidationError-0]
+# name: test_charging_limit[unknown_make-None-None-110-80-ServiceValidationError-0-v3]
+  list([
+  ])
+# ---
+# name: test_charging_limit[unknown_make-None-None-40-80-ServiceValidationError-0-v2]
+  list([
+  ])
+# ---
+# name: test_charging_limit[unknown_make-None-None-40-80-ServiceValidationError-0-v3]
   list([
   ])
 # ---

@@ -69,12 +69,14 @@ Initially, you will have the option to enable [webhooks](#webhooks). If desired,
 
 #### Authorization Data Entry
 
-1. Choose a name for your credentials and enter the **Client ID** and **Client Secret** which can be found in the [Smartcar dashboard][smartcar-dashboard].
+1. Choose a name for your credentials and enter the **Client ID** and **Client Secret** which can be found in the [Smartcar dashboard][smartcar-dashboard] under _Configuration_ &rarr; _API credentials_.
 1. **Crucially, set the "Redirect URIs"** in the Smartcar settings for your application. You need to add **exactly** the URI your Home Assistant instance uses for OAuth callbacks.
    - Most users will simply use the **My Home Assistant** URI: `https://my.home-assistant.io/redirect/oauth`
      > Note: This is not a placeholder. It is the URI that must be used unless you’ve disabled or removed the `default_config:` line from your configuration and disabled the [My Home Assistant Integration](https://www.home-assistant.io/integrations/my/).
    - Add **only** the correct URI for your setup.
 1. Continue to the next step.
+1. Enter your _Application ID_ which can be found in the [Smartcar dashboard][smartcar-dashboard] under _Configuration_ &rarr; _Application details_.
+1. If you plan to use webhooks, also enter your _Application management token_ which can be found in the [Smartcar dashboard][smartcar-dashboard] under _Configuration_ &rarr; _API credentials_.
 1. Select the **Permissions** you want Home Assistant to be able to access. To enable all entities in this integration, select all relevant permissions:
    - Get total distance traveled
    - Get the vehicle's location
@@ -698,12 +700,26 @@ For instance:
 - `homeassistant.update_entity` on [`sensor.<make_model>_battery`](#sensormake_model_battery) and [`sensor.<make_model>_range`](#sensormake_model_range) will make a single batch request that counts as **one** API call because the entities are related.
 - `homeassistant.update_entity` on [`sensor.<make_model>_battery`](#sensormake_model_battery) and [`sensor.<make_model>_odometer`](#sensormake_model_odometer) will make a single batch request that counts as **two** API calls since they are unrelated.
 
+## Upgrading from Legacy `v2` API to `v3`
+
+For now, you can continue to use the `v2` API as long as it is supported by Smartcar, but [Smartcar documents the deprecation thusly](https://smartcar.com/docs/getting-started/how-to/m2m/migration-guide#overview):
+
+> The Vehicles API v2.0 will be deprecated by Q4 of 2026. We recommend migrating to the latest version as soon as possible to ensure continued support and access to new features.
+
+To upgrade from `v2` to `v3`, you need to use the _API credentials_ rather than the _Legacy credentials_. In Home Assistant, you will need to:
+
+- Remove all Smartcar integrations that use v2. _Note: this is required in order to remove credentials in the next step_.  
+  Before removing the items, you may want to note any customizations to entities such as entity IDs or areas in which entities are located so that you can re-create them once the migration is complete.
+- Remove all [_Application Credentials_][ha-application-credentials] that use a v2 `client_id`. To be safe, you can remove all Smartcar credentials from the _Application Credentials_.
+- Re-setup each smart car integration, ensuring that you use the new v3 _API credentials_ and _Application ID_ rather than _Legacy Credentials_.
+
 ## Known Issues / Limitations
 
 - **Vehicle Compatibility:** Not all features are supported by all vehicle makes/models/years via the Smartcar API. Entities for unsupported features (e.g., [fuel status](#sensormake_model_fuel) for EVs or [lock control](#lockmake_model_door_lock) for VW ID.4 2023+) may or may still be created, but not function. Check the Smartcar compatibility details for your specific vehicle.
 - **Fuel Data Availability:** The [`sensor.<make_model>_fuel`](#sensormake_model_fuel) (amount in litres) is frequently `null` for many vehicles. However, [`sensor.<make_model>_fuel_percent`](#sensormake_model_fuel_percent) and [`sensor.<make_model>_fuel_range`](#sensormake_model_fuel_range) are typically more reliable and provide comprehensive fuel monitoring even when the amount is unavailable.
 - **API Latency:** There can be significant delays (seconds to minutes) between sending a command (e.g., start charging) and the vehicle executing/reporting the change back through the API. The state in Home Assistant will update after the next successful data poll.
 - **Rate Limits:** Be mindful of the 500 calls/vehicle/month limit on the free tier.
+- **Single User:** Smartcar applications must be configured with only a single user connected to vehicles.
 - **FAQ:** In case ou haven't found the [FAQ](FAQ.md) yet, it is a great resource for troubleshooting and discovering if you're running up against an issue with this integration vs. a limitation in Smartcar's platform.
 
 ## Support / Issues
@@ -718,4 +734,5 @@ Please report any issues you find with this integration by opening an issue on t
 [config-flow-start]: https://my.home-assistant.io/redirect/config_flow_start/?domain=smartcar
 [smartcar-dashboard]: https://dashboard.smartcar.com/team/applications
 [ha-remote-access]: https://www.home-assistant.io/docs/configuration/remote/
+[ha-application-credentials]: https://www.home-assistant.io/integrations/application_credentials/
 [gh-sponsors]: https://github.com/sponsors/wbyoung

@@ -1,124 +1,146 @@
 {
-    "application_credentials": {
-        "description": "Follow the [instructions]({more_info_url}) to configure Smartcar for your vehicle:\n\n1. Go to [Applications]({oauth_creds_url}) and your application from the list.\n1. Choose **Configuration** from the side menu.\n1. Copy the **Client ID**.\n1. Regenerate and copy the the **Client Secret**.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) to configure Smartcar for your vehicle:\n\n1. Go to [Applications]({oauth_creds_url}) and your application from the list.\n1. Choose **Configuration** from the side menu.\n1. Copy the **Client ID**.\n1. Regenerate and copy the the **Client Secret**.\n1. Add `{redirect_url}` under *Authorized redirect URI*."
+  },
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "already_in_progress": "Configuration flow is already in progress",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "cannot_connect": "Failed to connect",
+      "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+      "duplicate_vehicles": "Vehicles may only be set up once. The following VINs {vins} are already configured.",
+      "invalid_access_token": "Invalid access token",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "missing_credentials": "The integration requires application credentials.",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "no_vehicles": "No vehicles were available to setup.",
+      "not_single_user_app": "Application must have only a single user connected.",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_timeout": "Timeout resolving OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
+      "unknown": "Unexpected error",
+      "user_rejected_authorize": "Account linking rejected: {error}",
+      "wrong_vehicles": "The vehicles must match the original selections. Choose the vehicles with VIN(s): {vins}."
     },
-    "config": {
-        "abort": {
-            "already_configured": "Account is already configured",
-            "already_in_progress": "Configuration flow is already in progress",
-            "authorize_url_timeout": "Timeout generating authorize URL.",
-            "cannot_connect": "Failed to connect",
-            "cloud_not_connected": "Not connected to Home Assistant Cloud.",
-            "duplicate_vehicles": "Vehicles may only be set up once. The following VINs {vins} are already configured.",
-            "invalid_access_token": "Invalid access token",
-            "missing_configuration": "The component is not configured. Please follow the documentation.",
-            "missing_credentials": "The integration requires application credentials.",
-            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
-            "no_vehicles": "No vehicles were available to setup.",
-            "oauth_error": "Received invalid token data.",
-            "oauth_failed": "Error while obtaining access token.",
-            "oauth_timeout": "Timeout resolving OAuth token.",
-            "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
-            "reauth_successful": "Re-authentication was successful",
-            "unknown": "Unexpected error",
-            "user_rejected_authorize": "Account linking rejected: {error}",
-            "wrong_vehicles": "The vehicles must match the original selections. Choose the vehicles with VIN(s): {vins}."
-        },
-        "create_entry": {
-            "default": "To send events to Home Assistant, you will need to set up a [webhook with Smartcar]({smartcar_url}). Use the following URL:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
-        },
-        "error": {
-            "no_scopes": "At least one scope needs to be selected",
-            "no_management_token": "Missing application management token",
-            "extraneous_management_token": "Do not provide application management token unless using webhooks"
-        },
-        "step": {
-            "pick_implementation": {
-                "title": "Pick authentication method"
-            },
-            "reauth_confirm": {
-                "description": "The Smartcar integration needs to re-authenticate your account",
-                "title": "Authentication expired for {name}"
-            },
-            "webhooks": {
-                "data": {
-                    "use_webhooks": "Use webhooks",
-                    "application_management_token": "Token: only provide if using webhooks"
-                },
-                "description": "Provide your _Application Management Token_ from your [Smartcar account]({smartcar_url}) to use webhooks.\n\nSee [the documentation]({docs_url}) for further details.",
-                "title": "Smartcar configuration"
-            },
-            "scopes": {
-                "data": {
-                    "control_charge": "Control charging (start/stop & target charge)",
-                    "control_security": "Lock or unlock vehicle",
-                    "read_battery": "Get EV/PHEV battery level, capacity & current range",
-                    "read_charge": "Get details on whether the car is plugged in and charging",
-                    "read_engine_oil": "Get engine oil health",
-                    "read_fuel": "Get fuel tank level",
-                    "read_location": "Get the vehicle's location",
-                    "read_odometer": "Get total distance traveled",
-                    "read_security": "Get details on whether doors, windows & more are enabled",
-                    "read_tires": "Get tire pressure details"
-                },
-                "description": "Select the permissions you would like to grant",
-                "title": "Permission selection"
-            }
-        }
+    "create_entry": {
+      "default": "To send events to Home Assistant, you will need to set up a [webhook with Smartcar]({smartcar_url}). Use the following URL:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
     },
-    "exceptions": {
-        "batch_update_error": {
-            "message": "An error occurred while retrieving vehicle state from the Smartcar API: {error}"
-        }
+    "error": {
+      "no_application_id": "Missing application ID",
+      "no_scopes": "At least one scope needs to be selected",
+      "no_management_token": "Missing application management token",
+      "extraneous_management_token": "Do not provide application management token unless using webhooks"
     },
-    "options": {
-        "abort": {
-            "cloud_not_connected": "Not connected to Home Assistant Cloud.",
-            "unknown": "Unexpected error"
+    "step": {
+      "pick_implementation": {
+        "title": "Pick authentication method"
+      },
+      "reauth_confirm": {
+        "description": "The Smartcar integration needs to re-authenticate your account",
+        "title": "Authentication expired for {name}"
+      },
+      "webhooks": {
+        "data": {
+          "application_id": "Application ID",
+          "application_management_token": "Application Management Token",
+          "use_webhooks": "Use webhooks"
         },
-        "error": {
-            "no_management_token": "Missing application management token",
-            "extraneous_management_token": "Do not provide application management token unless using webhooks"
+        "data_description": {
+          "application_id": "Required for new Smartcar accounts and for v3.",
+          "application_management_token": "Only provide if using webhooks. This is the _Application Management Token_ from your [Smartcar account]({smartcar_url}) to use webhooks.\n\nSee [the documentation]({docs_url}) for further details.",
+          "use_webhooks": "Webhooks are Smartcar's preferred data update delivery method."
         },
-        "step": {
-            "webhooks": {
-                "data": {
-                    "use_webhooks": "Use webhooks",
-                    "application_management_token": "Token: only provide if using webhooks"
-                },
-                "description": "Provide your _Application Management Token_ from your [Smartcar account]({smartcar_url}) to use webhooks.\n\nTo send events to Home Assistant, you will need to set up a [webhook with Smartcar]({smartcar_url}). Use the following URL:\n\n`{webhook_url}`\n\nIf the above URL indicates that webhooks are not enabled, revisit this configuration screen after completing the setup to get the URL.\n\nSee [the documentation]({docs_url}) for further details.",
-                "title": "Smartcar configuration"
-            }
-        }
-    },
-    "services": {
-        "lock_doors": {
-            "description": "Lock doors for a vehicle.",
-            "fields": {
-                "config_entry": {
-                    "description": "The config entry to use for this service.",
-                    "name": "Config entry"
-                },
-                "vin": {
-                    "description": "The VIN of the vehicle to target.",
-                    "name": "VIN"
-                }
-            },
-            "name": "Lock doors"
+        "description": "To configure Smartcar, provide an _Application ID_. An _Application Management Token_ is also required if enabling webhooks.",
+        "title": "Smartcar configuration"
+      },
+      "scopes": {
+        "data": {
+          "control_charge": "Control charging (start/stop & target charge)",
+          "control_security": "Lock or unlock vehicle",
+          "read_battery": "Get EV/PHEV battery level, capacity & current range",
+          "read_charge": "Get details on whether the car is plugged in and charging",
+          "read_engine_oil": "Get engine oil health",
+          "read_fuel": "Get fuel tank level",
+          "read_location": "Get the vehicle's location",
+          "read_odometer": "Get total distance traveled",
+          "read_security": "Get details on whether doors, windows & more are enabled",
+          "read_tires": "Get tire pressure details"
         },
-        "unlock_doors": {
-            "description": "Unlock doors for a vehicle.",
-            "fields": {
-                "config_entry": {
-                    "description": "The config entry to use for this service.",
-                    "name": "Config entry"
-                },
-                "vin": {
-                    "description": "The VIN of the vehicle to target.",
-                    "name": "VIN"
-                }
-            },
-            "name": "Unlock doors"
-        }
+        "description": "Select the permissions you would like to grant",
+        "title": "Permission selection"
+      }
     }
+  },
+  "exceptions": {
+    "batch_update_error": {
+      "message": "An error occurred while retrieving vehicle state from the Smartcar API: {error}"
+    }
+  },
+  "issues": {
+    "legacy_client_id": {
+      "title": "Smartcar v2 API deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "{title} is using deprecated Smartcar v2 API. To migrate to v3.0:\n - Remove all Smartcar integrations that use v2. _Note: this is required for the next step._\n- Remove all _Application Credentials_ that use a v2 `client_id`. To be safe, you can remove all Smartcar credentials from the _Application Credentials_.\n- Re-setup each smart car integration, ensuring that you use the new v3 _API credentials_ and _Application ID_ rather than _Legacy Credentials_.\n\nRead the [documentation]({docs_url}) for more information.",
+            "title": "Smartcar v2 API deprecated"
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "cloud_not_connected": "Not connected to Home Assistant Cloud.",
+      "unknown": "Unexpected error"
+    },
+    "error": {
+      "no_management_token": "Missing application management token",
+      "extraneous_management_token": "Do not provide application management token unless using webhooks"
+    },
+    "step": {
+      "webhooks": {
+        "data": {
+          "use_webhooks": "Use webhooks",
+          "application_management_token": "Token: only provide if using webhooks"
+        },
+        "description": "Provide your _Application Management Token_ from your [Smartcar account]({smartcar_url}) to use webhooks.\n\nTo send events to Home Assistant, you will need to set up a [webhook with Smartcar]({smartcar_url}). Use the following URL:\n\n`{webhook_url}`\n\nIf the above URL indicates that webhooks are not enabled, revisit this configuration screen after completing the setup to get the URL.\n\nSee [the documentation]({docs_url}) for further details.",
+        "title": "Smartcar configuration"
+      }
+    }
+  },
+  "services": {
+    "lock_doors": {
+      "description": "Lock doors for a vehicle.",
+      "fields": {
+        "config_entry": {
+          "description": "The config entry to use for this service.",
+          "name": "Config entry"
+        },
+        "vin": {
+          "description": "The VIN of the vehicle to target.",
+          "name": "VIN"
+        }
+      },
+      "name": "Lock doors"
+    },
+    "unlock_doors": {
+      "description": "Unlock doors for a vehicle.",
+      "fields": {
+        "config_entry": {
+          "description": "The config entry to use for this service.",
+          "name": "Config entry"
+        },
+        "vin": {
+          "description": "The VIN of the vehicle to target.",
+          "name": "VIN"
+        }
+      },
+      "name": "Unlock doors"
+    }
+  }
 }

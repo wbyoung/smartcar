@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
+import copy
 from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta
 from http import HTTPStatus
 import logging
 import numbers
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import ClientResponseError
 from homeassistant.config_entries import ConfigEntry
@@ -25,9 +26,20 @@ from homeassistant.util import dt as dt_util
 from . import util
 from .auth import AbstractAuth
 from .const import CONF_APPLICATION_MANAGEMENT_TOKEN, DOMAIN, EntityDescriptionKey
+from .types import APIVersion
 from .util import key_path_get, key_path_update
 
 _LOGGER = logging.getLogger(__name__)
+
+# values from the smartcar service that denote an imperial measurement and can
+# be converted by one of the imperial_conversion functions defined on an entity
+# description.
+_IMPERIAL_MEASUREMENTS = {"miles", "psi", "gallons"}
+
+
+_SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP: dict[str | None, str] = {
+    "charge-chargelimits": "limit",
+}
 
 VEHICLE_FRONT_ROW = 0
 VEHICLE_BACK_ROW = 1
@@ -35,6 +47,18 @@ VEHICLE_LEFT_COLUMN = 0
 VEHICLE_RIGHT_COLUMN = 1
 
 UPDATE_INTERVAL = timedelta(hours=6)
+
+# Signal error conditions that are structural or otherwise expected for a given
+# vehicle and therefore recur on every update (e.g. a vehicle that is simply not
+# capable of a signal, or charge signals while not charging). Logging these at
+# ERROR floods the log with permanent noise, so they are demoted to DEBUG.
+# Genuine/actionable errors keep their original level.
+_BENIGN_SIGNAL_ERRORS: frozenset[tuple[str | None, str | None]] = frozenset(
+    {
+        ("COMPATIBILITY", "VEHICLE_NOT_CAPABLE"),
+        ("VEHICLE_STATE", "NOT_CHARGING"),
+    }
+)
 
 
 @dataclass
@@ -466,6 +490,51 @@ DATAPOINT_ENTITY_KEY_MAP = {
         None,
         None,
     ),
+    # Diagnostics (webhook-only, require read_diagnostics)
+    EntityDescriptionKey.DIAG_ABS: DatapointConfig(
+        "diagnostics-abs", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_MIL: DatapointConfig(
+        "diagnostics-mil", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_DTC_COUNT: DatapointConfig(
+        "diagnostics-dtccount", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_DTC_LIST: DatapointConfig(
+        "diagnostics-dtclist", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_BATTERY_CONDITIONING: DatapointConfig(
+        "diagnostics-evbatteryconditioning", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_CHARGING: DatapointConfig(
+        "diagnostics-evcharging", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_DRIVE_UNIT: DatapointConfig(
+        "diagnostics-evdriveunit", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_HV_BATTERY: DatapointConfig(
+        "diagnostics-evhvbattery", ["read_diagnostics"], None, None
+    ),
+    # Climate status (webhook-only, require read_climate)
+    EntityDescriptionKey.CABIN_TARGET_TEMPERATURE: DatapointConfig(
+        "hvac-cabintargettemperature", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_CABIN_HVAC_ACTIVE: DatapointConfig(
+        "hvac-iscabinhvacactive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_FRONT_DEFROSTER_ACTIVE: DatapointConfig(
+        "hvac-isfrontdefrosteractive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_REAR_DEFROSTER_ACTIVE: DatapointConfig(
+        "hvac-isreardefrosteractive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_STEERING_HEATER_ACTIVE: DatapointConfig(
+        "hvac-issteeringheateractive", ["read_climate"], None, None
+    ),
+    # Climate control switch (reads HVAC-active state, requires control_climate)
+    EntityDescriptionKey.CLIMATE: DatapointConfig(
+        "hvac-iscabinhvacactive", ["read_climate", "control_climate"], None, None
+    ),
 }
 
 DATAPOINT_STORAGE_KEY_V2_MAP = {
@@ -498,23 +567,26 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         auth: AbstractAuth,
         vehicle_id: str,
         vin: str,
         entry: ConfigEntry,
+        version: APIVersion,
     ) -> None:
         """Initialize coordinator."""
         self.auth = auth
         self.vehicle_id = vehicle_id
         self.vin = vin
         self.entry = entry
+        self.version = version
         self.batch_requests: set[EntityDescriptionKey] = set()
         self.data: dict[str, Any] = {}
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{vin}",
+            name=f"{DOMAIN}_{vehicle_id}",
             update_interval=UPDATE_INTERVAL
             if CONF_APPLICATION_MANAGEMENT_TOKEN not in entry.data
             else None,
@@ -650,11 +722,22 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         )
 
         try:
-            response = await util.async_request_with_retry(
-                lambda: self.auth.request("post", request_path, json=request_body),
-                logger=_LOGGER,
-                context=f"Coordinator {self.name}",
-            )
+            if self.auth.version == "v2":
+                response = await util.async_request_with_retry(
+                    lambda: self.auth.request_v2(
+                        "post", request_path, json=request_body
+                    ),
+                    logger=_LOGGER,
+                    context=f"Coordinator {self.name}",
+                )
+            else:
+                assert self.auth.version == "v3"
+                request_path = f"vehicles/{self.vehicle_id}/signals"
+                response = await util.async_request_with_retry(
+                    lambda: self.auth.request_v3("get", request_path),
+                    logger=_LOGGER,
+                    context=f"Coordinator {self.name}",
+                )
 
         # response errors here for responses that have actually completed, i.e.
         # 4xx responses are for errors related to requests made in the
@@ -681,11 +764,14 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         response.raise_for_status()
         response_data = await response.json()
 
-        if "responses" not in response_data:
-            msg = "Invalid batch response format"
-            raise UpdateFailed(msg)
+        if self.auth.version == "v2":
+            if "responses" not in response_data:
+                msg = "Invalid batch response format"
+                raise UpdateFailed(msg)
 
-        return self._merge_batch_data(response_data)
+            return self._merge_batch_data(response_data)
+        assert self.auth.version == "v3"
+        return self._merge_signal_data(response_data)
 
     def _merge_batch_data(self, batch_data: dict[str, Any]) -> dict[str, Any]:
         """Merge data from the responses from a batch request.
@@ -736,6 +822,20 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
 
             return updated_data
 
+    def _merge_signal_data(self, signal_data: dict[str, Any]) -> dict[str, Any]:
+        """Merge data response data from a v3 vehicle signals request.
+
+        Returns:
+            The newly merged data.
+        """
+        with self.create_updated_data() as (add, updated_data):
+            for signal in signal_data.get("data", []):
+                add.from_signal_attributes(signal.get("attributes", {}))
+
+            _LOGGER.debug("Coordinator %s: Signal polling update processed", self.name)
+
+            return updated_data
+
     @contextmanager
     def create_updated_data(
         self,
@@ -749,6 +849,59 @@ class _DataAdder:
     def __init__(self, data: dict[str, Any]) -> None:
         super().__init__()
         self.data = data
+        self._addition_made = False
+
+    @property
+    def addition_made(self) -> bool:
+        return self._addition_made
+
+    def from_signal_attributes(self, signal: dict) -> None:
+        name: str | None = signal.get("name")
+        status = signal.get("status", {})
+        is_error = status.get("value") == "ERROR"
+        code: str | None = signal.get("code")
+        body = copy.deepcopy(signal.get("body", {}))
+        meta = signal.get("meta", {})
+
+        if is_error:
+            _handle_webhook_signal_error(
+                name,
+                status.get("error", {}),
+                level="error" if _is_integrated(signal) else "debug",
+            )
+
+            body = {"value": None}
+
+        if body.get("unit") == "percent":
+            _handle_percent_unit_conversion(code, body)
+
+        if code in DATAPOINT_CODE_MAP:
+            assert code is not None
+
+            data_age = meta.get("oemUpdatedAt") if not is_error else None
+            fetched_at = meta.get("retrievedAt") if not is_error else None
+            unit = body.pop("unit", None)
+            unit_system = (
+                "imperial"
+                if unit in _IMPERIAL_MEASUREMENTS
+                else "metric"
+                if unit
+                else None
+            )
+
+            if data_age:
+                data_age = dt_util.utc_from_timestamp(data_age / 1000)
+            if fetched_at:
+                fetched_at = dt_util.utc_from_timestamp(fetched_at / 1000)
+
+            self.from_response_body(
+                code,
+                body=body,
+                unit_system=unit_system,
+                data_age=data_age,
+                fetched_at=fetched_at,
+                can_clear_meta=not is_error,
+            )
 
     def from_response_body(
         self,
@@ -859,6 +1012,8 @@ class _DataAdder:
         unit_system: str | None,
         can_clear: bool,
     ) -> None:
+        self._addition_made = True
+
         for datapoint in datapoints:
             storage_key = datapoint.storage_key
 
@@ -876,3 +1031,36 @@ class _DataAdder:
                 self.data[f"{storage_key}:fetched_at"] = fetched_at
             elif can_clear:
                 self.data.pop(f"{storage_key}:fetched_at", None)
+
+
+def _is_integrated(signal: dict) -> bool:
+    code: str | None = signal.get("code")
+    return code in DATAPOINT_CODE_MAP
+
+
+def _handle_percent_unit_conversion(code: str | None, body: dict[str, Any]) -> None:
+    if "values" in body:
+        item_key = _SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP.get(code) or "value"
+        values = body["values"]
+        values = [value | {item_key: value[item_key] / 100} for value in values]
+        body["values"] = values
+        body.pop("unit")
+    else:
+        body["value"] /= 100
+        body.pop("unit")
+
+
+def _handle_webhook_signal_error(
+    signal_name: str | None,
+    error: dict,
+    *,
+    level: Literal["error", "debug"] = "error",
+) -> None:
+    error_type = error.get("type")
+    error_code = error.get("code")
+
+    if (error_type, error_code) in _BENIGN_SIGNAL_ERRORS:
+        level = "debug"
+
+    logger_method = getattr(_LOGGER, level)
+    logger_method("error for signal %s: %s:%s", signal_name, error_type, error_code)

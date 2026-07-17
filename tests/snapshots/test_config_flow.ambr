@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_full_flow[cloud_not_connected]
+# name: test_full_flow[cloud_not_connected-v2]
   list([
     tuple(
       'POST',
@@ -39,7 +39,38 @@
     ),
   ])
 # ---
-# name: test_full_flow[cloud_webhooks]
+# name: test_full_flow[cloud_not_connected-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[cloud_webhooks-v2]
   list([
     tuple(
       'POST',
@@ -79,7 +110,38 @@
     ),
   ])
 # ---
-# name: test_full_flow[no_webhooks]
+# name: test_full_flow[cloud_webhooks-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[no_webhooks-v2]
   list([
     tuple(
       'POST',
@@ -119,7 +181,38 @@
     ),
   ])
 # ---
-# name: test_full_flow[webhooks]
+# name: test_full_flow[no_webhooks-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[no_webhooks_missing_vin-v2]
   list([
     tuple(
       'POST',
@@ -159,11 +252,169 @@
     ),
   ])
 # ---
-# name: test_full_flow[webhooks_extraneous_token]
+# name: test_full_flow[no_webhooks_missing_vin-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[webhooks-v2]
+  list([
+    tuple(
+      'POST',
+      URL('https://auth.smartcar.com/oauth/token'),
+      dict({
+        'client_id': 'mock-id',
+        'client_secret': 'mock-secret',
+        'code': 'abcd',
+        'grant_type': 'authorization_code',
+        'redirect_uri': 'https://example.com/auth/external/callback',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v2.0/vehicles'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v2.0/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v2.0/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[webhooks-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow[webhooks_extraneous_token-v2]
   list([
   ])
 # ---
-# name: test_full_flow[webhooks_missing_token]
+# name: test_full_flow[webhooks_extraneous_token-v3]
+  list([
+  ])
+# ---
+# name: test_full_flow[webhooks_missing_token-v2]
+  list([
+  ])
+# ---
+# name: test_full_flow[webhooks_missing_token-v3]
+  list([
+  ])
+# ---
+# name: test_full_flow_v3_only[empty_connections-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow_v3_only[invalid_user_configuration-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_full_flow_v3_only[missing_application_id-v3]
   list([
   ])
 # ---

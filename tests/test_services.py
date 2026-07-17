@@ -20,9 +20,9 @@ from custom_components.smartcar.services import (
     SERVICE_NAME_LOCK_DOORS,
     SERVICE_NAME_UNLOCK_DOORS,
 )
-from custom_components.smartcar.types import SmartcarAPIError
+from custom_components.smartcar.types import APIVersion, SmartcarAPIError
 
-from . import MOCK_API_ENDPOINT, setup_added_integration
+from . import MOCK_API_ENDPOINT, MOCK_API_ENDPOINT_LEGACY, setup_added_integration
 
 NO_ERROR = None.__class__
 
@@ -36,7 +36,7 @@ def test_has_services(
     assert hass.services.has_service(DOMAIN, SERVICE_NAME_UNLOCK_DOORS)
 
 
-# @pytest.mark.parametrize("vehicle_fixture", ["vw_id_4"])
+@pytest.mark.parametrize("client_id_version", ["v2", "v3"])
 @pytest.mark.parametrize("vehicle_fixture", ["unknown_make"])
 @pytest.mark.parametrize(
     "scenario",
@@ -88,6 +88,7 @@ async def test_door_closure(
     aioclient_mock: AiohttpClientMocker,
     scenario: dict[str, Any],
     vehicle: AsyncMock,
+    client_id_version: APIVersion,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ):
@@ -110,14 +111,33 @@ async def test_door_closure(
     await setup_added_integration(hass, mock_config_entry)
     assert len(aioclient_mock.mock_calls) == 0
 
-    aioclient_mock.post(
-        f"{MOCK_API_ENDPOINT}/v2.0/vehicles/{vehicle['id']}/security",
-        status=api_status,
-        json={
-            "message": "Some message related to the action unused by our code",
-            "status": api_status_slug,
-        },
-    )
+    if client_id_version == "v2":
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{vehicle['id']}/security",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+    else:
+        assert client_id_version == "v3"
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT}/vehicles/{vehicle['id']}/commands/security/lock",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT}/vehicles/{vehicle['id']}/commands/security/unlock",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
 
     try:
         await hass.services.async_call(

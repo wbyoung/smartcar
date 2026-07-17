@@ -1,5 +1,6 @@
 """Test component setup."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import cloud
@@ -14,6 +15,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClien
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from custom_components.smartcar import coordinator as coordinator_module
 from custom_components.smartcar.const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
     CONF_CLOUDHOOK,
@@ -22,8 +24,9 @@ from custom_components.smartcar.const import (
     REQUIRED_SCOPES,
     EntityDescriptionKey,
 )
+from custom_components.smartcar.types import APIVersion
 
-from . import MOCK_API_ENDPOINT, setup_added_integration, setup_integration
+from . import MOCK_API_ENDPOINT_LEGACY, setup_added_integration, setup_integration
 
 
 async def test_async_setup(hass: HomeAssistant):
@@ -36,6 +39,7 @@ async def test_standard_setup(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     vehicle: AsyncMock,
+    client_id_version: APIVersion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -43,7 +47,7 @@ async def test_standard_setup(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_id = vehicle["vin"]
+    device_id = vehicle["vin"] if client_id_version == "v2" else vehicle["id"]
     device = device_registry.async_get_device({(DOMAIN, device_id)})
 
     assert device is not None
@@ -64,12 +68,14 @@ async def test_standard_setup(
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
 
 
+@pytest.mark.parametrize("client_id_version", ["v2", "v3"])
 @pytest.mark.usefixtures("enable_all_entities")
 async def test_standard_setup_with_all_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     vehicle: AsyncMock,
+    client_id_version: APIVersion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -77,7 +83,7 @@ async def test_standard_setup_with_all_entities(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_id = vehicle["vin"]
+    device_id = vehicle["vin"] if client_id_version == "v2" else vehicle["id"]
     device = device_registry.async_get_device({(DOMAIN, device_id)})
 
     assert device is not None
@@ -144,13 +150,14 @@ async def test_limited_scopes(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     vehicle: AsyncMock,
+    client_id_version: APIVersion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup when only limited scopes are enabled."""
     await setup_integration(hass, mock_config_entry)
 
-    device_id = vehicle["vin"]
+    device_id = vehicle["vin"] if client_id_version == "v2" else vehicle["id"]
     device = device_registry.async_get_device({(DOMAIN, device_id)})
 
     assert device is not None
@@ -189,6 +196,7 @@ async def test_update_errors(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     vehicle: AsyncMock,
+    client_id_version: APIVersion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -196,7 +204,7 @@ async def test_update_errors(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_id = vehicle["vin"]
+    device_id = vehicle["vin"] if client_id_version == "v2" else vehicle["id"]
     device = device_registry.async_get_device({(DOMAIN, device_id)})
 
     assert device is not None
@@ -403,16 +411,16 @@ async def test_migration(
     )
 
     aioclient_mock.get(
-        f"{MOCK_API_ENDPOINT}/v2.0/vehicles",
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles",
         json=({"paging": {"count": 25, "offset": 0}, "vehicles": api_vehicle_ids}),
     )
     for vehicle_id in api_vehicle_ids:
         aioclient_mock.get(
-            f"{MOCK_API_ENDPOINT}/v2.0/vehicles/{vehicle_id}/vin",
+            f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{vehicle_id}/vin",
             json={"vin": f"mock-vin-for-${vehicle_id}"},
         )
         aioclient_mock.get(
-            f"{MOCK_API_ENDPOINT}/v2.0/vehicles/{vehicle_id}",
+            f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{vehicle_id}",
             json=(
                 {
                     "id": vehicle_id,
@@ -571,6 +579,21 @@ _SNAPSHOT_ORDER = {
             "charge_fast_charger_present",
             "firmware_version",
             "last_webhook_received",
+            "is_cabin_hvac_active",
+            "diag_abs",
+            "diag_mil",
+            "diag_dtc_count",
+            "diag_dtc_list",
+            "diag_ev_battery_conditioning",
+            "diag_ev_charging",
+            "diag_ev_drive_unit",
+            "diag_ev_hv_battery",
+            "cabin_target_temperature",
+            "is_cabin_hvac_active",
+            "is_front_defroster_active",
+            "is_rear_defroster_active",
+            "is_steering_heater_active",
+            "climate",
         ]
     )
 }
@@ -580,3 +603,29 @@ def snapshot_order(entity):
     _, key = entity.unique_id.split("_", 1)
 
     return _SNAPSHOT_ORDER[key]
+
+
+@pytest.mark.parametrize(
+    ("error_type", "error_code", "expected_level"),
+    [
+        ("VEHICLE_STATE", "NOT_CHARGING", logging.DEBUG),
+        ("COMPATIBILITY", "VEHICLE_NOT_CAPABLE", logging.DEBUG),
+        ("PERMISSION", None, logging.ERROR),
+    ],
+    ids=["not_charging", "not_capable", "genuine_error"],
+)
+def test_webhook_signal_error_log_level(
+    caplog: pytest.LogCaptureFixture,
+    error_type: str,
+    error_code: str | None,
+    expected_level: int,
+) -> None:
+    """Test benign signal errors are demoted to DEBUG while others are not."""
+    with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar"):
+        coordinator_module._handle_webhook_signal_error(
+            "Wattage",
+            {"type": error_type, "code": error_code},
+        )
+
+    record = next(r for r in caplog.records if "error for signal" in r.message)
+    assert record.levelno == expected_level

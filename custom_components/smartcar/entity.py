@@ -42,10 +42,14 @@ class SmartcarEntity[ValueT, RawValueT](
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.vin = coordinator.vin
+        device_id = coordinator.vehicle_id
+
+        if coordinator.version == "v2" and coordinator.vin:
+            device_id = coordinator.vin
+
         self.entity_description = description
-        self._attr_unique_id = f"{self.vin}_{description.key}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, self.vin)}}
+        self._attr_unique_id = f"{device_id}_{description.key}"
+        self._attr_device_info = {"identifiers": {(DOMAIN, device_id)}}
 
     @property
     def available(self) -> bool:
@@ -157,15 +161,14 @@ class SmartcarEntity[ValueT, RawValueT](
     async def _async_send_command(
         self,
         subpath: str,
-        payload: dict[str, Any],
+        payload: dict[str, Any] | None,
         *,
         method: str = "post",
-        version: str = "2.0",
         **kwargs,  # noqa: ARG002, ANN003
     ) -> bool:
         try:
             return await async_send_command(
-                self.coordinator, subpath, payload, method=method, version=version
+                self.coordinator, subpath, payload, method=method
             )
         except SmartcarAPIError:
             return False
@@ -267,13 +270,21 @@ def inject_raw_value[RawValueT](
 async def async_send_command(
     coordinator: SmartcarVehicleCoordinator,
     subpath: str,
-    payload: dict[str, Any],
+    payload: dict[str, Any] | None,
     *,
     method: str = "post",
-    version: str = "2.0",
 ) -> bool:
-    _LOGGER.info("Sending %s request for %s", subpath, coordinator.vin)
+    _LOGGER.info(
+        "Sending %s request for %s (VIN: %s)",
+        subpath,
+        coordinator.vehicle_id,
+        coordinator.vin,
+    )
     success = False
+    version = coordinator.auth.version
+
+    if version == "v3":
+        subpath = f"/commands{subpath}"
 
     try:
         resp = await util.async_request_with_retry(
@@ -284,16 +295,17 @@ async def async_send_command(
                 json=payload,
             ),
             logger=_LOGGER,
-            context=f"Command {subpath} for {coordinator.vin}",
+            context=f"Command {subpath} for {coordinator.vehicle_id} (VIN : {coordinator.vin}",
         )
         resp.raise_for_status()
         success = True
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.warning(
-                "Auth error %s sending %s request for %s",
+                "Auth error %s sending %s request for %s (VIN: %s)",
                 err.status,
                 subpath,
+                coordinator.vehicle_id,
                 coordinator.vin,
             )
             coordinator.config_entry.async_start_reauth(coordinator.hass)

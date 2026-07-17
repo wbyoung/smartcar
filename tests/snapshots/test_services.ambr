@@ -1,12 +1,19 @@
 # serializer version: 1
-# name: test_door_closure[invalid_config_entry-unknown_make][api-calls]
+# name: test_door_closure[invalid_config_entry-unknown_make-v2][api-calls]
   list([
   ])
 # ---
-# name: test_door_closure[invalid_config_entry-unknown_make][error]
+# name: test_door_closure[invalid_config_entry-unknown_make-v2][error]
   ServiceValidationError('invalid_config_entry')
 # ---
-# name: test_door_closure[lock_doors-unknown_make][api-calls]
+# name: test_door_closure[invalid_config_entry-unknown_make-v3][api-calls]
+  list([
+  ])
+# ---
+# name: test_door_closure[invalid_config_entry-unknown_make-v3][error]
+  ServiceValidationError('invalid_config_entry')
+# ---
+# name: test_door_closure[lock_doors-unknown_make-v2][api-calls]
   list([
     tuple(
       'post',
@@ -20,7 +27,19 @@
     ),
   ])
 # ---
-# name: test_door_closure[lock_doors_no_vin-unknown_make][api-calls]
+# name: test_door_closure[lock_doors-unknown_make-v3][api-calls]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_door_closure[lock_doors_no_vin-unknown_make-v2][api-calls]
   list([
     tuple(
       'post',
@@ -34,7 +53,19 @@
     ),
   ])
 # ---
-# name: test_door_closure[unlock_doors-unknown_make][api-calls]
+# name: test_door_closure[lock_doors_no_vin-unknown_make-v3][api-calls]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_door_closure[unlock_doors-unknown_make-v2][api-calls]
   list([
     tuple(
       'post',
@@ -48,7 +79,19 @@
     ),
   ])
 # ---
-# name: test_door_closure[unreachable-unknown_make][api-calls]
+# name: test_door_closure[unlock_doors-unknown_make-v3][api-calls]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_door_closure[unreachable-unknown_make-v2][api-calls]
   list([
     tuple(
       'post',
@@ -62,7 +105,25 @@
     ),
   ])
 # ---
-# name: test_door_closure[unreachable-unknown_make][error]
+# name: test_door_closure[unreachable-unknown_make-v2][error]
+  dict({
+    'code': 409,
+    'reason': '',
+  })
+# ---
+# name: test_door_closure[unreachable-unknown_make-v3][api-calls]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_door_closure[unreachable-unknown_make-v3][error]
   dict({
     'code': 409,
     'reason': '',

@@ -1,0 +1,742 @@
+[
+  {
+    "method": "get",
+    "vehicle_path": "/signals",
+    "params": {},
+    "response": {
+      "data": [
+        {
+          "id": "charge-chargelimits",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-chargelimits",
+            "name": "ChargeLimits",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": {
+              "values": [{ "type": "GLOBAL", "limit": 80 }],
+              "activeLimit": 80,
+              "unit": "percent"
+            }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-chargelimits"
+          }
+        },
+        {
+          "id": "charge-chargerate",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-chargerate",
+            "name": "ChargeRate",
+            "group": "Charge",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "VEHICLE_STATE",
+                "code": "NOT_CHARGING",
+                "title": "Not Charging",
+                "detail": "The vehicle is unable to perform your request because it is not currently charging.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            },
+            "body": { "value": 53, "unit": "km/h" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-29T03:57:53.614Z",
+            "oemUpdatedAt": "2026-06-29T03:55:47.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-chargerate"
+          }
+        },
+        {
+          "id": "charge-chargingconnectortype",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-chargingconnectortype",
+            "name": "ChargingConnectorType",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": "invalid" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-chargingconnectortype"
+          }
+        },
+        {
+          "id": "charge-detailedchargingstatus",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-detailedchargingstatus",
+            "name": "DetailedChargingStatus",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": "NOT_CHARGING" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-detailedchargingstatus"
+          }
+        },
+        {
+          "id": "charge-ischarging",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-ischarging",
+            "name": "IsCharging",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": false }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-ischarging"
+          }
+        },
+        {
+          "id": "charge-ischargingcableconnected",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-ischargingcableconnected",
+            "name": "IsChargingCableConnected",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": false }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-ischargingcableconnected"
+          }
+        },
+        {
+          "id": "charge-ischargingcablelatched",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-ischargingcablelatched",
+            "name": "IsChargingCableLatched",
+            "group": "Charge",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": false }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-ischargingcablelatched"
+          }
+        },
+        {
+          "id": "charge-timetocomplete",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-timetocomplete",
+            "name": "TimeToComplete",
+            "group": "Charge",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "VEHICLE_STATE",
+                "code": "NOT_CHARGING",
+                "title": "Not Charging",
+                "detail": "The vehicle is unable to perform your request because it is not currently charging.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            },
+            "body": { "value": 5 }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-29T03:57:53.614Z",
+            "oemUpdatedAt": "2026-06-29T03:55:47.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-timetocomplete"
+          }
+        },
+        {
+          "id": "charge-wattage",
+          "type": "signal",
+          "attributes": {
+            "code": "charge-wattage",
+            "name": "Wattage",
+            "group": "Charge",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "VEHICLE_STATE",
+                "code": "NOT_CHARGING",
+                "title": "Not Charging",
+                "detail": "The vehicle is unable to perform your request because it is not currently charging.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            },
+            "body": { "value": 8000, "unit": "watts" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-29T03:57:53.614Z",
+            "oemUpdatedAt": "2026-06-29T03:55:47.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/charge-wattage"
+          }
+        },
+        {
+          "id": "closure-doors",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-doors",
+            "name": "Doors",
+            "group": "Closure",
+            "status": { "value": "SUCCESS" },
+            "body": {
+              "values": [
+                { "row": 0, "column": 0, "isOpen": false, "isLocked": true },
+                { "row": 0, "column": 1, "isOpen": false, "isLocked": true },
+                { "row": 1, "column": 0, "isOpen": false, "isLocked": true },
+                { "row": 1, "column": 1, "isOpen": false, "isLocked": true }
+              ],
+              "rowCount": 2,
+              "columnCount": 2
+            }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-doors"
+          }
+        },
+        {
+          "id": "closure-enginecover",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-enginecover",
+            "name": "EngineCover",
+            "group": "Closure",
+            "status": { "value": "SUCCESS" },
+            "body": { "isOpen": false }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-enginecover"
+          }
+        },
+        {
+          "id": "closure-fronttrunk",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-fronttrunk",
+            "name": "FrontTrunk",
+            "group": "Closure",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "PERMISSION",
+                "code": "UNKNOWN",
+                "title": "Unknown",
+                "detail": "Your application has insufficient permissions to access the requested resource. Please prompt the user to re-authenticate using Smartcar Connect.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "REAUTHENTICATE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-03-17T15:41:40.604Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-fronttrunk"
+          }
+        },
+        {
+          "id": "closure-islocked",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-islocked",
+            "name": "IsLocked",
+            "group": "Closure",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": true }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-islocked"
+          }
+        },
+        {
+          "id": "closure-reartrunk",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-reartrunk",
+            "name": "RearTrunk",
+            "group": "Closure",
+            "status": { "value": "SUCCESS" },
+            "body": { "isOpen": false, "isLocked": true }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-reartrunk"
+          }
+        },
+        {
+          "id": "closure-sunroof",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-sunroof",
+            "name": "Sunroof",
+            "group": "Closure",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            },
+            "body": { "isOpen": null }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-04T15:45:55.333Z",
+            "oemUpdatedAt": "2026-06-04T15:26:19.203Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-sunroof"
+          }
+        },
+        {
+          "id": "closure-windows",
+          "type": "signal",
+          "attributes": {
+            "code": "closure-windows",
+            "name": "Windows",
+            "group": "Closure",
+            "status": { "value": "SUCCESS" },
+            "body": {
+              "values": [
+                { "row": 0, "column": 0, "isOpen": false },
+                { "row": 0, "column": 1, "isOpen": false },
+                { "row": 1, "column": 0, "isOpen": false },
+                { "row": 1, "column": 1, "isOpen": false }
+              ],
+              "rowCount": 2,
+              "columnCount": 2
+            }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/closure-windows"
+          }
+        },
+        {
+          "id": "connectivitysoftware-currentfirmwareversion",
+          "type": "signal",
+          "attributes": {
+            "code": "connectivitysoftware-currentfirmwareversion",
+            "name": "CurrentFirmwareVersion",
+            "group": "ConnectivitySoftware",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/connectivitysoftware-currentfirmwareversion"
+          }
+        },
+        {
+          "id": "connectivitystatus-isasleep",
+          "type": "signal",
+          "attributes": {
+            "code": "connectivitystatus-isasleep",
+            "name": "IsAsleep",
+            "group": "ConnectivityStatus",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/connectivitystatus-isasleep"
+          }
+        },
+        {
+          "id": "connectivitystatus-isdigitalkeypaired",
+          "type": "signal",
+          "attributes": {
+            "code": "connectivitystatus-isdigitalkeypaired",
+            "name": "IsDigitalKeyPaired",
+            "group": "ConnectivityStatus",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/connectivitystatus-isdigitalkeypaired"
+          }
+        },
+        {
+          "id": "connectivitystatus-isonline",
+          "type": "signal",
+          "attributes": {
+            "code": "connectivitystatus-isonline",
+            "name": "IsOnline",
+            "group": "ConnectivityStatus",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/connectivitystatus-isonline"
+          }
+        },
+        {
+          "id": "internalcombustionengine-amountremaining",
+          "type": "signal",
+          "attributes": {
+            "code": "internalcombustionengine-amountremaining",
+            "name": "AmountRemaining",
+            "group": "InternalCombustionEngine",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/internalcombustionengine-amountremaining"
+          }
+        },
+        {
+          "id": "internalcombustionengine-fuellevel",
+          "type": "signal",
+          "attributes": {
+            "code": "internalcombustionengine-fuellevel",
+            "name": "FuelLevel",
+            "group": "InternalCombustionEngine",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/internalcombustionengine-fuellevel"
+          }
+        },
+        {
+          "id": "internalcombustionengine-range",
+          "type": "signal",
+          "attributes": {
+            "code": "internalcombustionengine-range",
+            "name": "Range",
+            "group": "InternalCombustionEngine",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "PERMISSION",
+                "code": "UNKNOWN",
+                "title": "Unknown",
+                "detail": "Your application has insufficient permissions to access the requested resource. Please prompt the user to re-authenticate using Smartcar Connect.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "REAUTHENTICATE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/internalcombustionengine-range"
+          }
+        },
+        {
+          "id": "location-preciselocation",
+          "type": "signal",
+          "attributes": {
+            "code": "location-preciselocation",
+            "name": "PreciseLocation",
+            "group": "Location",
+            "status": { "value": "SUCCESS" },
+            "body": {
+              "latitude": 37.4292,
+              "longitude": 122.1381,
+              "locationType": "LAST_PARKED"
+            }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/location-preciselocation"
+          }
+        },
+        {
+          "id": "odometer-traveleddistance",
+          "type": "signal",
+          "attributes": {
+            "code": "odometer-traveleddistance",
+            "name": "TraveledDistance",
+            "group": "Odometer",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": 52891, "unit": "km" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.557Z",
+            "oemUpdatedAt": "2026-06-29T23:46:50.695Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/odometer-traveleddistance"
+          }
+        },
+        {
+          "id": "tractionbattery-range",
+          "type": "signal",
+          "attributes": {
+            "code": "tractionbattery-range",
+            "name": "Range",
+            "group": "TractionBattery",
+            "status": { "value": "SUCCESS" },
+            "body": {
+              "value": 253,
+              "type": "DEFAULT",
+              "additionalValues": [],
+              "unit": "km"
+            }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/tractionbattery-range"
+          }
+        },
+        {
+          "id": "tractionbattery-stateofcharge",
+          "type": "signal",
+          "attributes": {
+            "code": "tractionbattery-stateofcharge",
+            "name": "StateOfCharge",
+            "group": "TractionBattery",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": 57, "unit": "percent" }
+          },
+          "meta": {
+            "ingestedAt": "2026-06-30T00:03:55.110Z",
+            "retrievedAt": "2026-06-30T00:03:53.743Z",
+            "oemUpdatedAt": "2026-06-29T23:55:53.000Z"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/tractionbattery-stateofcharge"
+          }
+        },
+        {
+          "id": "vehicleidentification-nickname",
+          "type": "signal",
+          "attributes": {
+            "code": "vehicleidentification-nickname",
+            "name": "Nickname",
+            "group": "VehicleIdentification",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/vehicleidentification-nickname"
+          }
+        },
+        {
+          "id": "vehicleidentification-vin",
+          "type": "signal",
+          "attributes": {
+            "code": "vehicleidentification-vin",
+            "name": "VIN",
+            "group": "VehicleIdentification",
+            "status": { "value": "SUCCESS" },
+            "body": { "value": "VIWP1AB29P15LA85784N" }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/vehicleidentification-vin"
+          }
+        },
+        {
+          "id": "vehicleuseraccount-permissions",
+          "type": "signal",
+          "attributes": {
+            "code": "vehicleuseraccount-permissions",
+            "name": "Permissions",
+            "group": "VehicleUserAccount",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/vehicleuseraccount-permissions"
+          }
+        },
+        {
+          "id": "vehicleuseraccount-role",
+          "type": "signal",
+          "attributes": {
+            "code": "vehicleuseraccount-role",
+            "name": "Role",
+            "group": "VehicleUserAccount",
+            "status": {
+              "value": "ERROR",
+              "error": {
+                "type": "COMPATIBILITY",
+                "code": "VEHICLE_NOT_CAPABLE",
+                "title": "Vehicle Not Capable",
+                "detail": "The vehicle is incapable of performing your request.",
+                "description": "Deprecated. Use detail",
+                "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+              }
+            }
+          },
+          "meta": { "ingestedAt": "2026-06-30T00:03:55.110Z" },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals/vehicleuseraccount-role"
+          }
+        }
+      ],
+      "meta": { "totalCount": 31, "pageSize": 31, "pageNumber": 1 },
+      "links": {
+        "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/signals"
+      },
+      "included": {
+        "vehicle": {
+          "id": "a1d50709-3502-4faa-ba43-a5c7565e6a09",
+          "type": "vehicle",
+          "attributes": {
+            "make": "VOLKSWAGEN",
+            "model": "ID.4",
+            "year": 2023,
+            "powertrainType": "BEV",
+            "mode": "live"
+          },
+          "links": {
+            "self": "https://vehicle.api.smartcar.com/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09"
+          }
+        }
+      }
+    }
+  }
+]

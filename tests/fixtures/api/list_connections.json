@@ -1,0 +1,68 @@
+{
+  "data": [
+    {
+      "id": "553c49e4-08b0-4d28-b83c-fe9d539af4aa",
+      "type": "connection",
+      "attributes": {
+        "permissions": [
+          "control_charge",
+          "read_battery",
+          "read_charge",
+          "read_location",
+          "read_odometer",
+          "read_security",
+          "read_vehicle_info",
+          "read_vin"
+        ],
+        "vehicle": {
+          "make": "TESLA",
+          "model": "Model S",
+          "year": 2014,
+          "mode": "live",
+          "powertrainType": "BEV"
+        },
+        "user": {
+          "id": "218eda3b-0656-49a8-8f3d-360cdad07334"
+        }
+      },
+      "relationships": {
+        "vehicle": {
+          "data": {
+            "id": "36ab27d0-fd9d-4455-823a-ce30af709ffc",
+            "type": "vehicle"
+          },
+          "links": {
+            "related": "https://vehicle.api.smartcar.com/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc"
+          }
+        },
+        "user": {
+          "data": {
+            "id": "218eda3b-0656-49a8-8f3d-360cdad07334",
+            "type": "user"
+          }
+        }
+      },
+      "meta": {
+        "createdAt": "2025-05-03T02:45:45.349Z",
+        "updatedAt": "2026-06-21T02:56:21.130Z"
+      },
+      "links": {
+        "self": "https://vehicle.api.smartcar.com/v3/connections/553c49e4-08b0-4d28-b83c-fe9d539af4aa"
+      }
+    }
+  ],
+  "meta": {
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalCount": 1,
+    "orderBy": "createdAt",
+    "orderDirection": "DESC"
+  },
+  "links": {
+    "self": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10&filter%5Bvehicle.mode%5D=live",
+    "first": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10&filter%5Bvehicle.mode%5D=live",
+    "last": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10&filter%5Bvehicle.mode%5D=live",
+    "next": null,
+    "prev": null
+  }
+}

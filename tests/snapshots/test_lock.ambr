@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_lock[unknown_make-lock-200-success-locked-NoneType-1]
+# name: test_lock[unknown_make-lock-200-success-locked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -13,7 +13,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-NoneType-1]
+# name: test_lock[unknown_make-lock-200-success-locked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -27,7 +39,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-409-unreachable-unlocked-NoneType-1]
+# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-lock-409-unreachable-unlocked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -41,7 +65,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-200-success-unlocked-NoneType-1]
+# name: test_lock[unknown_make-lock-409-unreachable-unlocked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/lock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-200-success-unlocked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -55,7 +91,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-NoneType-1]
+# name: test_lock[unknown_make-unlock-200-success-unlocked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -69,7 +117,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-NoneType-1]
+# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-NoneType-1-v2]
   list([
     tuple(
       'post',
@@ -83,7 +143,19 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-500-server-unlocked-NoneType-4]
+# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-NoneType-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-500-server-unlocked-NoneType-4-v2]
   list([
     tuple(
       'post',
@@ -121,6 +193,42 @@
       dict({
         'action': 'UNLOCK',
       }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-500-server-unlocked-NoneType-4-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
       dict({
         'authorization': 'Bearer mock-token',
       }),

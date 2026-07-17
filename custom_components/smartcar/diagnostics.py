@@ -74,6 +74,9 @@ async def async_get_config_entry_diagnostics(
                     coordinator_name: coordinator.data
                     for coordinator_name, coordinator in coordinators.items()
                 },
+                "version": next(
+                    iter(coordinator.version for coordinator in coordinators.values())
+                ),
                 "metadata": metadata,
             },
             TO_REDACT,

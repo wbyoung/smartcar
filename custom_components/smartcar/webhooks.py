@@ -1,11 +1,10 @@
 from collections.abc import Callable
-import copy
 from functools import wraps
 import hmac
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Literal, cast
+from typing import Any, cast
 
 from aiohttp import web
 from homeassistant.components import cloud, webhook
@@ -15,19 +14,10 @@ from homeassistant.util import dt as dt_util
 
 from . import util
 from .const import CONF_APPLICATION_MANAGEMENT_TOKEN
-from .coordinator import DATAPOINT_CODE_MAP, SmartcarVehicleCoordinator
+from .coordinator import SmartcarVehicleCoordinator, _is_integrated
 from .types import SmartcarData
 
 _LOGGER = logging.getLogger(__name__)
-
-# values from the smartcar service that denote an imperial measurement and can
-# be converted by one of the imperial_conversion functions defined on an entity
-# description.
-_IMPERIAL_MEASUREMENTS = {"miles", "psi", "gallons"}
-
-_SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP: dict[str | None, str] = {
-    "charge-chargelimits": "limit",
-}
 
 
 async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str, bool]:
@@ -159,7 +149,9 @@ async def handle_webhook(
         ),
         None,
     )
-    coordinator = coordinators.get(vehicle_vin) if vehicle_vin else None
+    coordinator = coordinators.get(vehicle_id) or (
+        coordinators.get(vehicle_vin) if vehicle_vin else None
+    )
 
     if not coordinator:
         _LOGGER.debug(
@@ -205,92 +197,13 @@ def _handle_webhook_errors(
             _LOGGER.debug("ignoring error in webhook: %s", error)
 
 
-def _is_integrated(signal: dict) -> bool:
-    code: str | None = signal.get("code")
-    return code in DATAPOINT_CODE_MAP
-
-
 def _handle_webhook_signals(
     coordinator: SmartcarVehicleCoordinator,
     signals: list[dict],
 ) -> None:
     with coordinator.create_updated_data() as (add, updated_data):
-        data_changed = False
-
         for signal in signals:
-            name: str | None = signal.get("name")
-            status = signal.get("status", {})
-            is_error = status.get("value") == "ERROR"
-            code: str | None = signal.get("code")
-            body = copy.deepcopy(signal.get("body", {}))
-            meta = signal.get("meta", {})
+            add.from_signal_attributes(signal)
 
-            if is_error:
-                _handle_webhook_signal_error(
-                    name,
-                    status.get("error", {}),
-                    level="error" if _is_integrated(signal) else "debug",
-                )
-
-                body = {"value": None}
-
-            if body.get("unit") == "percent":
-                _handle_percent_unit_conversion(code, body)
-
-            if code in DATAPOINT_CODE_MAP:
-                assert code is not None
-
-                data_age = meta.get("oemUpdatedAt") if not is_error else None
-                fetched_at = meta.get("retrievedAt") if not is_error else None
-                unit = body.pop("unit", None)
-                unit_system = (
-                    "imperial"
-                    if unit in _IMPERIAL_MEASUREMENTS
-                    else "metric"
-                    if unit
-                    else None
-                )
-
-                if data_age:
-                    data_age = dt_util.utc_from_timestamp(data_age / 1000)
-                if fetched_at:
-                    fetched_at = dt_util.utc_from_timestamp(fetched_at / 1000)
-
-                add.from_response_body(
-                    code,
-                    body=body,
-                    unit_system=unit_system,
-                    data_age=data_age,
-                    fetched_at=fetched_at,
-                    can_clear_meta=not is_error,
-                )
-
-                data_changed = True
-
-        if data_changed:
+        if add.addition_made:
             coordinator.async_set_updated_data(updated_data)
-
-
-def _handle_percent_unit_conversion(code: str | None, body: dict[str, Any]) -> None:
-    if "values" in body:
-        item_key = _SIGNAL_BODY_MULTIVALUE_ITEM_KEY_MAP.get(code) or "value"
-        values = body["values"]
-        values = [value | {item_key: value[item_key] / 100} for value in values]
-        body["values"] = values
-        body.pop("unit")
-    else:
-        body["value"] /= 100
-        body.pop("unit")
-
-
-def _handle_webhook_signal_error(
-    signal_name: str | None,
-    error: dict,
-    *,
-    level: Literal["error", "debug"] = "error",
-) -> None:
-    error_type = error.get("type")
-    error_code = error.get("code")
-
-    logger_method = getattr(_LOGGER, level)
-    logger_method("error for signal %s: %s:%s", signal_name, error_type, error_code)

@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfSpeed,
+    UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
 )
@@ -50,6 +51,43 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _diag_status(body: object) -> object:
+    """Extract a diagnostic system status string from a webhook signal body.
+
+    Field name is inferred from Smartcar conventions; falls back across the
+    likely keys so it keeps working once real data flows for this vehicle.
+
+    Returns:
+        The extracted status or the body unchanged.
+    """
+    if not isinstance(body, dict):
+        return body
+    return body.get("status") or body.get("value")
+
+
+def _dtc_count(body: object) -> object:
+    if not isinstance(body, dict):
+        return body
+    value = body.get("value")
+    return body.get("count") if value is None else value
+
+
+def _dtc_list(body: object) -> object:
+    if not isinstance(body, dict):
+        return body
+    items = body.get("value") or body.get("values") or body.get("codes") or []
+    if not isinstance(items, list):
+        return str(items)
+    codes = [str(i.get("code", i)) if isinstance(i, dict) else str(i) for i in items]
+    return ", ".join(codes) if codes else "none"
+
+
+def _hvac_number(body: object) -> object:
+    if not isinstance(body, dict):
+        return body
+    return body.get("value")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -327,6 +365,83 @@ SENSOR_TYPES: tuple[SmartcarSensorDescription, ...] = (
         value_key_path="connectivitysoftware-currentfirmwareversion.value",
         icon="mdi:chip",
     ),
+    # --- Diagnostics (read_diagnostics) ---
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_ABS,
+        name="ABS Status",
+        value_key_path="diagnostics-abs",
+        value_cast=_diag_status,
+        icon="mdi:car-brake-abs",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_MIL,
+        name="Malfunction Indicator Lamp",
+        value_key_path="diagnostics-mil",
+        value_cast=_diag_status,
+        icon="mdi:engine",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_DTC_COUNT,
+        name="Trouble Code Count",
+        value_key_path="diagnostics-dtccount",
+        value_cast=_dtc_count,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:alert-circle",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_DTC_LIST,
+        name="Trouble Codes",
+        value_key_path="diagnostics-dtclist",
+        value_cast=_dtc_list,
+        icon="mdi:format-list-bulleted",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_EV_BATTERY_CONDITIONING,
+        name="EV Battery Conditioning Status",
+        value_key_path="diagnostics-evbatteryconditioning",
+        value_cast=_diag_status,
+        icon="mdi:battery-heart-variant",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_EV_CHARGING,
+        name="EV Charging Status",
+        value_key_path="diagnostics-evcharging",
+        value_cast=_diag_status,
+        icon="mdi:ev-station",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_EV_DRIVE_UNIT,
+        name="EV Drive Unit Status",
+        value_key_path="diagnostics-evdriveunit",
+        value_cast=_diag_status,
+        icon="mdi:cog",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.DIAG_EV_HV_BATTERY,
+        name="EV High Voltage Battery Status",
+        value_key_path="diagnostics-evhvbattery",
+        value_cast=_diag_status,
+        icon="mdi:car-battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # --- Climate status (read_climate) ---
+    SmartcarSensorDescription(
+        key=EntityDescriptionKey.CABIN_TARGET_TEMPERATURE,
+        name="Cabin Target Temperature",
+        value_key_path="hvac-cabintargettemperature",
+        value_cast=_hvac_number,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermostat",
+    ),
 )
 
 META_SENSOR_TYPES: tuple[SmartcarMetaSensorDescription, ...] = (
@@ -357,7 +472,7 @@ async def async_setup_entry(  # noqa: RUF029
         entry.runtime_data.coordinators
     )
     meta_coordinator = entry.runtime_data.meta_coordinator
-    _LOGGER.debug("Setting up sensors for VINs: %s", list(coordinators.keys()))
+    _LOGGER.debug("Setting up sensors for vehicles: %s", list(coordinators.keys()))
     entities = [
         SmartcarSensor(coordinator, description)
         for coordinator in coordinators.values()
@@ -367,10 +482,20 @@ async def async_setup_entry(  # noqa: RUF029
         SmartcarMetaSensor(
             meta_coordinator,
             description,
-            {"identifiers": {(DOMAIN, vehicle_coordinator.vin)}},
+            {"identifiers": {(DOMAIN, device_id)}},
         )
         for vehicle_coordinator in coordinators.values()
         for description in META_SENSOR_TYPES
+        if (
+            vehicle_coordinator.version == "v3"
+            and (device_id := vehicle_coordinator.vehicle_id)
+        )
+        or (
+            vehicle_coordinator.version == "v2"
+            and (
+                device_id := (vehicle_coordinator.vin or vehicle_coordinator.vehicle_id)
+            )
+        )
     ]
     _LOGGER.info("Adding %s Smartcar sensor entities", len(entities))
     async_add_entities(entities)
@@ -403,10 +528,10 @@ class SmartcarMetaSensor(CoordinatorEntity[DataUpdateCoordinator], SensorEntity)
         """Initialize."""
         super().__init__(coordinator)
 
-        (_, vin) = next(iter(device_info["identifiers"]))
+        (_, device_id) = next(iter(device_info["identifiers"]))
 
         self.entity_description = description
-        self._attr_unique_id = f"{vin}_{description.key}"
+        self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_device_info = device_info
 
     @property

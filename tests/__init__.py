@@ -11,8 +11,14 @@ from pytest_homeassistant_custom_component.common import (
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.smartcar.const import DOMAIN
+from custom_components.smartcar.types import APIVersion
 
-MOCK_API_ENDPOINT = "http://test.local"
+MOCK_API_ENDPOINT = "http://test.local/v3"
+MOCK_API_ENDPOINT_LEGACY = "http://test.local/v2.0"
+MOCK_API_ENDPOINTS: dict[APIVersion, str] = {
+    "v2": MOCK_API_ENDPOINT_LEGACY,
+    "v3": MOCK_API_ENDPOINT,
+}
 MOCK_UTC_NOW = dt.datetime(2026, 2, 17, 16, 21, 32, 3842, tzinfo=dt.UTC)
 
 
@@ -36,14 +42,18 @@ def aioclient_mock_append_vehicle_request(
     api_response_type: str,
     vehicle_fixture: str,
     vehicle_attributes: dict,
+    client_id_version: APIVersion,
 ):
     vehicle_id = vehicle_attributes["id"]
-    fixture_name = f"api/{vehicle_fixture}.{api_response_type}.json"
+    fixture_name = (
+        "api/"
+        f"{vehicle_fixture}.{api_response_type}"
+        f"{'.v3' if client_id_version == 'v3' else ''}.json"
+    )
     http_calls = load_json_array_fixture(fixture_name, DOMAIN)
 
     for http_call in http_calls:
         method = http_call.get("method", "get")
-        version = http_call.get("version", "2.0")
         params = http_call.get("params", {})
         status = http_call.get("status", 200)
         side_effect = http_call.get("side_effect")
@@ -72,7 +82,7 @@ def aioclient_mock_append_vehicle_request(
                 raise side_effect_class()
 
         getattr(aioclient_mock, method)(
-            f"{MOCK_API_ENDPOINT}/v{version}{path}",
+            f"{MOCK_API_ENDPOINTS[client_id_version]}{path}",
             params=params,
             status=status,
             side_effect=side_effect,

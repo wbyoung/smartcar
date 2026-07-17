@@ -1,9 +1,14 @@
 from typing import cast
 
 from aiohttp import ClientSession
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    LocalOAuth2Implementation,
+    OAuth2Session,
+)
 
 from .auth import AbstractAuth
+from .types import APIVersion
+from .util import api_version_for_client_id
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
@@ -12,11 +17,20 @@ class AsyncConfigEntryAuth(AbstractAuth):
     def __init__(
         self,
         websession: ClientSession,
+        implementation: LocalOAuth2Implementation,
         oauth_session: OAuth2Session,
-        host: str,
+        endpoints: dict[APIVersion, str],
+        *,
+        user_id: str | None = None,
     ) -> None:
         """Initialize Smartcar auth."""
-        super().__init__(websession, host)
+        super().__init__(
+            websession,
+            endpoints,
+            version=api_version_for_client_id(implementation.client_id),
+            user_id=user_id,
+        )
+        self._oauth_impl = implementation
         self._oauth_session = oauth_session
 
     async def async_get_access_token(self) -> str:
@@ -37,10 +51,13 @@ class AccessTokenAuthImpl(AbstractAuth):
         self,
         websession: ClientSession,
         access_token: str,
-        host: str,
+        endpoints: dict[APIVersion, str],
+        *,
+        version: APIVersion,
+        user_id: str | None = None,
     ) -> None:
-        """Init the Nest client library auth implementation."""
-        super().__init__(websession, host)
+        """Initialize Smartcar auth with pre-defined access token."""
+        super().__init__(websession, endpoints, version=version, user_id=user_id)
         self._access_token = access_token
 
     async def async_get_access_token(self) -> str:

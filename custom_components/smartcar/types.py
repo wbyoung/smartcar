@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .auth import AbstractAuth
-
 if TYPE_CHECKING:
+    from .auth import AbstractAuth
     from .coordinator import SmartcarVehicleCoordinator
+
+
+type APIVersion = Literal["v2", "v3"]
 
 
 @dataclass(frozen=True, kw_only=True)

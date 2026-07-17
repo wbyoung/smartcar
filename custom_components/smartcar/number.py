@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import logging
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -33,7 +33,7 @@ ENTITY_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
             (
                 round(value["limit"] * 100)
                 for value in values or []
-                if value["type"].lower() == "global" and value["condition"] is None
+                if value["type"].lower() == "global" and value.get("condition") is None
             ),
             None,
         ),
@@ -86,9 +86,16 @@ class SmartcarChargeLimitNumber(
         assert value >= 50, "Value must be between 50 and 100"
         assert value <= 100, "Value must be between 50 and 100"
 
-        if await self._async_send_command(
-            "/charge/limit", {"limit": (raw_value := value / 100.0)}
-        ):
+        version = self.coordinator.auth.version
+        raw_value = value / 100.0
+        command = "/charge/set-limit"
+        payload: dict[str, Any] = {"data": {"attributes": {"percent": value}}}
+
+        if version == "v2":
+            command = "/charge/limit"
+            payload = {"limit": (raw_value := value / 100.0)}
+
+        if await self._async_send_command(command, payload):
             non_global_or_conditional_limits = [
                 value
                 for value in self._extract_raw_value() or []

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "id": "vehicleidentification-vin",
+    "type": "signal",
+    "attributes": {
+      "code": "vehicleidentification-vin",
+      "name": "VIN",
+      "group": "VehicleIdentification",
+
+      "status": {
+        "value": "ERROR",
+        "error": {
+          "type": "COMPATIBILITY",
+          "code": "VEHICLE_NOT_CAPABLE",
+          "title": "Vehicle Not Capable",
+          "detail": "The vehicle is incapable of performing your request.",
+          "description": "Mock description: Not ingested.",
+          "resolution": { "type": "UNKNOWN_RESOLUTION_TYPE" }
+        }
+      },
+      "body": {
+        "value": null
+      }
+    },
+    "links": {
+      "self": "https://vehicle.api.smartcar.com/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin"
+    }
+  },
+  "included": {
+    "vehicle": {
+      "id": "36ab27d0-fd9d-4455-823a-ce30af709ffc",
+      "type": "vehicle",
+      "attributes": {
+        "make": "TESLA",
+        "model": "Model S",
+        "year": 2014,
+        "powertrainType": "BEV",
+        "mode": "live"
+      },
+      "links": {
+        "self": "https://vehicle.api.smartcar.com/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc"
+      }
+    }
+  }
+}

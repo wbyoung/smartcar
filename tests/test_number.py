@@ -20,11 +20,19 @@ from pytest_homeassistant_custom_component.common import (
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
-from . import MOCK_API_ENDPOINT, setup_added_integration, setup_integration
+from custom_components.smartcar.types import APIVersion
+
+from . import (
+    MOCK_API_ENDPOINT,
+    MOCK_API_ENDPOINT_LEGACY,
+    setup_added_integration,
+    setup_integration,
+)
 
 NO_ERROR = None.__class__
 
 
+@pytest.mark.parametrize("client_id_version", ["v2", "v3"])
 @pytest.mark.usefixtures("enable_all_entities")
 @pytest.mark.parametrize(
     (
@@ -57,6 +65,7 @@ async def test_charging_limit(
     expected_state: int,
     expected_raises: Exception,
     api_calls: int,
+    client_id_version: APIVersion,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -65,14 +74,25 @@ async def test_charging_limit(
     await setup_integration(hass, mock_config_entry)
     assert len(aioclient_mock.mock_calls) == 1
 
-    aioclient_mock.post(
-        f"{MOCK_API_ENDPOINT}/v2.0/vehicles/{vehicle['id']}/charge/limit",
-        status=api_status,
-        json={
-            "message": "Some message related to the action unused by our code",
-            "status": api_status_slug,
-        },
-    )
+    if client_id_version == "v2":
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{vehicle['id']}/charge/limit",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+    else:
+        assert client_id_version == "v3"
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT}/vehicles/{vehicle['id']}/commands/charge/set-limit",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
 
     try:
         await hass.services.async_call(
@@ -178,7 +198,7 @@ async def test_restore_state_from_v2(
 
     await setup_added_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["vin"]]
+    coordinator = mock_config_entry.runtime_data.coordinators[vehicle_attributes["id"]]
 
     coordinator_data = {
         key: data

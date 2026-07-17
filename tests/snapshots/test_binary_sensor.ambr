@@ -27,6 +27,21 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_cabin_hvac_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'BYD Seal U Dm-i Cabin HVAC Active',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.byd_seal_u_dm_i_cabin_hvac_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_charging_cable_plugged_in]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -204,6 +219,21 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_front_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'BYD Seal U Dm-i Front Defroster Active',
+      'icon': 'mdi:car-defrost-front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.byd_seal_u_dm_i_front_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_front_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -247,6 +277,21 @@
     'state': 'on',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_rear_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'BYD Seal U Dm-i Rear Defroster Active',
+      'icon': 'mdi:car-defrost-rear',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.byd_seal_u_dm_i_rear_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -269,6 +314,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.byd_seal_u_dm_i_rear_trunk_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-binary_sensor][binary_sensor.byd_seal_u_dm_i_steering_wheel_heater_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'BYD Seal U Dm-i Steering Wheel Heater Active',
+      'icon': 'mdi:steering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.byd_seal_u_dm_i_steering_wheel_heater_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -378,6 +438,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.jaguar_i_pace_battery_heater_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_cabin_hvac_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'JAGUAR I-PACE Cabin HVAC Active',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jaguar_i_pace_cabin_hvac_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -579,6 +654,21 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_front_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'JAGUAR I-PACE Front Defroster Active',
+      'icon': 'mdi:car-defrost-front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jaguar_i_pace_front_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_front_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -624,6 +714,21 @@
     'state': 'on',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_rear_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'JAGUAR I-PACE Rear Defroster Active',
+      'icon': 'mdi:car-defrost-rear',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jaguar_i_pace_rear_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -654,6 +759,21 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_steering_wheel_heater_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'JAGUAR I-PACE Steering Wheel Heater Active',
+      'icon': 'mdi:steering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.jaguar_i_pace_steering_wheel_heater_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-binary_sensor][binary_sensor.jaguar_i_pace_sunroof]
@@ -769,6 +889,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.polestar_polestar_2_battery_heater_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_cabin_hvac_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'POLESTAR Polestar 2 Cabin HVAC Active',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.polestar_polestar_2_cabin_hvac_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -970,6 +1105,21 @@
     'state': 'off',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_front_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'POLESTAR Polestar 2 Front Defroster Active',
+      'icon': 'mdi:car-defrost-front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.polestar_polestar_2_front_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_front_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1015,6 +1165,21 @@
     'state': 'on',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_rear_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'POLESTAR Polestar 2 Rear Defroster Active',
+      'icon': 'mdi:car-defrost-rear',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.polestar_polestar_2_rear_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1045,6 +1210,21 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_steering_wheel_heater_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'POLESTAR Polestar 2 Steering Wheel Heater Active',
+      'icon': 'mdi:steering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.polestar_polestar_2_steering_wheel_heater_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-binary_sensor][binary_sensor.polestar_polestar_2_sunroof]
@@ -1158,6 +1338,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.vw_id_4_battery_heater_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_cabin_hvac_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'VW ID.4 Cabin HVAC Active',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vw_id_4_cabin_hvac_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1339,6 +1534,21 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_front_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'VW ID.4 Front Defroster Active',
+      'icon': 'mdi:car-defrost-front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vw_id_4_front_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_front_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1380,6 +1590,21 @@
     'state': 'on',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_rear_defroster_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'VW ID.4 Rear Defroster Active',
+      'icon': 'mdi:car-defrost-rear',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vw_id_4_rear_defroster_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1402,6 +1627,21 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.vw_id_4_rear_trunk_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-binary_sensor][binary_sensor.vw_id_4_steering_wheel_heater_active]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'VW ID.4 Steering Wheel Heater Active',
+      'icon': 'mdi:steering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vw_id_4_steering_wheel_heater_active',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

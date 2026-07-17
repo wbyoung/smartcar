@@ -1,0 +1,17 @@
+{
+  "data": [],
+  "meta": {
+    "pageNumber": 1,
+    "pageSize": 0,
+    "totalCount": 0,
+    "orderBy": "createdAt",
+    "orderDirection": "DESC"
+  },
+  "links": {
+    "self": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10",
+    "first": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10",
+    "last": "https://vehicle.api.smartcar.com/v3/connections?page%5Bnumber%5D=1&page%5Bsize%5D=10",
+    "next": null,
+    "prev": null
+  }
+}
