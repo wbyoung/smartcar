@@ -381,6 +381,12 @@ async def _store_all_vehicles(
                 )
             }
 
+            # check for an empty vehicle list first: with no connections at
+            # all, the user count check below would misreport the problem as
+            # a multi-user configuration issue.
+            if not vehicle_ids:
+                raise EmptyVehicleListError
+
             if len(user_ids) != 1:
                 raise UnsupportedUserConfigurationError
 

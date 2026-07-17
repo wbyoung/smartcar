@@ -202,6 +202,20 @@ async def test_full_flow(
             },
             {
                 "form_type": FlowResultType.ABORT,
+                "abort_reason": "not_single_user_app",
+                "errors": {},
+            },
+        ),
+        (
+            {"empty_connections"},
+            {},
+            {
+                CONF_APPLICATION_ID: "my-app-id",
+                "use_webhooks": False,
+            },
+            {
+                "form_type": FlowResultType.ABORT,
+                "abort_reason": "no_vehicles",
                 "errors": {},
             },
         ),
@@ -209,6 +223,7 @@ async def test_full_flow(
     ids=[
         "missing_application_id",
         "invalid_user_configuration",
+        "empty_connections",
     ],
 )
 async def test_full_flow_v3_only(
@@ -255,6 +270,7 @@ async def _test_full_flow(
     expected_result = deepcopy(expected_result)
     final_step = expected_result.pop("final_step", None)
     expected_errors = expected_result.pop("errors", None)
+    expected_abort_reason = expected_result.pop("abort_reason", None)
     expected_placeholders = expected_result.pop("description_placeholders", None)
     expected_data = expected_result.pop("data", {})
     expected_form_type = expected_result.pop(
@@ -370,12 +386,15 @@ async def _test_full_flow(
                 OAUTH2_TOKEN,
                 json=server_access_token,
             )
+            connections_fixture = "list_connections"
+            if "multi_user_app" in setup:
+                connections_fixture = "list_connections_with_multiple_users"
+            elif "empty_connections" in setup:
+                connections_fixture = "list_connections_empty"
             aioclient_mock.get(
                 f"{MOCK_API_ENDPOINT}/connections",
                 json=load_json_object_fixture(
-                    f"api/list_connections{
-                        '_with_multiple_users' if 'multi_user_app' in setup else ''
-                    }.json",
+                    f"api/{connections_fixture}.json",
                     DOMAIN,
                 ),
             )
@@ -388,7 +407,11 @@ async def _test_full_flow(
             )
             expected_aioclient_mock_calls += (
                 3  # oauth token & 2 for connections/signals
-                - (1 if "multi_user_app" in setup else 0)
+                - (
+                    1  # the signals request is never made when the flow aborts
+                    if setup & {"multi_user_app", "empty_connections"}
+                    else 0
+                )
             )
 
         with (
@@ -422,6 +445,9 @@ async def _test_full_flow(
     if expected_errors is not None:
         assert result.get("errors", {}) == expected_errors
         assert result["description_placeholders"] == expected_placeholders
+
+        if expected_abort_reason is not None:
+            assert result["reason"] == expected_abort_reason
     else:
         entries = hass.config_entries.async_entries(DOMAIN)
         assert len(entries) == 1

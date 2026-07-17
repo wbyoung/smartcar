@@ -370,6 +370,28 @@
   list([
   ])
 # ---
+# name: test_full_flow_v3_only[empty_connections-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
 # name: test_full_flow_v3_only[invalid_user_configuration-v3]
   list([
     tuple(
