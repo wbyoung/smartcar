@@ -275,6 +275,20 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-switch][switch.byd_seal_u_dm_i_climate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i Climate',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.byd_seal_u_dm_i_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-switch][switch.jaguar_i_pace_charging]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -291,6 +305,20 @@
     'state': 'on',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-switch][switch.jaguar_i_pace_climate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Climate',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.jaguar_i_pace_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-vw_id_4-switch][switch.vw_id_4_charging]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -303,5 +331,19 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-switch][switch.vw_id_4_climate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Climate',
+      'icon': 'mdi:air-conditioner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.vw_id_4_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---

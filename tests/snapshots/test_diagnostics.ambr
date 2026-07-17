@@ -95,7 +95,7 @@
           'access_token': '**REDACTED**',
           'installed_app_id': '2d474f47-bab5-4438-9d37-478148b9d073',
           'refresh_token': '**REDACTED**',
-          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security',
+          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security read_diagnostics read_climate control_climate',
         }),
         'vehicles': dict({
           'a1d50709-3502-4faa-ba43-a5c7565e6a09': dict({
@@ -237,7 +237,7 @@
           'access_token': '**REDACTED**',
           'installed_app_id': '2d474f47-bab5-4438-9d37-478148b9d073',
           'refresh_token': '**REDACTED**',
-          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security',
+          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security read_diagnostics read_climate control_climate',
         }),
         'vehicles': dict({
           'a1d50709-3502-4faa-ba43-a5c7565e6a09': dict({
@@ -284,7 +284,7 @@
           'access_token': '**REDACTED**',
           'installed_app_id': '2d474f47-bab5-4438-9d37-478148b9d073',
           'refresh_token': '**REDACTED**',
-          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security',
+          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security read_diagnostics read_climate control_climate',
         }),
         'vehicles': dict({
           'a1d50709-3502-4faa-ba43-a5c7565e6a09': dict({
@@ -335,7 +335,7 @@
           'access_token': '**REDACTED**',
           'installed_app_id': '2d474f47-bab5-4438-9d37-478148b9d073',
           'refresh_token': '**REDACTED**',
-          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security',
+          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security read_diagnostics read_climate control_climate',
         }),
         'vehicles': dict({
           'db745230-7f7c-4791-bcaa-185facf371be': dict({
@@ -915,7 +915,7 @@
           'access_token': '**REDACTED**',
           'installed_app_id': '2d474f47-bab5-4438-9d37-478148b9d073',
           'refresh_token': '**REDACTED**',
-          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security',
+          'scopes': 'read_vehicle_info read_vin read_battery read_charge read_engine_oil read_fuel read_location read_odometer read_security read_tires control_charge control_security read_diagnostics read_climate control_climate',
         }),
         'vehicles': dict({
           'db745230-7f7c-4791-bcaa-185facf371be': dict({

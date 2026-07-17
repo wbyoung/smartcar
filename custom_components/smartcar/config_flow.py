@@ -8,6 +8,7 @@ from aiohttp import ClientConnectorError, ClientError
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlowResult,
     OptionsFlow,
@@ -169,7 +170,12 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
         )
 
     def _initial_data(self) -> dict[str, Any]:
-        return self._get_reauth_entry().data if self.source == SOURCE_REAUTH else {}
+        result: dict[str, Any] = {}
+        if self.source == SOURCE_REAUTH:
+            result = self._get_reauth_entry().data
+        if self.source == SOURCE_RECONFIGURE:
+            result = self._get_reconfigure_entry().data
+        return result
 
     @property
     def selected_scopes(self) -> list[Scope]:
@@ -269,6 +275,20 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             return await self.async_step_webhooks()
         return await super().async_step_auth(user_input)
 
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,  # noqa: ARG002
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry.
+
+        Replays the customized flow (webhooks then scopes) before re-running
+        the OAuth authorization so permissions can be changed after setup.
+
+        Returns:
+            The config flow result.
+        """
+        return await self.async_step_user()
+
     async def async_step_reauth(
         self,
         entry_data: Mapping[str, Any],  # noqa: ARG002
@@ -331,10 +351,15 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
 
         await self.async_set_unique_id(unique_id_from_entry_data(data))
 
-        other_vins = vehicle_vins_in_use(
-            self.hass,
-            self._get_reauth_entry() if self.source == SOURCE_REAUTH else None,
+        current_entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+            if self.source == SOURCE_RECONFIGURE
+            else None
         )
+
+        other_vins = vehicle_vins_in_use(self.hass, current_entry)
         duplicate_vins = [
             details["vin"]
             for details in data.get("vehicles", {}).values()
@@ -348,8 +373,6 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             )
 
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-
             self._abort_if_unique_id_mismatch(
                 reason="wrong_vehicles",
                 description_placeholders={
@@ -358,16 +381,27 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
             )
 
             return self.async_update_reload_and_abort(
-                reauth_entry, data={**self._initial_data(), **data}
+                current_entry, data={**self._initial_data(), **data}
             )
 
-        self._abort_if_unique_id_configured()
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(
+                reason="wrong_vehicles",
+                description_placeholders={
+                    "vins": vins_from_entry_data(self._initial_data())
+                },
+            )
+        else:
+            self._abort_if_unique_id_configured()
 
         # populate webhook details
         if CONF_APPLICATION_MANAGEMENT_TOKEN in data:
             try:
                 webhook_id, webhook_url, cloudhook = await _get_webhook_details(
-                    self.hass
+                    self.hass,
+                    self._initial_data().get(CONF_WEBHOOK_ID)
+                    if self.source == SOURCE_RECONFIGURE
+                    else None,
                 )
             except cloud.CloudNotConnected:
                 return self.async_abort(reason="cloud_not_connected")
@@ -380,6 +414,20 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 **description_placeholders,
                 "webhook_url": webhook_url,
             }
+
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_data = {**self._initial_data(), **data}
+            if CONF_APPLICATION_MANAGEMENT_TOKEN not in data:
+                # webhooks were disabled during reconfigure; drop stale details
+                reconfigure_data.pop(CONF_APPLICATION_MANAGEMENT_TOKEN, None)
+                reconfigure_data.pop(CONF_WEBHOOK_ID, None)
+                reconfigure_data.pop(CONF_CLOUDHOOK, None)
+
+            return self.async_update_reload_and_abort(
+                current_entry,
+                data=reconfigure_data,
+                reason="reconfigure_successful",
+            )
 
         return self.async_create_entry(
             title=DEFAULT_NAME,

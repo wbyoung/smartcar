@@ -48,6 +48,18 @@ VEHICLE_RIGHT_COLUMN = 1
 
 UPDATE_INTERVAL = timedelta(hours=6)
 
+# Signal error conditions that are structural or otherwise expected for a given
+# vehicle and therefore recur on every update (e.g. a vehicle that is simply not
+# capable of a signal, or charge signals while not charging). Logging these at
+# ERROR floods the log with permanent noise, so they are demoted to DEBUG.
+# Genuine/actionable errors keep their original level.
+_BENIGN_SIGNAL_ERRORS: frozenset[tuple[str | None, str | None]] = frozenset(
+    {
+        ("COMPATIBILITY", "VEHICLE_NOT_CAPABLE"),
+        ("VEHICLE_STATE", "NOT_CHARGING"),
+    }
+)
+
 
 @dataclass
 class DatapointConfig:
@@ -477,6 +489,51 @@ DATAPOINT_ENTITY_KEY_MAP = {
         [],
         None,
         None,
+    ),
+    # Diagnostics (webhook-only, require read_diagnostics)
+    EntityDescriptionKey.DIAG_ABS: DatapointConfig(
+        "diagnostics-abs", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_MIL: DatapointConfig(
+        "diagnostics-mil", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_DTC_COUNT: DatapointConfig(
+        "diagnostics-dtccount", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_DTC_LIST: DatapointConfig(
+        "diagnostics-dtclist", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_BATTERY_CONDITIONING: DatapointConfig(
+        "diagnostics-evbatteryconditioning", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_CHARGING: DatapointConfig(
+        "diagnostics-evcharging", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_DRIVE_UNIT: DatapointConfig(
+        "diagnostics-evdriveunit", ["read_diagnostics"], None, None
+    ),
+    EntityDescriptionKey.DIAG_EV_HV_BATTERY: DatapointConfig(
+        "diagnostics-evhvbattery", ["read_diagnostics"], None, None
+    ),
+    # Climate status (webhook-only, require read_climate)
+    EntityDescriptionKey.CABIN_TARGET_TEMPERATURE: DatapointConfig(
+        "hvac-cabintargettemperature", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_CABIN_HVAC_ACTIVE: DatapointConfig(
+        "hvac-iscabinhvacactive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_FRONT_DEFROSTER_ACTIVE: DatapointConfig(
+        "hvac-isfrontdefrosteractive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_REAR_DEFROSTER_ACTIVE: DatapointConfig(
+        "hvac-isreardefrosteractive", ["read_climate"], None, None
+    ),
+    EntityDescriptionKey.IS_STEERING_HEATER_ACTIVE: DatapointConfig(
+        "hvac-issteeringheateractive", ["read_climate"], None, None
+    ),
+    # Climate control switch (reads HVAC-active state, requires control_climate)
+    EntityDescriptionKey.CLIMATE: DatapointConfig(
+        "hvac-iscabinhvacactive", ["read_climate", "control_climate"], None, None
     ),
 }
 
@@ -1001,6 +1058,9 @@ def _handle_webhook_signal_error(
 ) -> None:
     error_type = error.get("type")
     error_code = error.get("code")
+
+    if (error_type, error_code) in _BENIGN_SIGNAL_ERRORS:
+        level = "debug"
 
     logger_method = getattr(_LOGGER, level)
     logger_method("error for signal %s: %s:%s", signal_name, error_type, error_code)

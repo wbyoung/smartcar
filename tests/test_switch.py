@@ -22,6 +22,7 @@ from pytest_homeassistant_custom_component.common import (
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
+from custom_components.smartcar import switch as switch_module
 from custom_components.smartcar.types import APIVersion
 
 from . import (
@@ -137,6 +138,115 @@ async def test_switch(
 )
 async def test_webhook_update(webhook_scenario: Callable[[], Awaitable[None]]) -> None:
     await webhook_scenario()
+
+
+def test_hvac_bool_cast() -> None:
+    """Test extraction of HVAC booleans from webhook signal bodies."""
+    assert switch_module._hvac_bool({"value": True}) is True
+    assert switch_module._hvac_bool({"value": False}) is False
+    assert switch_module._hvac_bool({}) is None
+    assert switch_module._hvac_bool(True) is True  # noqa: FBT003
+    assert switch_module._hvac_bool(None) is None
+
+
+@pytest.mark.parametrize("client_id_version", ["v2", "v3"])
+@pytest.mark.parametrize(
+    (
+        "service_action",
+        "api_status",
+        "api_status_slug",
+        "expected_state",
+        "expected_v2_action",
+    ),
+    [
+        (SERVICE_TURN_ON, 200, "success", STATE_ON, "START"),
+        (SERVICE_TURN_OFF, 200, "success", STATE_OFF, "STOP"),
+        (SERVICE_TURN_ON, 409, "unreachable", STATE_OFF, "START"),
+        (SERVICE_TURN_OFF, 409, "unreachable", STATE_OFF, "STOP"),
+    ],
+    ids=["turn_on", "turn_off", "turn_on_unreachable", "turn_off_unreachable"],
+)
+@pytest.mark.parametrize("vehicle_fixture", ["unknown_make"])
+async def test_climate_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    vehicle: AsyncMock,
+    service_action: str,
+    api_status: int,
+    api_status_slug: str,
+    expected_state: str,
+    expected_v2_action: str,
+    client_id_version: APIVersion,
+) -> None:
+    """Test starting/stopping climate (preconditioning)."""
+
+    await setup_integration(hass, mock_config_entry)
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # seed HVAC data (not present in the vehicle fixture) so the climate
+    # switch becomes available and starts from a known state
+    coordinator = mock_config_entry.runtime_data.coordinators[vehicle["id"]]
+    coordinator.async_set_updated_data(
+        {**(coordinator.data or {}), "hvac-iscabinhvacactive": {"value": False}}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.smartcar_784n_climate").state == STATE_OFF
+
+    if client_id_version == "v2":
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{vehicle['id']}/climate",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+    else:
+        assert client_id_version == "v3"
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT}/vehicles/{vehicle['id']}/commands/climate/start",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+        aioclient_mock.post(
+            f"{MOCK_API_ENDPOINT}/vehicles/{vehicle['id']}/commands/climate/stop",
+            status=api_status,
+            json={
+                "message": "Some message related to the action unused by our code",
+                "status": api_status_slug,
+            },
+        )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service_action,
+        {ATTR_ENTITY_ID: "switch.smartcar_784n_climate"},
+        blocking=True,
+    )
+
+    switch_state = hass.states.get("switch.smartcar_784n_climate")
+    assert switch_state.state == expected_state
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+    (method, url, data, _headers) = aioclient_mock.mock_calls[1]
+    expected_subpath = "start" if service_action == SERVICE_TURN_ON else "stop"
+
+    assert method == "post"
+
+    if client_id_version == "v2":
+        assert str(url).endswith(f"/vehicles/{vehicle['id']}/climate")
+        assert data == {"action": expected_v2_action}
+    else:
+        assert str(url).endswith(
+            f"/vehicles/{vehicle['id']}/commands/climate/{expected_subpath}"
+        )
+        assert data is None
 
 
 RESTORE_STATE_V2_PARAMETRIZE_ARGS = [

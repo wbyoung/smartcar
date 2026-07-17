@@ -24,6 +24,17 @@ from .entity import SmartcarEntity, SmartcarEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
+def _hvac_bool(body: object) -> object:
+    """Extract a boolean from an HVAC webhook signal body ({"value": bool}).
+
+    Returns:
+        The extracted boolean or the body unchanged.
+    """
+    if isinstance(body, dict):
+        return body.get("value")
+    return body
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartcarBinarySensorDescription(
     BinarySensorEntityDescription, SmartcarEntityDescription
@@ -294,6 +305,39 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         name="Fast Charger Connected",
         value_key_path="charge-isfastchargerpresent.value",
         device_class=BinarySensorDeviceClass.PLUG,
+    ),
+    # --- Climate status (read_climate) ---
+    SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.IS_CABIN_HVAC_ACTIVE,
+        name="Cabin HVAC Active",
+        value_key_path="hvac-iscabinhvacactive",
+        value_cast=_hvac_bool,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:air-conditioner",
+    ),
+    SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.IS_FRONT_DEFROSTER_ACTIVE,
+        name="Front Defroster Active",
+        value_key_path="hvac-isfrontdefrosteractive",
+        value_cast=_hvac_bool,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:car-defrost-front",
+    ),
+    SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.IS_REAR_DEFROSTER_ACTIVE,
+        name="Rear Defroster Active",
+        value_key_path="hvac-isreardefrosteractive",
+        value_cast=_hvac_bool,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:car-defrost-rear",
+    ),
+    SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.IS_STEERING_HEATER_ACTIVE,
+        name="Steering Wheel Heater Active",
+        value_key_path="hvac-issteeringheateractive",
+        value_cast=_hvac_bool,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:steering",
     ),
 )
 

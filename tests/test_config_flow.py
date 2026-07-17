@@ -1010,6 +1010,203 @@ async def test_reauth(
     assert compare_entry_data == expected_entry_data
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize("vehicle_fixture", ["vw_id_4"])
+@pytest.mark.parametrize(
+    (
+        "entry_data",
+        "user_input",
+        "new_vehicle_id",
+        "expected_result",
+    ),
+    [
+        (
+            {},
+            {"use_webhooks": False},
+            "a1d50709-3502-4faa-ba43-a5c7565e6a09",
+            {
+                "abort_reason": "reconfigure_successful",
+                "access_token": "updated-access-token",
+                "setup_calls": 1,
+            },
+        ),
+        (
+            {
+                CONF_APPLICATION_MANAGEMENT_TOKEN: "old_mock_amt",
+                CONF_CLOUDHOOK: False,
+                CONF_WEBHOOK_ID: "original_webhook_id",
+            },
+            {"use_webhooks": True, CONF_APPLICATION_MANAGEMENT_TOKEN: "mock_amt"},
+            "a1d50709-3502-4faa-ba43-a5c7565e6a09",
+            {
+                "abort_reason": "reconfigure_successful",
+                "access_token": "updated-access-token",
+                "setup_calls": 1,
+                "entry_data": {
+                    CONF_APPLICATION_MANAGEMENT_TOKEN: "mock_amt",
+                    CONF_CLOUDHOOK: False,
+                    CONF_WEBHOOK_ID: "original_webhook_id",
+                },
+            },
+        ),
+        (
+            {
+                CONF_APPLICATION_MANAGEMENT_TOKEN: "old_mock_amt",
+                CONF_CLOUDHOOK: False,
+                CONF_WEBHOOK_ID: "original_webhook_id",
+            },
+            {"use_webhooks": False},
+            "a1d50709-3502-4faa-ba43-a5c7565e6a09",
+            {
+                "abort_reason": "reconfigure_successful",
+                "access_token": "updated-access-token",
+                "setup_calls": 1,
+            },
+        ),
+        (
+            {},
+            {"use_webhooks": False},
+            "a-different-vehicle-id",
+            {
+                "abort_reason": "wrong_vehicles",
+                "placeholders": {"vins": "VIWP1AB29P15LA85784N"},
+                "access_token": "mock-access-token",
+                "setup_calls": 0,
+            },
+        ),
+    ],
+    ids=[
+        "reconfigure_successful",
+        "reconfigure_keeps_webhook_id",
+        "reconfigure_disables_webhooks",
+        "wrong_vehicles",
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    vehicle_fixture: str,
+    vehicle_attributes: dict,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartcar_auth: AsyncMock,
+    entry_data: dict,
+    user_input: dict,
+    new_vehicle_id: str,
+    expected_result: dict[str, Any],
+) -> None:
+    """Test the reconfiguration flow."""
+    expected_abort_reason = expected_result.get("abort_reason")
+    expected_placeholders = expected_result.get("placeholders")
+    expected_access_token = expected_result.get("access_token")
+    expected_setup_calls = expected_result.get("setup_calls", 1)
+    expected_entry_data = expected_result.get("entry_data", {})
+
+    mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, **entry_data},
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "webhooks"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    selected_scopes = ["read_odometer"]
+    requested_scopes = REQUIRED_SCOPES + selected_scopes
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {k: k in selected_scopes for k in CONFIGURABLE_SCOPES},
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    vin = "5YJSA1CN5DFP00101"
+    server_access_token = {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "updated-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+        "scope": " ".join(requested_scopes),
+    }
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN_LEGACY,
+        json=server_access_token,
+    )
+    aioclient_mock.get(
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles",
+        json={"paging": {"count": 25, "offset": 0}, "vehicles": [new_vehicle_id]},
+    )
+    aioclient_mock.get(
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}/vin", json={"vin": vin}
+    )
+    aioclient_mock.get(
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}",
+        json={
+            "id": new_vehicle_id,
+            "make": "TESLA",
+            "model": "Model S",
+            "year": "2014",
+        },
+    )
+
+    with (
+        patch(
+            "custom_components.smartcar.async_setup_entry", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert len(mock_setup.mock_calls) == expected_setup_calls
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_abort_reason
+    assert result["description_placeholders"] == expected_placeholders
+
+    assert mock_config_entry.unique_id == vehicle_attributes["id"]
+    assert "token" in mock_config_entry.data
+
+    # limit scope of comparison for config entry data
+    compare_entry_data = {**mock_config_entry.data}
+    token = compare_entry_data.pop("token")
+    compare_entry_data.pop("auth_implementation", None)
+    compare_entry_data.pop("vehicles", None)
+
+    # verify access token is refreshed
+    assert token["access_token"] == expected_access_token
+    assert token["refresh_token"] == "mock-refresh-token"  # noqa: S105
+    assert compare_entry_data == expected_entry_data
+
+
 @pytest.mark.parametrize("vehicle_fixture", ["vw_id_4"])
 @pytest.mark.parametrize(
     ("setup", "entry_data", "user_input", "expected_result"),

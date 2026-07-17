@@ -452,6 +452,20 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -478,6 +492,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -628,6 +659,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -731,6 +818,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -851,6 +952,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[broad_auth_error-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -877,6 +1021,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1027,6 +1188,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1131,6 +1348,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1251,6 +1482,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_json-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1277,6 +1551,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1427,6 +1718,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1531,6 +1878,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1651,6 +2012,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[invalid_signature-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1677,6 +2081,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1827,6 +2248,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1930,6 +2407,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2050,6 +2541,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[irrelevant_auth_error-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2076,6 +2610,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2226,6 +2777,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2330,6 +2937,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2450,6 +3071,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[test_mode-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2476,6 +3140,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2626,6 +3307,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2729,6 +3466,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2849,6 +3600,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_error-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2875,6 +3669,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3025,6 +3836,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3129,6 +3996,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3249,6 +4130,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_mismatch-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3277,6 +4201,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3427,6 +4368,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3530,6 +4527,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3652,6 +4663,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3678,6 +4732,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3828,6 +4899,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -3935,6 +5062,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4055,6 +5196,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[vehicle_state_fuel-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -4081,6 +5265,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4231,6 +5432,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -4335,6 +5592,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4455,6 +5726,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_scenarios[verify-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -4483,6 +5797,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_seal_u_dm_i_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'BYD Seal U Dm-i Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4633,6 +5964,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -4736,6 +6123,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_seal_u_dm_i_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4858,6 +6259,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-byd_seal-sensor][sensor.byd_seal_u_dm_i_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BYD Seal U Dm-i Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.byd_seal_u_dm_i_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -4892,6 +6336,23 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'JAGUAR I-PACE Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_cabin_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_charge_rate]
@@ -5040,6 +6501,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -5149,6 +6666,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_malfunction_indicator_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_odometer]
@@ -5269,6 +6800,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace-sensor][sensor.jaguar_i_pace_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -5303,6 +6877,23 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'JAGUAR I-PACE Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_cabin_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_charge_rate]
@@ -5457,6 +7048,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -5568,6 +7215,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '82',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_malfunction_indicator_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_odometer]
@@ -5698,6 +7359,49 @@
     'state': '699.9',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-jaguar_ipace2-sensor][sensor.jaguar_i_pace_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'JAGUAR I-PACE Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.jaguar_i_pace_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -5730,6 +7434,23 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '82',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'POLESTAR Polestar 2 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_cabin_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_charge_rate]
@@ -5888,6 +7609,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -5993,6 +7770,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.polestar_polestar_2_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6119,6 +7910,49 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-polestar_2-sensor][sensor.polestar_polestar_2_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'POLESTAR Polestar 2 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.polestar_polestar_2_trouble_codes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_abs_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 ABS Status',
+      'icon': 'mdi:car-brake-abs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_abs_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -6147,6 +7981,23 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_battery_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_cabin_target_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'VW ID.4 Cabin Target Temperature',
+      'icon': 'mdi:thermostat',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_cabin_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6297,6 +8148,62 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_ev_battery_conditioning_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Battery Conditioning Status',
+      'icon': 'mdi:battery-heart-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_battery_conditioning_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_ev_charging_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Charging Status',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_charging_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_ev_drive_unit_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV Drive Unit Status',
+      'icon': 'mdi:cog',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_drive_unit_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_ev_high_voltage_battery_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 EV High Voltage Battery Status',
+      'icon': 'mdi:car-battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_ev_high_voltage_battery_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_firmware_version]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -6400,6 +8307,20 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_low_voltage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_malfunction_indicator_lamp]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Malfunction Indicator Lamp',
+      'icon': 'mdi:engine',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_malfunction_indicator_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6516,6 +8437,35 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vw_id_4_tire_pressure_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_trouble_code_count]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Code Count',
+      'icon': 'mdi:alert-circle',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_code_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_webhook_update[vehicle_state_all-vw_id_4-sensor][sensor.vw_id_4_trouble_codes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'VW ID.4 Trouble Codes',
+      'icon': 'mdi:format-list-bulleted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vw_id_4_trouble_codes',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

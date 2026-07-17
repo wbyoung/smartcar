@@ -21,6 +21,7 @@
       "oauth_timeout": "Timeout resolving OAuth token.",
       "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
       "reauth_successful": "Re-authentication was successful",
+      "reconfigure_successful": "Reconfiguration was successful",
       "unknown": "Unexpected error",
       "user_rejected_authorize": "Account linking rejected: {error}",
       "wrong_vehicles": "The vehicles must match the original selections. Choose the vehicles with VIN(s): {vins}."

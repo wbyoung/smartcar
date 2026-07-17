@@ -1,5 +1,6 @@
 """Test component setup."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import cloud
@@ -14,6 +15,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClien
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from custom_components.smartcar import coordinator as coordinator_module
 from custom_components.smartcar.const import (
     CONF_APPLICATION_MANAGEMENT_TOKEN,
     CONF_CLOUDHOOK,
@@ -577,6 +579,21 @@ _SNAPSHOT_ORDER = {
             "charge_fast_charger_present",
             "firmware_version",
             "last_webhook_received",
+            "is_cabin_hvac_active",
+            "diag_abs",
+            "diag_mil",
+            "diag_dtc_count",
+            "diag_dtc_list",
+            "diag_ev_battery_conditioning",
+            "diag_ev_charging",
+            "diag_ev_drive_unit",
+            "diag_ev_hv_battery",
+            "cabin_target_temperature",
+            "is_cabin_hvac_active",
+            "is_front_defroster_active",
+            "is_rear_defroster_active",
+            "is_steering_heater_active",
+            "climate",
         ]
     )
 }
@@ -586,3 +603,29 @@ def snapshot_order(entity):
     _, key = entity.unique_id.split("_", 1)
 
     return _SNAPSHOT_ORDER[key]
+
+
+@pytest.mark.parametrize(
+    ("error_type", "error_code", "expected_level"),
+    [
+        ("VEHICLE_STATE", "NOT_CHARGING", logging.DEBUG),
+        ("COMPATIBILITY", "VEHICLE_NOT_CAPABLE", logging.DEBUG),
+        ("PERMISSION", None, logging.ERROR),
+    ],
+    ids=["not_charging", "not_capable", "genuine_error"],
+)
+def test_webhook_signal_error_log_level(
+    caplog: pytest.LogCaptureFixture,
+    error_type: str,
+    error_code: str | None,
+    expected_level: int,
+) -> None:
+    """Test benign signal errors are demoted to DEBUG while others are not."""
+    with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar"):
+        coordinator_module._handle_webhook_signal_error(
+            "Wattage",
+            {"type": error_type, "code": error_code},
+        )
+
+    record = next(r for r in caplog.records if "error for signal" in r.message)
+    assert record.levelno == expected_level

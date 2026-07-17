@@ -43,6 +43,9 @@ class Scope(StrEnum):
     READ_TIRES = auto()
     CONTROL_CHARGE = auto()
     CONTROL_SECURITY = auto()
+    READ_DIAGNOSTICS = auto()
+    READ_CLIMATE = auto()
+    CONTROL_CLIMATE = auto()
 
 
 REQUIRED_SCOPES = [
@@ -61,6 +64,9 @@ DEFAULT_SCOPES = [
     Scope.READ_VEHICLE_INFO,
     Scope.READ_VIN,
     Scope.CONTROL_CHARGE,
+    Scope.READ_DIAGNOSTICS,
+    Scope.READ_CLIMATE,
+    Scope.CONTROL_CLIMATE,
 ]
 
 
@@ -121,6 +127,23 @@ class EntityDescriptionKey(StrEnum):
     CHARGE_FAST_CHARGER_PRESENT = auto()
     FIRMWARE_VERSION = auto()
     LAST_WEBHOOK_RECEIVED = auto()
+    # Diagnostics (requires read_diagnostics)
+    DIAG_ABS = auto()
+    DIAG_MIL = auto()
+    DIAG_DTC_COUNT = auto()
+    DIAG_DTC_LIST = auto()
+    DIAG_EV_BATTERY_CONDITIONING = auto()
+    DIAG_EV_CHARGING = auto()
+    DIAG_EV_DRIVE_UNIT = auto()
+    DIAG_EV_HV_BATTERY = auto()
+    # Climate status (requires read_climate)
+    CABIN_TARGET_TEMPERATURE = auto()
+    IS_CABIN_HVAC_ACTIVE = auto()
+    IS_FRONT_DEFROSTER_ACTIVE = auto()
+    IS_REAR_DEFROSTER_ACTIVE = auto()
+    IS_STEERING_HEATER_ACTIVE = auto()
+    # Climate control (requires read_climate + control_climate)
+    CLIMATE = auto()
 
 
 DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS = {
@@ -131,4 +154,18 @@ DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS = {
     EntityDescriptionKey.LOCATION,
     EntityDescriptionKey.PLUG_STATUS,
     EntityDescriptionKey.RANGE,
+    EntityDescriptionKey.DIAG_ABS,
+    EntityDescriptionKey.DIAG_MIL,
+    EntityDescriptionKey.DIAG_DTC_COUNT,
+    EntityDescriptionKey.DIAG_DTC_LIST,
+    EntityDescriptionKey.DIAG_EV_BATTERY_CONDITIONING,
+    EntityDescriptionKey.DIAG_EV_CHARGING,
+    EntityDescriptionKey.DIAG_EV_DRIVE_UNIT,
+    EntityDescriptionKey.DIAG_EV_HV_BATTERY,
+    EntityDescriptionKey.CABIN_TARGET_TEMPERATURE,
+    EntityDescriptionKey.IS_CABIN_HVAC_ACTIVE,
+    EntityDescriptionKey.IS_FRONT_DEFROSTER_ACTIVE,
+    EntityDescriptionKey.IS_REAR_DEFROSTER_ACTIVE,
+    EntityDescriptionKey.IS_STEERING_HEATER_ACTIVE,
+    EntityDescriptionKey.CLIMATE,
 }
