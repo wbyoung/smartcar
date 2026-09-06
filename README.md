@@ -162,9 +162,9 @@ Several entities are created for for each connected vehicle (subject to vehicle 
 - [`device_tracker.<make_model>_location`](#device_trackermake_model_location)
 - [`sensor.<make_model>_battery_capacity`](#sensormake_model_battery_capacity)
 - [`sensor.<make_model>_battery`](#sensormake_model_battery)
-- [`sensor.<make_model>_charge_rate`](#numbermake_model_charge_rate)
-- [`sensor.<make_model>_energy_added`](#numbermake_model_energy_added)
-- [`sensor.<make_model>_time_to_complete`](#numbermake_model_time_to_complete)
+- [`sensor.<make_model>_charge_rate`](#sensormake_model_charge_rate)
+- [`sensor.<make_model>_energy_added`](#sensormake_model_energy_added)
+- [`sensor.<make_model>_time_to_complete`](#sensormake_model_time_to_complete)
 - [`sensor.<make_model>_low_voltage_battery`](#sensormake_model_low_voltage_battery)
 - [`sensor.<make_model>_charging_status`](#sensormake_model_charging_status)
 - [`sensor.<make_model>_engine_oil_life`](#sensormake_model_engine_oil_life)
@@ -215,8 +215,8 @@ Several entities are created for for each connected vehicle (subject to vehicle 
 
 All entities have the following attributes:
 
-- `age` The date at which the data was recorded by the vehicle\*; _corresponds to [`sc-data-age`](https://smartcar.com/docs/api-reference/headers#param-sc-data-age)_
-- `fetched_at` The date at which Smartcar fetched the data\*; _corresponds to [`sc-data-fetched-at`](https://smartcar.com/docs/api-reference/headers#param-sc-fetched-at)_
+- `age` The date at which the data was recorded by the vehicle\*; _corresponds to [`meta.oemUpdatedAt`](https://smartcar.com/docs/api-reference/get-signal#response-data-meta-oem-updated-at) or [`sc-data-age`](https://smartcar.com/docs/api-reference/headers#param-sc-data-age)_
+- `fetched_at` The date at which Smartcar fetched the data\*; _corresponds to [`meta.retrievedAt`](https://smartcar.com/docs/api-reference/get-signal#response-data-meta-retrieved-at) or [`sc-data-fetched-at`](https://smartcar.com/docs/api-reference/headers#param-sc-fetched-at)_
 
 \* _These will only be present when included in the API response._
 
@@ -228,21 +228,21 @@ In addition to the above, there is a sensor to aid in setting up the integration
 
 ### `device_tracker.<make_model>_location`
 
-The GPS [location](https://smartcar.com/docs/api-reference/get-location) of the vehicle.
+The GPS [location](https://smartcar.com/docs/api-reference/signals/location#preciselocation) of the vehicle.
 
 Enabled by default: :white_check_mark:  
 Requires permissions: `read_location`
 
 ### `sensor.<make_model>_battery_capacity`
 
-The [battery capacity](https://smartcar.com/docs/api-reference/get-nominal-capacity) of this vehicle in kWh.
+The [battery capacity](https://smartcar.com/docs/api-reference/signals/tractionbattery#nominalcapacity) of this vehicle in kWh.
 
 Enabled by default: :x:  
 Requires permissions: `read_battery`
 
 ### `sensor.<make_model>_battery`
 
-The [state of charge](https://smartcar.com/docs/api-reference/evs/get-battery-level#param-percent-remaining) of the vehicle as a percentage.
+The [state of charge](https://smartcar.com/docs/api-reference/signals/tractionbattery#stateofcharge) of the vehicle as a percentage.
 
 Enabled by default: :white_check_mark:  
 Requires permissions: `read_battery`  
@@ -250,37 +250,35 @@ Obtained concurrently with: [`sensor.<make_model>_range`](#sensormake_model_rang
 
 ### `sensor.<make_model>_charge_rate`
 
-The [charge rate](https://smartcar.com/docs/api-reference/signals/charge#charge-rate) of the vehicle.
+The [charge rate](https://smartcar.com/docs/api-reference/signals/charge#chargerate) of the vehicle.
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
 
 ### `sensor.<make_model>_energy_added`
 
-The [amount of energy added](https://smartcar.com/docs/api-reference/signals/charge#energy-added) in the current or most recent charging session.
+The [amount of energy added](https://smartcar.com/docs/api-reference/signals/charge#energyadded) in the current or most recent charging session.
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
 
 ### `sensor.<make_model>_time_to_complete`
 
-The [estimated time remaining](https://smartcar.com/docs/api-reference/signals/charge#time-to-complete) until charging is complete.
+The [estimated time remaining](https://smartcar.com/docs/api-reference/signals/charge#timetocomplete) until charging is complete.
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
 
 ### `sensor.<make_model>_low_voltage_battery`
 
-The [state of charge of the low voltage battery](https://smartcar.com/docs/api-reference/signals/lowvoltagebattery#state-of-charge).
+The [state of charge of the low voltage battery](https://smartcar.com/docs/api-reference/signals/lowvoltagebattery#stateofcharge).
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
 
-### `binary_sensor.<make_model>_door_front_right`
-
 ### `sensor.<make_model>_charging_status`
 
-The [charging status](https://smartcar.com/docs/api-reference/evs/get-charge-status) of the vehicle.
+The [charging status](https://smartcar.com/docs/api-reference/signals/charge#detailedchargingstatus) of the vehicle.
 
 Possible values:
 
@@ -294,14 +292,14 @@ Obtained concurrently with: [`binary_sensor.<make_model>_charging_cable_plugged_
 
 ### `sensor.<make_model>_engine_oil_life`
 
-The [estimated engine oil life](https://smartcar.com/docs/api-reference/get-engine-oil-life) remaining for the vehicle.
+The [estimated engine oil life](https://smartcar.com/docs/api-reference/signals/internalcombustionengine#oillife) remaining for the vehicle.
 
 Enabled by default: :x:  
 Requires permissions: `read_engine_oil`
 
 ### `sensor.<make_model>_fuel`
 
-The [volume of fuel](https://smartcar.com/docs/api-reference/get-fuel-tank) remaining for the vehicle.
+The [volume of fuel](https://smartcar.com/docs/api-reference/signals/internalcombustionengine#amountremaining) remaining for the vehicle.
 
 **Note:** This value is frequently `null` for many vehicles. Consider using [`sensor.<make_model>_fuel_percent`](#sensormake_model_fuel_percent) or [`sensor.<make_model>_fuel_range`](#sensormake_model_fuel_range) for more reliable fuel information.
 
@@ -311,7 +309,7 @@ Obtained concurrently with: [`sensor.<make_model>_fuel_percent`](#sensormake_mod
 
 ### `sensor.<make_model>_fuel_percent`
 
-The [fuel level as a percentage](https://smartcar.com/docs/api-reference/get-fuel-tank#param-percent-remaining) remaining for the vehicle (0-100%).
+The [fuel level as a percentage](https://smartcar.com/docs/api-reference/signals/internalcombustionengine#fuellevel) remaining for the vehicle (0-100%).
 
 This sensor provides more reliable fuel information than the amount-based sensor, as percentage values are more consistently available from vehicle APIs.
 
@@ -321,7 +319,7 @@ Obtained concurrently with: [`sensor.<make_model>_fuel`](#sensormake_model_fuel)
 
 ### `sensor.<make_model>_fuel_range`
 
-The [estimated driving range](https://smartcar.com/docs/api-reference/get-fuel-tank#param-range) remaining for the vehicle based on current fuel level.
+The [estimated driving range](https://smartcar.com/docs/api-reference/signals/internalcombustionengine#range) remaining for the vehicle based on current fuel level.
 
 Enabled by default: :x:  
 Requires permissions: `read_fuel`  
@@ -329,14 +327,14 @@ Obtained concurrently with: [`sensor.<make_model>_fuel`](#sensormake_model_fuel)
 
 ### `sensor.<make_model>_odometer`
 
-The [odometer reading](https://smartcar.com/docs/api-reference/get-odometer) of the vehicle.
+The [odometer reading](https://smartcar.com/docs/api-reference/signals/odometer#traveleddistance) of the vehicle.
 
 Enabled by default: :x:  
 Requires permissions: `read_odometer`
 
 ### `sensor.<make_model>_range`
 
-The [estimated range remaining](https://smartcar.com/docs/api-reference/evs/get-battery-level#param-range) for the vehicle.
+The [estimated range remaining](https://smartcar.com/docs/api-reference/signals/tractionbattery#range) for the vehicle.
 
 Enabled by default: :white_check_mark:  
 Requires permissions: `read_battery`  
@@ -344,7 +342,7 @@ Obtained concurrently with: [`sensor.<make_model>_battery`](#sensormake_model_ba
 
 ### `sensor.<make_model>_gear_state`
 
-The [gear state](https://smartcar.com/docs/api-reference/signals/transmission#gear-state) for the vehicle.
+The [gear state](https://smartcar.com/docs/api-reference/signals/transmission#gearstate) for the vehicle.
 
 Possible values:
 
@@ -358,7 +356,7 @@ Webhooks only: :link: _currently only available via webhooks_
 
 ### `sensor.<make_model>_tire_pressure_back_left`
 
-The [back left tire pressure](https://smartcar.com/docs/api-reference/get-tire-pressure#param-back-left) of the vehicle.
+The [back left tire pressure](https://smartcar.com/docs/api-reference/signals/wheel#tires) of the vehicle.
 
 Enabled by default: :x:  
 Requires permissions: `read_tires`  
@@ -366,7 +364,7 @@ Obtained concurrently with: [`sensor.<make_model>_tire_pressure_back_right`](#se
 
 ### `sensor.<make_model>_tire_pressure_back_right`
 
-The [back right tire pressure](https://smartcar.com/docs/api-reference/get-tire-pressure#param-back-right) of the vehicle.
+The [back right tire pressure](https://smartcar.com/docs/api-reference/signals/wheel#tires) of the vehicle.
 
 Enabled by default: :x:  
 Requires permissions: `read_tires`  
@@ -374,7 +372,7 @@ Obtained concurrently with: [`sensor.<make_model>_tire_pressure_back_left`](#sen
 
 ### `sensor.<make_model>_tire_pressure_front_left`
 
-The [front left tire pressure](https://smartcar.com/docs/api-reference/get-tire-pressure#param-front-left) of the vehicle.
+The [front left tire pressure](https://smartcar.com/docs/api-reference/signals/wheel#tires) of the vehicle.
 
 Enabled by default: :x:  
 Requires permissions: `read_tires`  
@@ -382,7 +380,7 @@ Obtained concurrently with: [`sensor.<make_model>_tire_pressure_back_left`](#sen
 
 ### `sensor.<make_model>_tire_pressure_front_right`
 
-The [front right tire pressure](https://smartcar.com/docs/api-reference/get-tire-pressure#param-front-right) of the vehicle.
+The [front right tire pressure](https://smartcar.com/docs/api-reference/signals/wheel#tires) of the vehicle.
 
 Enabled by default: :x:
 Requires permissions: `read_tires`
@@ -432,7 +430,7 @@ Webhooks only: :link: _currently only available via webhooks_
 
 ### `binary_sensor.<make_model>_charging_cable_plugged_in`
 
-Whether the vehicle [is currently plugged in](https://smartcar.com/docs/api-reference/evs/get-charge-status#param-is-plugged-in).
+Whether the vehicle [is currently plugged in](https://smartcar.com/docs/api-reference/signals/charge#ischargingcableconnected).
 
 Enabled by default: :white_check_mark:  
 Deprecated: This is deprecated and will be removed when the v2 API is no longer being used  
@@ -441,7 +439,7 @@ Obtained concurrently with: [`sensor.<make_model>_charging_status`](#sensormake_
 
 ### `binary_sensor.<make_model>_battery_heater_active`
 
-Whether the vehicle is [battery heater is active](https://smartcar.com/docs/api-reference/signals/tractionbattery#is-heater-active).
+Whether the vehicle [battery heater is active](https://smartcar.com/docs/api-reference/signals/tractionbattery#is-heater-active).
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
@@ -606,14 +604,14 @@ Webhooks only: :link: _currently only available via webhooks_
 
 ### `number.<make_model>_charge_limit`
 
-Change the [charge limit](https://smartcar.com/docs/api-reference/evs/get-charge-limit) by [setting it to a specific value](https://smartcar.com/docs/api-reference/evs/set-charge-limit).
+Change the [charge limit](https://smartcar.com/docs/api-reference/signals/charge#chargelimits) by [setting it to a specific value](https://smartcar.com/docs/api-reference/charging/set-charge-limit).
 
 Enabled by default: :x:  
 Requires permissions: `read_charge`, `control_charge`
 
 ### `switch.<make_model>_charging`
 
-Change whether the vehicle is [currently charging](https://smartcar.com/docs/api-reference/evs/get-charge-status#param-state) by [starting or stopping charging](https://smartcar.com/docs/api-reference/evs/control-charge).
+Change whether the vehicle is [currently charging](https://smartcar.com/docs/api-reference/signals/charge#detailedchargingstatus) by [starting](https://smartcar.com/docs/api-reference/charging/start-charging) or [stopping charging](https://smartcar.com/docs/api-reference/charging/stop-charging).
 
 Enabled by default: :white_check_mark:  
 Requires permissions: `read_charge`, `control_charge`  
@@ -621,7 +619,7 @@ Obtained concurrently with: [`sensor.<make_model>_charging_status`](#sensormake_
 
 ### `lock.<make_model>_door_lock`
 
-Change whether the vehicle is [currently locked](https://smartcar.com/docs/api-reference/get-lock-status) by [locking or unlocking](https://smartcar.com/docs/api-reference/control-lock-unlock).
+Change whether the vehicle is [currently locked](https://smartcar.com/docs/api-reference/get-lock-status) by [locking](https://smartcar.com/docs/api-reference/security/lock-doors) or [unlocking](https://smartcar.com/docs/api-reference/security/unlock-doors).
 
 Enabled by default: :white_check_mark:  
 Requires permissions: `read_security`, `control_security`
