@@ -3,28 +3,51 @@ tag-template: "v$RESOLVED_VERSION"
 change-template: "- #$NUMBER $TITLE @$AUTHOR"
 sort-direction: "ascending"
 categories:
-  - title: ":danger: Breaking changes"
-    label: "breaking change"
-  - title: ":bulb: Features"
-    label: "enhancement"
-  - title: ":bug: Bug Fixes"
-    label: "bug"
-  - title: ":pencil2: Documentation"
-    label: "documentation"
-  - title: ":toolbox: Chore"
-    label: "chore"
+  - title: "⚠️ Breaking changes"
+    semver-increment: "major"
+    when:
+      - conventional:
+          breaking: true
+      - labels:
+          - "breaking change"
+  - title: "💡 Features"
+    semver-increment: "minor"
+    when:
+      - conventional:
+          types:
+            - "feat"
+            - "perf"
+      - labels:
+          - "feature"
+          - "enhancement"
+  - title: "🐛 Bug Fixes"
+    when:
+      - conventional:
+          types:
+            - "fix"
+      - labels:
+          - "bug"
+  - title: "✏️ Documentation"
+    when:
+      - conventional:
+          types:
+            - "docs"
+      - labels:
+          - "documentation"
+  - title: "🧰 Chore"
+    when:
+      - conventional:
+          types:
+            - "chore"
+            - "build"
+            - "ci"
+            - "style"
+            - "refactor"
+            - "test"
+      - labels:
+          - "chore"
     collapse-after: 3
-version-resolver:
-  major:
-    labels:
-      - "major"
-  minor:
-    labels:
-      - "minor"
-  patch:
-    labels:
-      - "patch"
-  default: "patch"
+
 template: |
   ## Changes
 
@@ -36,10 +59,8 @@ template: |
 exclude-contributors:
   - "github-actions"
 
-autolabeler:
-  - label: "bug"
-    branch:
-      - "/fix(?:-|\/).+/"
-  - label: "enhancement"
-    branch:
-      - "/(feature|add)(?:-|\/).+/"
+replacers:
+  - search: '/(- #\d+) (?:feat|fix|docs|chore)!?:/g'
+    replace: "$1"
+  - search: '/(- #\d+) ([a-z])/g'
+    replace: '$1 \u$2' # capitalize the first letter of each entry
