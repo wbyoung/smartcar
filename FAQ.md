@@ -99,7 +99,7 @@ The payloads themselves are fine. Open one in the Smartcar log and you'll see a 
 
 ...then the application itself is likely in a state where the key Smartcar signs payloads with is out of step with the Application Management Token shown in the dashboard, and regenerating the token will not bring the two back into sync.
 
-**What does fix it:** delete the **application** in your Smartcar dashboard, create a new one, and set the integration up again against the new application.
+**The fix:** delete the **application** in your Smartcar dashboard, create a new one, and set the integration up again against the new application.
 
 **If you are on the free tier**, there is a catch: the dashboard will not delete an application while it is the only one on the account, and the free plan is limited to a single application — so there is no way to do this through the UI on a free account. Two ways around it:
 
