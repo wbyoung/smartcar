@@ -95,17 +95,17 @@ class SmartcarChargeLimitNumber(
             command = "/charge/limit"
             payload = {"limit": (raw_value := value / 100.0)}
 
-        if await self._async_send_command(command, payload):
-            non_global_or_conditional_limits = [
-                value
-                for value in self._extract_raw_value() or []
-                if value["type"] != "global" or value["condition"] is not None
-            ]
+        await self._async_send_command(command, payload)
+        non_global_or_conditional_limits = [
+            value
+            for value in self._extract_raw_value() or []
+            if value["type"] != "global" or value["condition"] is not None
+        ]
 
-            self._inject_raw_value(
-                [
-                    {"type": "global", "limit": raw_value, "condition": None},
-                    *non_global_or_conditional_limits,
-                ]
-            )
-            self.async_write_ha_state()
+        self._inject_raw_value(
+            [
+                {"type": "global", "limit": raw_value, "condition": None},
+                *non_global_or_conditional_limits,
+            ]
+        )
+        self.async_write_ha_state()

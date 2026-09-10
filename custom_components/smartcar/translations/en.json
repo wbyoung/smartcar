@@ -76,6 +76,12 @@
     }
   },
   "exceptions": {
+    "command_failed": {
+      "message": "The Smartcar vehicle command failed (HTTP {status})."
+    },
+    "command_authentication_failed": {
+      "message": "The Smartcar vehicle command failed because authentication is required. Reauthenticate the Smartcar integration and try again."
+    },
     "batch_update_error": {
       "message": "An error occurred while retrieving vehicle state from the Smartcar API: {error}"
     }

@@ -1,6 +1,7 @@
 """Test switch entities."""
 
 from collections.abc import Awaitable, Callable
+from contextlib import nullcontext
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientResponseError
@@ -14,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -48,11 +50,15 @@ NO_ERROR = None.__class__
     [
         (SERVICE_TURN_ON, 200, "success", STATE_ON, NO_ERROR, 1),
         (SERVICE_TURN_OFF, 200, "success", STATE_OFF, NO_ERROR, 1),
-        (SERVICE_TURN_ON, 409, "unreachable", STATE_OFF, NO_ERROR, 1),
-        (SERVICE_TURN_OFF, 409, "unreachable", STATE_OFF, NO_ERROR, 1),
-        (SERVICE_TURN_ON, 401, "unauthroized", STATE_OFF, NO_ERROR, 1),
-        (SERVICE_TURN_OFF, 401, "unauthroized", STATE_OFF, NO_ERROR, 1),
-        (SERVICE_TURN_OFF, 500, "server", STATE_OFF, NO_ERROR, 4),
+        (SERVICE_TURN_ON, 409, "unreachable", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 409, "unreachable", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_ON, 401, "unauthroized", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 401, "unauthroized", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 429, "rate_limit", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 430, "billing", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 500, "server", STATE_OFF, HomeAssistantError, 4),
+        (SERVICE_TURN_OFF, 501, "compatibility", STATE_OFF, HomeAssistantError, 1),
+        (SERVICE_TURN_OFF, 502, "upstream", STATE_OFF, HomeAssistantError, 1),
         (SERVICE_TURN_OFF, 503, "unavailable", STATE_OFF, ClientResponseError, 1),
     ],
 )
@@ -122,6 +128,19 @@ async def test_switch(
         raised_error,
         expected_raises,  # type: ignore[arg-type]
     )
+
+    if isinstance(raised_error, HomeAssistantError) and api_status is not None:
+        assert raised_error.translation_domain == "smartcar"
+        if api_status == 401:
+            assert raised_error.translation_key == "command_authentication_failed"
+            assert any(
+                flow["context"].get("source") == "reauth"
+                for flow in hass.config_entries.flow.async_progress()
+            )
+        else:
+            assert raised_error.translation_key == "command_failed"
+            assert raised_error.translation_placeholders == {"status": str(api_status)}
+            assert str(api_status) in str(raised_error)
 
     assert len(aioclient_mock.mock_calls) == 1 + api_calls
     assert [tuple(mock_call) for mock_call in aioclient_mock.mock_calls[1:]] == snapshot
@@ -222,12 +241,13 @@ async def test_climate_switch(
             },
         )
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        service_action,
-        {ATTR_ENTITY_ID: "switch.smartcar_784n_climate"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) if api_status != 200 else nullcontext():
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service_action,
+            {ATTR_ENTITY_ID: "switch.smartcar_784n_climate"},
+            blocking=True,
+        )
 
     switch_state = hass.states.get("switch.smartcar_784n_climate")
     assert switch_state.state == expected_state

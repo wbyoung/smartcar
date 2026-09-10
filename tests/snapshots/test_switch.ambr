@@ -25,7 +25,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_off-401-unauthroized-off-NoneType-1-v2]
+# name: test_switch[unknown_make-turn_off-401-unauthroized-off-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -39,7 +39,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_off-401-unauthroized-off-NoneType-1-v3]
+# name: test_switch[unknown_make-turn_off-401-unauthroized-off-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -51,64 +51,8 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_off-409-unreachable-off-NoneType-1-v2]
+# name: test_switch[unknown_make-turn_off-409-unreachable-off-HomeAssistantError-1-v2]
   list([
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
-      dict({
-        'action': 'STOP',
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_switch[unknown_make-turn_off-409-unreachable-off-NoneType-1-v3]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
-      None,
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_switch[unknown_make-turn_off-500-server-off-NoneType-4-v2]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
-      dict({
-        'action': 'STOP',
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
-      dict({
-        'action': 'STOP',
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
-      dict({
-        'action': 'STOP',
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
     tuple(
       'post',
       URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
@@ -121,7 +65,115 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_off-500-server-off-NoneType-4-v3]
+# name: test_switch[unknown_make-turn_off-409-unreachable-off-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-429-rate_limit-off-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-429-rate_limit-off-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-430-billing-off-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-430-billing-off-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-500-server-off-HomeAssistantError-4-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-500-server-off-HomeAssistantError-4-v3]
   list([
     tuple(
       'post',
@@ -147,6 +199,58 @@
         'authorization': 'Bearer mock-token',
       }),
     ),
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-501-compatibility-off-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-501-compatibility-off-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-502-upstream-off-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge'),
+      dict({
+        'action': 'STOP',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_switch[unknown_make-turn_off-502-upstream-off-HomeAssistantError-1-v3]
+  list([
     tuple(
       'post',
       URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/stop'),
@@ -209,7 +313,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_on-401-unauthroized-off-NoneType-1-v2]
+# name: test_switch[unknown_make-turn_on-401-unauthroized-off-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -223,7 +327,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_on-401-unauthroized-off-NoneType-1-v3]
+# name: test_switch[unknown_make-turn_on-401-unauthroized-off-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -235,7 +339,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_on-409-unreachable-off-NoneType-1-v2]
+# name: test_switch[unknown_make-turn_on-409-unreachable-off-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -249,7 +353,7 @@
     ),
   ])
 # ---
-# name: test_switch[unknown_make-turn_on-409-unreachable-off-NoneType-1-v3]
+# name: test_switch[unknown_make-turn_on-409-unreachable-off-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',

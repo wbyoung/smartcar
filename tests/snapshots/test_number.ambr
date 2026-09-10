@@ -31,7 +31,7 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-401-unauthroized-90-80-NoneType-1-v2]
+# name: test_charging_limit[unknown_make-401-unauthroized-90-80-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -45,39 +45,7 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-401-unauthroized-90-80-NoneType-1-v3]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
-      dict({
-        'data': dict({
-          'attributes': dict({
-            'percent': 90.0,
-          }),
-        }),
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_charging_limit[unknown_make-409-unreachable-90-80-NoneType-1-v2]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge/limit'),
-      dict({
-        'limit': 0.9,
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_charging_limit[unknown_make-409-unreachable-90-80-NoneType-1-v3]
+# name: test_charging_limit[unknown_make-401-unauthroized-90-80-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -95,7 +63,39 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-500-server-90-80-NoneType-4-v2]
+# name: test_charging_limit[unknown_make-409-unreachable-90-80-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/charge/limit'),
+      dict({
+        'limit': 0.9,
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-409-unreachable-90-80-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/charge/set-limit'),
+      dict({
+        'data': dict({
+          'attributes': dict({
+            'percent': 90.0,
+          }),
+        }),
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_charging_limit[unknown_make-500-server-90-80-HomeAssistantError-4-v2]
   list([
     tuple(
       'post',
@@ -139,7 +139,7 @@
     ),
   ])
 # ---
-# name: test_charging_limit[unknown_make-500-server-90-80-NoneType-4-v3]
+# name: test_charging_limit[unknown_make-500-server-90-80-HomeAssistantError-4-v3]
   list([
     tuple(
       'post',

@@ -95,9 +95,9 @@ class SmartcarChargingSwitch(SmartcarEntity[bool, bool], SwitchEntity):
             command = "/charge"
             payload = {"action": "START"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=True)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=True)
+        self.async_write_ha_state()
 
     async def async_turn_off(
         self,
@@ -111,9 +111,9 @@ class SmartcarChargingSwitch(SmartcarEntity[bool, bool], SwitchEntity):
             command = "/charge"
             payload = {"action": "STOP"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=False)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=False)
+        self.async_write_ha_state()
 
 
 class SmartcarClimateSwitch(SmartcarEntity[bool, bool], SwitchEntity):
@@ -137,9 +137,9 @@ class SmartcarClimateSwitch(SmartcarEntity[bool, bool], SwitchEntity):
             command = "/climate"
             payload = {"action": "START"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=True)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=True)
+        self.async_write_ha_state()
 
     async def async_turn_off(
         self,
@@ -153,6 +153,6 @@ class SmartcarClimateSwitch(SmartcarEntity[bool, bool], SwitchEntity):
             command = "/climate"
             payload = {"action": "STOP"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=False)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=False)
+        self.async_write_ha_state()

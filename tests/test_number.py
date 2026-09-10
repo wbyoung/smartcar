@@ -10,7 +10,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import (
@@ -45,9 +45,9 @@ NO_ERROR = None.__class__
     ),
     [
         (200, "success", 90, 90, NO_ERROR, 1),
-        (409, "unreachable", 90, 80, NO_ERROR, 1),
-        (401, "unauthroized", 90, 80, NO_ERROR, 1),
-        (500, "server", 90, 80, NO_ERROR, 4),
+        (409, "unreachable", 90, 80, HomeAssistantError, 1),
+        (401, "unauthroized", 90, 80, HomeAssistantError, 1),
+        (500, "server", 90, 80, HomeAssistantError, 4),
         (None, None, 40, 80, ServiceValidationError, 0),
         (None, None, 110, 80, ServiceValidationError, 0),
     ],
@@ -113,6 +113,18 @@ async def test_charging_limit(
         raised_error,
         expected_raises,  # type: ignore[arg-type]
     )
+
+    if isinstance(raised_error, HomeAssistantError) and api_status is not None:
+        assert raised_error.translation_domain == "smartcar"
+        if api_status == 401:
+            assert raised_error.translation_key == "command_authentication_failed"
+            assert any(
+                flow["context"].get("source") == "reauth"
+                for flow in hass.config_entries.flow.async_progress()
+            )
+        else:
+            assert raised_error.translation_key == "command_failed"
+            assert raised_error.translation_placeholders == {"status": str(api_status)}
 
     assert len(aioclient_mock.mock_calls) == 1 + api_calls
     assert [tuple(mock_call) for mock_call in aioclient_mock.mock_calls[1:]] == snapshot

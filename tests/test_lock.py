@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
@@ -31,11 +32,18 @@ NO_ERROR = None.__class__
     [
         (SERVICE_LOCK, 200, "success", LockState.LOCKED, NO_ERROR, 1),
         (SERVICE_UNLOCK, 200, "success", LockState.UNLOCKED, NO_ERROR, 1),
-        (SERVICE_LOCK, 409, "unreachable", LockState.UNLOCKED, NO_ERROR, 1),
-        (SERVICE_UNLOCK, 409, "unreachable", LockState.UNLOCKED, NO_ERROR, 1),
-        (SERVICE_LOCK, 401, "unauthroized", LockState.UNLOCKED, NO_ERROR, 1),
-        (SERVICE_UNLOCK, 401, "unauthroized", LockState.UNLOCKED, NO_ERROR, 1),
-        (SERVICE_UNLOCK, 500, "server", LockState.UNLOCKED, NO_ERROR, 4),
+        (SERVICE_LOCK, 409, "unreachable", LockState.UNLOCKED, HomeAssistantError, 1),
+        (SERVICE_UNLOCK, 409, "unreachable", LockState.UNLOCKED, HomeAssistantError, 1),
+        (SERVICE_LOCK, 401, "unauthroized", LockState.UNLOCKED, HomeAssistantError, 1),
+        (
+            SERVICE_UNLOCK,
+            401,
+            "unauthroized",
+            LockState.UNLOCKED,
+            HomeAssistantError,
+            1,
+        ),
+        (SERVICE_UNLOCK, 500, "server", LockState.UNLOCKED, HomeAssistantError, 4),
     ],
 )
 @pytest.mark.parametrize("vehicle_fixture", ["unknown_make"])
@@ -104,6 +112,18 @@ async def test_lock(
         raised_error,
         expected_raises,  # type: ignore[arg-type]
     )
+
+    if isinstance(raised_error, HomeAssistantError) and api_status is not None:
+        assert raised_error.translation_domain == "smartcar"
+        if api_status == 401:
+            assert raised_error.translation_key == "command_authentication_failed"
+            assert any(
+                flow["context"].get("source") == "reauth"
+                for flow in hass.config_entries.flow.async_progress()
+            )
+        else:
+            assert raised_error.translation_key == "command_failed"
+            assert raised_error.translation_placeholders == {"status": str(api_status)}
 
     assert len(aioclient_mock.mock_calls) == 1 + api_calls
     assert [tuple(mock_call) for mock_call in aioclient_mock.mock_calls[1:]] == snapshot
