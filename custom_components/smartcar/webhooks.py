@@ -95,7 +95,7 @@ async def handle_webhook(
             {"challenge": util.hmac_sha256_hexdigest(app_token, data["challenge"])}
         )
 
-    _LOGGER.debug("Validating signature: %s; app_token: %s", signature, app_token)
+    _LOGGER.debug("Validating signature")
 
     # the verify message is not signed, so that's done before this check. all
     # other messages must be signed & validated before we process the data from
