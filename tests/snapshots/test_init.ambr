@@ -6010,7 +6010,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_charging_cable_plugged_in]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
       'device_class': 'plug',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'Smartcar 784N Charging Cable Plugged In',
     }),
     'context': <ANY>,
@@ -6037,7 +6039,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_back_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Back Left',
       'icon': 'mdi:car-door',
     }),
@@ -6052,7 +6056,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_back_left_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Back Left Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -6067,7 +6073,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_back_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Back Right',
       'icon': 'mdi:car-door',
     }),
@@ -6082,7 +6090,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_back_right_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Back Right Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -6097,7 +6107,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_front_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Front Left',
       'icon': 'mdi:car-door',
     }),
@@ -6112,7 +6124,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_front_left_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Front Left Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -6127,7 +6141,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_front_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Front Right',
       'icon': 'mdi:car-door',
     }),
@@ -6142,7 +6158,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_door_front_right_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Front Right Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -6157,7 +6175,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_engine_cover]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Engine Cover',
     }),
     'context': <ANY>,
@@ -6256,7 +6276,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Rear Trunk',
     }),
     'context': <ANY>,
@@ -6270,7 +6292,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_rear_trunk_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Rear Trunk Lock',
     }),
     'context': <ANY>,
@@ -6326,7 +6350,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_window_back_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Window Back Left',
     }),
     'context': <ANY>,
@@ -6340,7 +6366,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_window_back_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Window Back Right',
     }),
     'context': <ANY>,
@@ -6354,7 +6382,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_window_front_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Window Front Left',
     }),
     'context': <ANY>,
@@ -6368,7 +6398,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][binary_sensor.smartcar_784n_window_front_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Window Front Right',
     }),
     'context': <ANY>,
@@ -6413,6 +6445,8 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][device_tracker.smartcar_784n_location]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Location',
       'gps_accuracy': 0,
       'icon': 'mdi:car',
@@ -8781,6 +8815,8 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][lock.smartcar_784n_door_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Door Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -8795,6 +8831,8 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][number.smartcar_784n_charge_limit]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'Smartcar 784N Charge Limit',
       'icon': 'mdi:battery-charging-80',
       'max': 100.0,
@@ -8828,7 +8866,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][sensor.smartcar_784n_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
       'device_class': 'battery',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'Smartcar 784N Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -8942,6 +8982,8 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][sensor.smartcar_784n_charging_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'Smartcar 784N Charging Status',
       'icon': 'mdi:ev-station',
     }),
@@ -9203,7 +9245,9 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][sensor.smartcar_784n_odometer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'distance',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'Smartcar 784N Odometer',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -9346,6 +9390,8 @@
 # name: test_standard_setup_with_all_entities[unknown_make-v3][switch.smartcar_784n_charging]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'Smartcar 784N Charging',
       'icon': 'mdi:ev-plug-type2',
     }),
@@ -12834,7 +12880,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_charging_cable_plugged_in]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
       'device_class': 'plug',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Charging Cable Plugged In',
     }),
     'context': <ANY>,
@@ -12861,7 +12909,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_back_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Back Left',
       'icon': 'mdi:car-door',
     }),
@@ -12876,7 +12926,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_back_left_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Back Left Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -12891,7 +12943,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_back_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Back Right',
       'icon': 'mdi:car-door',
     }),
@@ -12906,7 +12960,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_back_right_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Back Right Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -12921,7 +12977,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_front_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Front Left',
       'icon': 'mdi:car-door',
     }),
@@ -12936,7 +12994,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_front_left_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Front Left Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -12951,7 +13011,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_front_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Front Right',
       'icon': 'mdi:car-door',
     }),
@@ -12966,7 +13028,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_door_front_right_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Front Right Lock',
       'icon': 'mdi:car-door-lock',
     }),
@@ -12981,7 +13045,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_engine_cover]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Engine Cover',
     }),
     'context': <ANY>,
@@ -13080,7 +13146,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_rear_trunk]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'door',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Rear Trunk',
     }),
     'context': <ANY>,
@@ -13094,7 +13162,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_rear_trunk_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'lock',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Rear Trunk Lock',
     }),
     'context': <ANY>,
@@ -13150,7 +13220,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_window_back_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Window Back Left',
     }),
     'context': <ANY>,
@@ -13164,7 +13236,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_window_back_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Window Back Right',
     }),
     'context': <ANY>,
@@ -13178,7 +13252,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_window_front_left]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Window Front Left',
     }),
     'context': <ANY>,
@@ -13192,7 +13268,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][binary_sensor.vw_id_4_window_front_right]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'window',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Window Front Right',
     }),
     'context': <ANY>,
@@ -13237,6 +13315,8 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][device_tracker.vw_id_4_location]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Location',
       'gps_accuracy': 0,
       'icon': 'mdi:car',
@@ -15605,6 +15685,8 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][lock.vw_id_4_door_lock]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Door Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -15619,6 +15701,8 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][number.vw_id_4_charge_limit]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Charge Limit',
       'icon': 'mdi:battery-charging-80',
       'max': 100.0,
@@ -15652,7 +15736,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][sensor.vw_id_4_battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
       'device_class': 'battery',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
@@ -15766,6 +15852,8 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][sensor.vw_id_4_charging_status]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Charging Status',
       'icon': 'mdi:ev-station',
     }),
@@ -16023,7 +16111,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][sensor.vw_id_4_odometer]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:46:50.695000+00:00',
       'device_class': 'distance',
+      'fetched_at': '2026-06-30T00:03:53.557000+00:00',
       'friendly_name': 'VW ID.4 Odometer',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
@@ -16039,7 +16129,9 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][sensor.vw_id_4_range]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
       'device_class': 'distance',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Range',
       'icon': 'mdi:map-marker-distance',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -16166,6 +16258,8 @@
 # name: test_standard_setup_with_all_entities[vw_id_4-v3][switch.vw_id_4_charging]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'age': '2026-06-29T23:55:53+00:00',
+      'fetched_at': '2026-06-30T00:03:53.743000+00:00',
       'friendly_name': 'VW ID.4 Charging',
       'icon': 'mdi:ev-plug-type2',
     }),
