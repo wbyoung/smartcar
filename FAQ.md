@@ -91,13 +91,13 @@ The payloads themselves are fine. Open one in the Smartcar log and you'll see a 
 
 **A successful webhook Verify does not rule this out.** The `VERIFY` handshake is answered before the signature check runs, so verification passes even while every data payload is being rejected.
 
-**What does not fix it:**
+**When the following do not resolve the issue:**
 
-- Regenerating the Application Management Token and re-entering it in the integration, however many times you try
+- Regenerating the Application Management Token and re-entering it in the integration
 - Re-verifying the webhook, or deleting and recreating the webhook
 - Removing the integration and the Application Credentials and setting them up again
 
-Once an application is in this state, the key Smartcar signs payloads with appears to be out of step with the Application Management Token shown in the dashboard, and regenerating the token does not bring the two back into sync.
+...then the application itself is likely in a state where the key Smartcar signs payloads with is out of step with the Application Management Token shown in the dashboard, and regenerating the token will not bring the two back into sync.
 
 **What does fix it:** delete the **application** in your Smartcar dashboard, create a new one, and set the integration up again against the new application.
 
