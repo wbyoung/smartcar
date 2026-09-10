@@ -25,7 +25,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-NoneType-1-v2]
+# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -39,7 +39,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-NoneType-1-v3]
+# name: test_lock[unknown_make-lock-401-unauthroized-unlocked-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -51,7 +51,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-409-unreachable-unlocked-NoneType-1-v2]
+# name: test_lock[unknown_make-lock-409-unreachable-unlocked-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -65,7 +65,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-lock-409-unreachable-unlocked-NoneType-1-v3]
+# name: test_lock[unknown_make-lock-409-unreachable-unlocked-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -103,7 +103,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-NoneType-1-v2]
+# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-HomeAssistantError-1-v2]
   list([
     tuple(
       'post',
@@ -117,33 +117,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-NoneType-1-v3]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
-      None,
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-NoneType-1-v2]
-  list([
-    tuple(
-      'post',
-      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/security'),
-      dict({
-        'action': 'UNLOCK',
-      }),
-      dict({
-        'authorization': 'Bearer mock-token',
-      }),
-    ),
-  ])
-# ---
-# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-NoneType-1-v3]
+# name: test_lock[unknown_make-unlock-401-unauthroized-unlocked-HomeAssistantError-1-v3]
   list([
     tuple(
       'post',
@@ -155,7 +129,33 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-500-server-unlocked-NoneType-4-v2]
+# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-HomeAssistantError-1-v2]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v2.0/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/security'),
+      dict({
+        'action': 'UNLOCK',
+      }),
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-409-unreachable-unlocked-HomeAssistantError-1-v3]
+  list([
+    tuple(
+      'post',
+      URL('http://test.local/v3/vehicles/a1d50709-3502-4faa-ba43-a5c7565e6a09/commands/security/unlock'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+  ])
+# ---
+# name: test_lock[unknown_make-unlock-500-server-unlocked-HomeAssistantError-4-v2]
   list([
     tuple(
       'post',
@@ -199,7 +199,7 @@
     ),
   ])
 # ---
-# name: test_lock[unknown_make-unlock-500-server-unlocked-NoneType-4-v3]
+# name: test_lock[unknown_make-unlock-500-server-unlocked-HomeAssistantError-4-v3]
   list([
     tuple(
       'post',

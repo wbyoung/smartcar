@@ -66,9 +66,9 @@ class SmartcarDoorLock(SmartcarEntity[bool, bool], LockEntity):
             command = "/security"
             payload = {"action": "LOCK"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=True)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=True)
+        self.async_write_ha_state()
 
     async def async_unlock(
         self,
@@ -82,6 +82,6 @@ class SmartcarDoorLock(SmartcarEntity[bool, bool], LockEntity):
             command = "/security"
             payload = {"action": "UNLOCK"}
 
-        if await self._async_send_command(command, payload):
-            self._inject_raw_value(value=False)
-            self.async_write_ha_state()
+        await self._async_send_command(command, payload)
+        self._inject_raw_value(value=False)
+        self.async_write_ha_state()
