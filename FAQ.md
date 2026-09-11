@@ -73,6 +73,43 @@ In your Smartcar Dashboard go to Vehicles, select your vehicle from the list, th
 
 ![log](images/FAQ3.png)
 
+### Webhook payloads rejected with `invalid signature`
+
+Your Home Assistant log fills up with this, once per webhook delivery:
+
+```
+ERROR (MainThread) [custom_components.smartcar.webhooks] ignoring message with invalid signature
+```
+
+In the Smartcar dashboard webhook log the same deliveries show a **401** response containing:
+
+```json
+{"error": {"code": "invalid_signature", "message": "invalid signature on request body"}}
+```
+
+The payloads themselves are fine. Open one in the Smartcar log and you'll see a normal `VEHICLE_STATE` event carrying the signals you subscribed to, all with a `SUCCESS` status. Home Assistant is receiving good data and discarding it, because the signature on the request body doesn't match the **Application Management Token** it has stored.
+
+**A successful webhook Verify does not rule this out.** The `VERIFY` handshake is answered before the signature check runs, so verification passes even while every data payload is being rejected.
+
+**When the following do not resolve the issue:**
+
+- Regenerating the Application Management Token and re-entering it in the integration
+- Re-verifying the webhook, or deleting and recreating the webhook
+- Removing the integration and the Application Credentials and setting them up again
+
+...then the application itself is likely in a state where the key Smartcar signs payloads with is out of step with the Application Management Token shown in the dashboard, and regenerating the token will not bring the two back into sync.
+
+**The fix:** delete the **application** in your Smartcar dashboard, create a new one, and set the integration up again against the new application.
+
+**If you are on the free tier**, there is a catch: the dashboard will not delete an application while it is the only one on the account, and the free plan is limited to a single application — so there is no way to do this through the UI on a free account. Two ways around it:
+
+- **Add a second application first.** This needs any paid plan. Create a second application, delete the original, then downgrade again.
+- **Create a new Smartcar account** under a different email address and set everything up there from scratch. This stays free.
+
+**After recreating the application** you will have a new Application ID, Application Management Token and API credentials, so this is a full re-setup: new Application Credentials in Home Assistant, a new webhook in the Smartcar dashboard, and re-authorizing your vehicle through Smartcar Connect.
+
+Delete the old Smartcar config entry in Home Assistant **before** adding the new one. That releases the old entity IDs, so the new entities reclaim exactly the same ones and your sensor history and automations carry over untouched. You will still need to redo the customisations that live in the entity registry: area assignments, and any sensors you had enabled that are disabled by default (the odometer is an easy one to miss).
+
 ### When all else fails: Start fresh
 
 If you’re still stuck, a clean setup often resolves lingering issues:
@@ -82,6 +119,8 @@ If you’re still stuck, a clean setup often resolves lingering issues:
 - Delete the car from your Smartcar dashboard.
 
 Then restart HA and reinstall and reconfigure everything from scratch, following the installation guide. Once finished setting it up again, it should bring your car back in HA with all its sensor history.
+
+If that still doesn't help, the last step is to delete the **application** in your Smartcar dashboard and create a new one. This is a bigger job — you get new API credentials and have to re-authorize your vehicle — and on the free tier it needs a workaround, so see [Webhook payloads rejected with `invalid signature`](#webhook-payloads-rejected-with-invalid-signature) for the details.
 
 ### Keep in mind
 
