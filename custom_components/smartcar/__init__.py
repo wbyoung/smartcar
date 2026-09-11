@@ -433,21 +433,36 @@ async def _store_vehicle_details(
                 "get",
                 f"vehicles/{vehicle_id}/signals/vehicleidentification-vin",
             )
-            signals_resp.raise_for_status()
-            signals_data = await signals_resp.json()
-            vehicle_info = (
-                signals_data.get("included", {})
-                .get("vehicle", {})
-                .get("attributes", {})
-            )
 
-            vin = (
-                signals_data.get("data", {})
-                .get("attributes", {})
-                .get("body", {})
-                .get("value", None)
-            )
+            if signals_resp.status == HTTPStatus.NOT_FOUND:
+                _LOGGER.info(
+                    "VIN signal unavailable for vehicle %s",
+                    vehicle_id,
+                )
 
+                vin = None
+
+                vehicle_info = {}
+            else:
+                signals_resp.raise_for_status()
+
+                signals_data = await signals_resp.json()
+
+                vehicle_info = (
+                    signals_data.get("included", {})
+                    .get("vehicle", {})
+                    .get("attributes", {})
+                )
+
+                vin = (
+                    signals_data.get("data", {})
+                    .get("attributes", {})
+                    .get("body", {})
+                    .get("value", None)
+                )
+
+     
+ 
         if auth.version == "v2":
             _LOGGER.debug("Fetching attributes for vehicle ID: %s", vehicle_id)
             attr_resp = await auth.request_v2("get", f"vehicles/{vehicle_id}")
