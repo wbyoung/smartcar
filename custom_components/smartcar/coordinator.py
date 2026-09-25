@@ -60,6 +60,19 @@ _BENIGN_SIGNAL_ERRORS: frozenset[tuple[str | None, str | None]] = frozenset(
     }
 )
 
+# Scopes required by v3 signal codes whose datapoints do not declare them. The v3
+# signals endpoint returns every signal regardless of the scopes granted, so a user
+# who declined `read_security` receives these with a PERMISSION error on every
+# update. Knowing the required scope lets that case be logged at DEBUG. This is only
+# consulted when choosing a log level; entity setup and v2 batching still use
+# `DatapointConfig.required_scopes`.
+_V3_CODE_REQUIRED_SCOPES: dict[str | None, tuple[str, ...]] = {
+    "closure-doors": ("read_security",),
+    "closure-enginecover": ("read_security",),
+    "closure-fronttrunk": ("read_security",),
+    "closure-reartrunk": ("read_security",),
+}
+
 
 @dataclass
 class DatapointConfig:
@@ -850,14 +863,23 @@ class SmartcarVehicleCoordinator(DataUpdateCoordinator):
         self,
     ) -> Generator[tuple[_DataAdder, dict[str, Any]]]:
         updated_data = dict(self.data or {})
+        token_scopes = frozenset(
+            self.config_entry.data.get("token", {}).get("scopes", []) or []
+        )
 
-        yield _DataAdder(updated_data), updated_data
+        yield _DataAdder(updated_data, token_scopes=token_scopes), updated_data
 
 
 class _DataAdder:
-    def __init__(self, data: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        data: dict[str, Any],
+        *,
+        token_scopes: frozenset[str] = frozenset(),
+    ) -> None:
         super().__init__()
         self.data = data
+        self.token_scopes = token_scopes
         self._addition_made = False
 
     @property
@@ -873,10 +895,14 @@ class _DataAdder:
         meta = signal.get("meta", {})
 
         if is_error:
+            error = status.get("error", {})
+            is_expected = not _is_integrated(signal) or _is_unheld_scope_error(
+                signal, error, self.token_scopes
+            )
             _handle_webhook_signal_error(
                 name,
-                status.get("error", {}),
-                level="error" if _is_integrated(signal) else "debug",
+                error,
+                level="debug" if is_expected else "error",
             )
 
             body = {"value": None}
@@ -1057,6 +1083,35 @@ def _parse_signal_timestamp(value: str | float | None) -> dt.datetime | None:
 def _is_integrated(signal: dict) -> bool:
     code: str | None = signal.get("code")
     return code in DATAPOINT_CODE_MAP
+
+
+def _required_scopes_for_code(code: str | None) -> frozenset[str]:
+    scopes = set(_V3_CODE_REQUIRED_SCOPES.get(code, ()))
+    for datapoint in DATAPOINT_CODE_MAP.get(code, ()):
+        scopes.update(datapoint.required_scopes)
+
+    # reading a signal only needs the `read_*` scopes; `control_*` scopes gate
+    # commands and must not make a readable signal look unpermitted.
+    return frozenset(scope for scope in scopes if scope.startswith("read_"))
+
+
+def _is_unheld_scope_error(
+    signal: dict, error: dict, token_scopes: frozenset[str]
+) -> bool:
+    """Whether a signal error is explained by a scope the user did not grant.
+
+    Only PERMISSION errors on signals with known, unheld scopes qualify. A
+    permission failure on a scope that was granted still logs at ERROR.
+
+    Returns:
+        True if the error is expected because a required scope was not granted.
+    """
+    if error.get("type") != "PERMISSION":
+        return False
+
+    required = _required_scopes_for_code(signal.get("code"))
+
+    return bool(required) and not required.issubset(token_scopes)
 
 
 def _handle_percent_unit_conversion(code: str | None, body: dict[str, Any]) -> None:
