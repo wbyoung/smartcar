@@ -2,6 +2,7 @@
 
 import copy
 import datetime as dt
+import logging
 
 from homeassistant.core import HomeAssistant
 import pytest
@@ -98,3 +99,75 @@ def test_failed_signal_preserves_previous_timestamps() -> None:
     assert data["tractionbattery-stateofcharge"] == {"value": None}
     assert data["tractionbattery-stateofcharge:data_age"] == old_time
     assert data["tractionbattery-stateofcharge:fetched_at"] == old_time
+
+
+@pytest.mark.parametrize(
+    ("code", "error", "token_scopes", "expected_level"),
+    [
+        (
+            "closure-doors",
+            {"type": "PERMISSION", "code": None},
+            frozenset({"read_battery"}),
+            logging.DEBUG,
+        ),
+        (
+            "closure-islocked",
+            {"type": "PERMISSION", "code": None},
+            frozenset({"read_battery"}),
+            logging.DEBUG,
+        ),
+        (
+            "closure-doors",
+            {"type": "PERMISSION", "code": None},
+            frozenset({"read_security"}),
+            logging.ERROR,
+        ),
+        (
+            "closure-islocked",
+            {"type": "PERMISSION", "code": None},
+            frozenset({"read_security"}),
+            logging.ERROR,
+        ),
+        (
+            "closure-windows",
+            {"type": "PERMISSION", "code": None},
+            frozenset({"read_battery"}),
+            logging.ERROR,
+        ),
+        (
+            "closure-doors",
+            {"type": "SERVER", "code": None},
+            frozenset({"read_battery"}),
+            logging.ERROR,
+        ),
+    ],
+    ids=[
+        "unheld_scope_v3_only_signal",
+        "unheld_scope_declared_datapoint",
+        "held_scope_is_genuine",
+        "held_read_scope_without_control_scope",
+        "no_known_scope_is_genuine",
+        "non_permission_error_is_genuine",
+    ],
+)
+def test_signal_error_for_unheld_scope_is_debug(
+    caplog: pytest.LogCaptureFixture,
+    code: str,
+    error: dict,
+    token_scopes: frozenset[str],
+    expected_level: int,
+) -> None:
+    """Permission errors for scopes the user never granted are expected noise."""
+    with caplog.at_level(logging.DEBUG, logger="custom_components.smartcar"):
+        coordinator_module._DataAdder(
+            {}, token_scopes=token_scopes
+        ).from_signal_attributes(
+            {
+                "code": code,
+                "name": "Signal",
+                "status": {"value": "ERROR", "error": error},
+            }
+        )
+
+    record = next(r for r in caplog.records if "error for signal" in r.message)
+    assert record.levelno == expected_level
