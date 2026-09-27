@@ -53,6 +53,12 @@ REDIRECT_URL = "https://example.com/auth/external/callback"
             {},
         ),
         (
+            {"missing_vin_404"},
+            {},
+            {CONF_APPLICATION_ID: "my-app-id", "use_webhooks": False},
+            {},
+),
+        (
             set(),
             {},
             {
@@ -144,6 +150,7 @@ REDIRECT_URL = "https://example.com/auth/external/callback"
         "webhooks_extraneous_token",
         "cloud_webhooks",
         "cloud_not_connected",
+        "no_webhooks_missing_vin_404",
     ],
 )
 async def test_full_flow(
@@ -342,7 +349,11 @@ async def _test_full_flow(
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
         vehicle_id = "36ab27d0-fd9d-4455-823a-ce30af709ffc"
-        vin = "5YJSA1CN5DFP00101" if "missing_vin" not in setup else None
+        vin = (
+            "5YJSA1CN5DFP00101"
+            if not (setup & {"missing_vin", "missing_vin_404"})
+            else None
+        )
 
         if client_id_version == "v2":
             server_access_token = {
@@ -398,10 +409,23 @@ async def _test_full_flow(
                     DOMAIN,
                 ),
             )
+            vin_status = (
+                404
+                if "missing_vin_404" in setup
+                else 200
+            )
+
+            vin_fixture = (
+                "api/get_vin_signal_404.json"
+                if "missing_vin_404" in setup
+                else f"api/get_vin_signal{'_missing' if 'missing_vin' in setup else ''}.json"
+            )
+
             aioclient_mock.get(
                 f"{MOCK_API_ENDPOINT}/vehicles/{vehicle_id}/signals/vehicleidentification-vin",
+                status=vin_status,
                 json=load_json_object_fixture(
-                    f"api/get_vin_signal{'_missing' if 'missing_vin' in setup else ''}.json",
+                    vin_fixture,
                     DOMAIN,
                 ),
             )
@@ -463,7 +487,7 @@ async def _test_full_flow(
             "model": "Model S",
             "year": "2014",
         }
-        if "missing_vin" in setup:
+        if setup & {"missing_vin", "missing_vin_404"}:
             expected_attrs.pop("vin")
         assert "token" in data
         del data["token"]["expires_at"]
