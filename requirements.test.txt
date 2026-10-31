@@ -1,6 +1,6 @@
 pre_commit==4.2.0
 pycares==4.11.0
-pytest==8.3.5
-pytest-cov==6.0.0
-pytest-homeassistant-custom-component==0.13.252
-syrupy==4.8.1
+pytest==8.4.2
+pytest-cov==7.0.0
+pytest-homeassistant-custom-component==0.13.294
+syrupy==5.0.0

@@ -1,6 +1,7 @@
 """Test component setup."""
 
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import cloud
@@ -227,21 +228,26 @@ async def test_update_errors(
 
 
 @pytest.mark.parametrize(
-    ("data_attribute", "expected_reloads"),
+    ("data_attribute", "data_attribute_value", "expected_reloads"),
     [
-        ("arbitrary-update", 1),
-        ("token", 0),
+        ("arbitrary-update", "value1", 1),
+        ("token", {"access_token": "mock-new-access-token"}, 0),
+        ("token", {"refresh_token": "mock-new-refresh-token"}, 1),
     ],
-    ids=["data-change", "oauth-token-change"],
+    ids=["data-change", "oauth-access-token-update", "oauth-refresh-token-renewal"],
 )
 async def test_update_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     vehicle: AsyncMock,
     data_attribute: str,
+    data_attribute_value: Any,
     expected_reloads: int,
 ) -> None:
     await setup_integration(hass, mock_config_entry)
+
+    new_data = {**mock_config_entry.data, data_attribute: data_attribute_value}
+    new_data["token"] = {**mock_config_entry.data["token"], **new_data["token"]}
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_reload",
@@ -249,7 +255,7 @@ async def test_update_entry(
     ) as mock_reload:
         hass.config_entries.async_update_entry(
             mock_config_entry,
-            data={**mock_config_entry.data, data_attribute: "value1"},
+            data=new_data,
         )
         await hass.async_block_till_done()
         assert mock_reload.call_count == expected_reloads

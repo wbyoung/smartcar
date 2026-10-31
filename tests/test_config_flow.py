@@ -35,7 +35,12 @@ from custom_components.smartcar.const import (
 )
 from custom_components.smartcar.types import APIVersion
 
-from . import MOCK_API_ENDPOINT, MOCK_API_ENDPOINT_LEGACY, setup_integration
+from . import (
+    MOCK_API_ENDPOINT,
+    MOCK_API_ENDPOINT_LEGACY,
+    setup_added_integration,
+    setup_integration,
+)
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
 
@@ -913,6 +918,11 @@ async def test_reauth(
         data={**mock_config_entry.data, **entry_data},
     )
 
+    # setup without doing first refresh so that we don't need to mock the data
+    # request/responses, but still get the update handler installed.
+    with patch("custom_components.smartcar.async_do_first_refresh", return_value=True):
+        await setup_added_integration(hass, mock_config_entry)
+
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
@@ -951,7 +961,6 @@ async def test_reauth(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    vin = "5YJSA1CN5DFP00101"
     server_access_token = {
         "refresh_token": "mock-refresh-token",
         "access_token": "updated-access-token",
@@ -969,27 +978,28 @@ async def test_reauth(
         json={"paging": {"count": 25, "offset": 0}, "vehicles": [new_vehicle_id]},
     )
     aioclient_mock.get(
-        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}/vin", json={"vin": vin}
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}/vin",
+        json={"vin": vehicle_attributes["vin"]},
     )
     aioclient_mock.get(
         f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}",
         json={
             "id": new_vehicle_id,
-            "make": "TESLA",
-            "model": "Model S",
-            "year": "2014",
+            "make": vehicle_attributes["make"],
+            "model": vehicle_attributes["model"],
+            "year": vehicle_attributes["year"],
         },
     )
 
     with patch(
-        "custom_components.smartcar.async_setup_entry", return_value=True
-    ) as mock_setup:
+        "custom_components.smartcar.async_do_first_refresh", return_value=True
+    ) as mock_first_refresh:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert len(mock_setup.mock_calls) == expected_setup_calls
+    assert len(mock_first_refresh.mock_calls) == expected_setup_calls
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_abort_reason
     assert result["description_placeholders"] == expected_placeholders
@@ -1109,6 +1119,11 @@ async def test_reconfigure(
         data={**mock_config_entry.data, **entry_data},
     )
 
+    # setup without doing first refresh so that we don't need to mock the data
+    # request/responses, but still get the update handler installed.
+    with patch("custom_components.smartcar.async_do_first_refresh", return_value=True):
+        await setup_added_integration(hass, mock_config_entry)
+
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -1143,7 +1158,6 @@ async def test_reconfigure(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    vin = "5YJSA1CN5DFP00101"
     server_access_token = {
         "refresh_token": "mock-refresh-token",
         "access_token": "updated-access-token",
@@ -1161,22 +1175,23 @@ async def test_reconfigure(
         json={"paging": {"count": 25, "offset": 0}, "vehicles": [new_vehicle_id]},
     )
     aioclient_mock.get(
-        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}/vin", json={"vin": vin}
+        f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}/vin",
+        json={"vin": vehicle_attributes["vin"]},
     )
     aioclient_mock.get(
         f"{MOCK_API_ENDPOINT_LEGACY}/vehicles/{new_vehicle_id}",
         json={
             "id": new_vehicle_id,
-            "make": "TESLA",
-            "model": "Model S",
-            "year": "2014",
+            "make": vehicle_attributes["make"],
+            "model": vehicle_attributes["model"],
+            "year": vehicle_attributes["year"],
         },
     )
 
     with (
         patch(
-            "custom_components.smartcar.async_setup_entry", return_value=True
-        ) as mock_setup,
+            "custom_components.smartcar.async_do_first_refresh", return_value=True
+        ) as mock_first_refresh,
         patch(
             "homeassistant.components.cloud.async_active_subscription",
             return_value=False,
@@ -1187,7 +1202,7 @@ async def test_reconfigure(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert len(mock_setup.mock_calls) == expected_setup_calls
+    assert len(mock_first_refresh.mock_calls) == expected_setup_calls
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_abort_reason
     assert result["description_placeholders"] == expected_placeholders
