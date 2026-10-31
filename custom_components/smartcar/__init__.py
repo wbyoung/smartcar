@@ -224,8 +224,21 @@ async def async_update_listener(
 ) -> None:
     """Handle options update."""
 
-    entry_data = {k: v for k, v in entry.data.items() if k != "token"}
-    initial_data = {k: v for k, v in initial_data.items() if k != "token"}
+    def comparable(data: dict[str, Any]) -> dict[str, Any]:
+        return {
+            k: (
+                v
+                if k != "token"
+                else {
+                    "refresh_token": v.get("refresh_token"),
+                    "scope": v.get("scope"),
+                }
+            )
+            for k, v in data.items()
+        }
+
+    entry_data = comparable(entry.data)
+    initial_data = comparable(initial_data)
 
     if entry_data != initial_data:
         await hass.config_entries.async_reload(entry.entry_id)

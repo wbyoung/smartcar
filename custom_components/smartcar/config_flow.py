@@ -380,7 +380,7 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 },
             )
 
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 current_entry, data={**self._initial_data(), **data}
             )
 
@@ -392,7 +392,7 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 },
             )
         else:
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(reload_on_update=False)
 
         # populate webhook details
         if CONF_APPLICATION_MANAGEMENT_TOKEN in data:
@@ -423,7 +423,7 @@ class SmartcarOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):  # ty
                 reconfigure_data.pop(CONF_WEBHOOK_ID, None)
                 reconfigure_data.pop(CONF_CLOUDHOOK, None)
 
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 current_entry,
                 data=reconfigure_data,
                 reason="reconfigure_successful",
