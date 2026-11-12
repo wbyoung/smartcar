@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from aiohttp import web
 from homeassistant.components import cloud, webhook
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -29,6 +30,12 @@ async def webhook_url_from_id(hass: HomeAssistant, webhook_id: str) -> tuple[str
         cloudhook = False
 
     return webhook_url, cloudhook
+
+
+def redact_webhook_url(webhook_url: str) -> str:
+    # the last path segment is the secret part of both webhook & cloudhook urls
+    base, _, _ = webhook_url.rpartition("/")
+    return f"{base}/{REDACTED}"
 
 
 def update_meta_coordinator_data[F: Callable[..., Any], ReturnT](fn: F) -> F:

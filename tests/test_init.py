@@ -527,6 +527,54 @@ async def test_remove_entry(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("cloudhook", "expected_url"),
+    [
+        (False, "/api/webhook/**REDACTED**"),
+        (True, "https://hooks.nabu.casa/**REDACTED**"),
+    ],
+    ids=["webhook", "cloudhook"],
+)
+async def test_webhook_url_redacted_in_log(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    cloudhook: bool,
+    expected_url: str,
+) -> None:
+    """Test the webhook URL is logged without its secret part."""
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_APPLICATION_MANAGEMENT_TOKEN: "mock_amt",
+            CONF_CLOUDHOOK: cloudhook,
+            CONF_WEBHOOK_ID: "mock_webhook_id",
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=cloudhook,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            return_value="https://hooks.nabu.casa/mock_cloudhook_id",
+        ),
+        caplog.at_level(logging.INFO, logger="custom_components.smartcar"),
+    ):
+        await setup_added_integration(hass, mock_config_entry)
+
+    record = next(r for r in caplog.records if "Registering webhook" in r.message)
+    assert record.getMessage().endswith(expected_url)
+    assert "mock_webhook_id" not in caplog.text
+    assert "mock_cloudhook_id" not in caplog.text
+
+
 _SNAPSHOT_ORDER = {
     key: idx
     for idx, key in enumerate(

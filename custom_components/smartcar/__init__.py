@@ -33,7 +33,7 @@ from .errors import (
 from .services import async_setup_services
 from .types import SmartcarData
 from .util import api_version_for_client_id
-from .webhooks import handle_webhook, webhook_url_from_id
+from .webhooks import handle_webhook, redact_webhook_url, webhook_url_from_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if CONF_WEBHOOK_ID in entry.data:
         _LOGGER.info(
             "Registering webhook at url: %s",
-            (await webhook_url_from_id(hass, entry.data[CONF_WEBHOOK_ID]))[0],
+            redact_webhook_url(
+                (await webhook_url_from_id(hass, entry.data[CONF_WEBHOOK_ID]))[0]
+            ),
         )
         webhook.async_register(
             hass,
