@@ -35,6 +35,17 @@ def _hvac_bool(body: object) -> object:
     return body
 
 
+def _unlocked(is_locked: bool | None) -> bool | None:  # noqa: FBT001
+    """Convert a locked value to the `on` state of a lock binary sensor.
+
+    Returns:
+        `True` when unlocked, `False` when locked, or `None` when unknown.
+    """
+    if is_locked is None:
+        return None
+    return not is_locked
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartcarBinarySensorDescription(
     BinarySensorEntityDescription, SmartcarEntityDescription
@@ -43,6 +54,17 @@ class SmartcarBinarySensorDescription(
 
 
 SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    # read-only alternative to the `lock` entity for users that granted
+    # `read_security` but not `control_security`. it is only added when the
+    # `lock` entity is not (see `_is_replaced_by_lock_entity`).
+    SmartcarBinarySensorDescription(
+        key=EntityDescriptionKey.DOOR_LOCK_STATUS,
+        name="Door Lock",
+        value_key_path="closure-islocked.value",
+        value_cast=_unlocked,
+        icon="mdi:car-door-lock",
+        device_class=BinarySensorDeviceClass.LOCK,
+    ),
     SmartcarBinarySensorDescription(
         key=EntityDescriptionKey.PLUG_STATUS,
         name="Charging Cable Plugged In",
@@ -354,10 +376,26 @@ async def async_setup_entry(  # noqa: RUF029
         SmartcarBinarySensor(coordinator, description)
         for coordinator in coordinators.values()
         for description in SENSOR_TYPES
-        if coordinator.is_scope_enabled(description.key, verbose=True)
+        if not _is_replaced_by_lock_entity(coordinator, description)
+        and coordinator.is_scope_enabled(description.key, verbose=True)
     ]
     _LOGGER.info("Adding %s Smartcar binary sensor entities", len(entities))
     async_add_entities(entities)
+
+
+def _is_replaced_by_lock_entity(
+    coordinator: SmartcarVehicleCoordinator,
+    description: BinarySensorEntityDescription,
+) -> bool:
+    """Check if the read-only lock status is covered by the `lock` entity.
+
+    Returns:
+        `True` if this is the read-only door lock status and the `lock` entity
+        will be created instead.
+    """
+    return description.key == EntityDescriptionKey.DOOR_LOCK_STATUS and (
+        coordinator.is_scope_enabled(EntityDescriptionKey.DOOR_LOCK)
+    )
 
 
 class SmartcarBinarySensor(SmartcarEntity[bool, bool], BinarySensorEntity):

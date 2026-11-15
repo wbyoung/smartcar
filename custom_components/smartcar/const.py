@@ -76,6 +76,7 @@ class EntityDescriptionKey(StrEnum):
     PLUG_STATUS = auto()
     LOCATION = auto()
     DOOR_LOCK = auto()
+    DOOR_LOCK_STATUS = auto()
     DOOR_BACK_LEFT = auto()
     DOOR_BACK_RIGHT = auto()
     DOOR_FRONT_LEFT = auto()
@@ -151,6 +152,7 @@ DEFAULT_ENABLED_ENTITY_DESCRIPTION_KEYS = {
     EntityDescriptionKey.CHARGING_STATE,
     EntityDescriptionKey.CHARGING,
     EntityDescriptionKey.DOOR_LOCK,
+    EntityDescriptionKey.DOOR_LOCK_STATUS,
     EntityDescriptionKey.LOCATION,
     EntityDescriptionKey.PLUG_STATUS,
     EntityDescriptionKey.RANGE,

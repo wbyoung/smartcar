@@ -188,6 +188,7 @@ Several entities are created for for each connected vehicle (subject to vehicle 
 - [`sensor.<make_model>_firmware_version`](#sensormake_model_firmware_version)
 - [`binary_sensor.<make_model>_charging_cable_plugged_in`](#binary_sensormake_model_charging_cable_plugged_in)
 - [`binary_sensor.<make_model>_battery_heater_active`](#binary_sensormake_model_battery_heater_active)
+- [`binary_sensor.<make_model>_door_lock`](#binary_sensormake_model_door_lock)
 - [`binary_sensor.<make_model>_front_trunk`](#binary_sensormake_model_front_trunk)
 - [`binary_sensor.<make_model>_front_trunk_lock`](#binary_sensormake_model_front_trunk_lock)
 - [`binary_sensor.<make_model>_rear_trunk`](#binary_sensormake_model_rear_trunk)
@@ -445,6 +446,13 @@ Whether the vehicle [battery heater is active](https://smartcar.com/docs/api-ref
 
 Enabled by default: :x:  
 Webhooks only: :link: _currently only available via webhooks_
+
+### `binary_sensor.<make_model>_door_lock`
+
+Whether the vehicle is [currently locked](https://smartcar.com/docs/api-reference/get-lock-status), as a read-only sensor. This is only created when [`lock.<make_model>_door_lock`](#lockmake_model_door_lock) is not, i.e. when `read_security` is granted but `control_security` is not (for instance, on some Smartcar plans).
+
+Enabled by default: :white_check_mark:  
+Requires permissions: `read_security`
 
 ### `binary_sensor.<make_model>_front_trunk`
 

@@ -195,6 +195,13 @@ DATAPOINT_ENTITY_KEY_MAP = {
         "/security",
         "isLocked",
     ),
+    # read-only lock status, used when `control_security` is not granted
+    EntityDescriptionKey.DOOR_LOCK_STATUS: DatapointConfig(
+        "closure-islocked",
+        ["read_security"],
+        "/security",
+        "isLocked",
+    ),
     EntityDescriptionKey.DOOR_BACK_LEFT_LOCK: DatapointConfig(
         "closure-doors",
         [],
