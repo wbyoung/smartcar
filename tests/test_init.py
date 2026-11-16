@@ -595,6 +595,7 @@ _SNAPSHOT_ORDER = {
             "tire_pressure_front_right",
             "charging",
             "door_lock",
+            "door_lock_status",
             "plug_status",
             "charge_limit",
             "location",
