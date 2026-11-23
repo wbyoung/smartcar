@@ -448,8 +448,18 @@ async def _store_vehicle_details(
                 "get",
                 f"vehicles/{vehicle_id}/signals/vehicleidentification-vin",
             )
-            signals_resp.raise_for_status()
-            signals_data = await signals_resp.json()
+
+            # some vehicles respond with a 404 for the vin signal even though
+            # their other signals are available. the vin and the vehicle
+            # attributes included with it are optional, so continue without
+            # them rather than failing to set up the vehicle.
+            if signals_resp.status == HTTPStatus.NOT_FOUND:
+                _LOGGER.warning("VIN signal not found for vehicle ID: %s", vehicle_id)
+                signals_data = {}
+            else:
+                signals_resp.raise_for_status()
+                signals_data = await signals_resp.json()
+
             vehicle_info = (
                 signals_data.get("included", {})
                 .get("vehicle", {})
@@ -471,12 +481,12 @@ async def _store_vehicle_details(
 
         make = vehicle_info.get("make")
         model = vehicle_info.get("model")
-        year = str(vehicle_info.get("year"))
+        year = vehicle_info.get("year")
 
         data["vehicles"][vehicle_id] = {
             "make": make,
             "model": model,
-            "year": year,
+            "year": str(year) if year is not None else None,
         }
 
         if vin:
