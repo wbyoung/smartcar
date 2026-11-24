@@ -418,3 +418,34 @@
   list([
   ])
 # ---
+# name: test_full_flow_v3_only[vin_not_found-v3]
+  list([
+    tuple(
+      'POST',
+      URL('https://iam.smartcar.com/oauth2/token'),
+      dict({
+        'client_id': 'client_mock-id',
+        'client_secret': 'mock-secret',
+        'grant_type': 'client_credentials',
+      }),
+      None,
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/connections'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+      }),
+    ),
+    tuple(
+      'get',
+      URL('http://test.local/v3/vehicles/36ab27d0-fd9d-4455-823a-ce30af709ffc/signals/vehicleidentification-vin'),
+      None,
+      dict({
+        'authorization': 'Bearer mock-token',
+        'sc-user-id': '218eda3b-0656-49a8-8f3d-360cdad07334',
+      }),
+    ),
+  ])
+# ---

@@ -224,11 +224,21 @@ async def test_full_flow(
                 "errors": {},
             },
         ),
+        (
+            {"vin_not_found"},
+            {},
+            {
+                CONF_APPLICATION_ID: "my-app-id",
+                "use_webhooks": False,
+            },
+            {},
+        ),
     ],
     ids=[
         "missing_application_id",
         "invalid_user_configuration",
         "empty_connections",
+        "vin_not_found",
     ],
 )
 async def test_full_flow_v3_only(
@@ -347,7 +357,11 @@ async def _test_full_flow(
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
         vehicle_id = "36ab27d0-fd9d-4455-823a-ce30af709ffc"
-        vin = "5YJSA1CN5DFP00101" if "missing_vin" not in setup else None
+        vin = (
+            "5YJSA1CN5DFP00101"
+            if not setup & {"missing_vin", "vin_not_found"}
+            else None
+        )
 
         if client_id_version == "v2":
             server_access_token = {
@@ -403,13 +417,22 @@ async def _test_full_flow(
                     DOMAIN,
                 ),
             )
-            aioclient_mock.get(
-                f"{MOCK_API_ENDPOINT}/vehicles/{vehicle_id}/signals/vehicleidentification-vin",
-                json=load_json_object_fixture(
-                    f"api/get_vin_signal{'_missing' if 'missing_vin' in setup else ''}.json",
-                    DOMAIN,
-                ),
+            vin_signal_url = (
+                f"{MOCK_API_ENDPOINT}/vehicles/{vehicle_id}"
+                "/signals/vehicleidentification-vin"
             )
+            if "vin_not_found" in setup:
+                # some vehicles respond with a 404 for this signal rather than
+                # a signal with an error status & a null value.
+                aioclient_mock.get(vin_signal_url, status=HTTPStatus.NOT_FOUND)
+            else:
+                aioclient_mock.get(
+                    vin_signal_url,
+                    json=load_json_object_fixture(
+                        f"api/get_vin_signal{'_missing' if 'missing_vin' in setup else ''}.json",
+                        DOMAIN,
+                    ),
+                )
             expected_aioclient_mock_calls += (
                 3  # oauth token & 2 for connections/signals
                 - (
@@ -470,6 +493,9 @@ async def _test_full_flow(
         }
         if "missing_vin" in setup:
             expected_attrs.pop("vin")
+        if "vin_not_found" in setup:
+            # the vehicle attributes are part of the vin signal response
+            expected_attrs = {"make": None, "model": None, "year": None}
         assert "token" in data
         del data["token"]["expires_at"]
         assert dict(config_entry.data) == {
