@@ -131,6 +131,24 @@ async def test_charging_limit(
 
 
 @pytest.mark.usefixtures("enable_all_entities")
+@pytest.mark.parametrize("client_id_version", ["v3"])
+@pytest.mark.parametrize("api_response_type", ["active_limit_only"])
+@pytest.mark.parametrize("vehicle_fixture", ["vw_id_4"])
+async def test_charging_limit_from_active_limit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    vehicle: AsyncMock,
+) -> None:
+    """Test charging limit falls back to `activeLimit` when `values` is empty."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    number_state = hass.states.get("number.vw_id_4_charge_limit")
+    assert number_state is not None
+    assert number_state.state == "90"
+
+
+@pytest.mark.usefixtures("enable_all_entities")
 @pytest.mark.parametrize("platform", [Platform.NUMBER])
 @pytest.mark.parametrize(
     "vehicle_fixture", ["vw_id_4", "jaguar_ipace", "byd_seal", "polestar_2"]
