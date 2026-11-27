@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import EntityDescriptionKey
 from .coordinator import SmartcarVehicleCoordinator
 from .entity import SmartcarEntity, SmartcarEntityDescription
+from .util import key_path_get
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class _StorageValue(TypedDict):
 
 
 class SmartcarChargeLimitNumber(
-    SmartcarEntity[float, list[_StorageValue]], NumberEntity
+    SmartcarEntity[float | None, list[_StorageValue]], NumberEntity
 ):
     """Number entity for charge limit."""
 
@@ -81,6 +82,24 @@ class SmartcarChargeLimitNumber(
     @property
     def native_value(self) -> float | None:
         return self._extract_value()
+
+    def _extract_value(self) -> float | None:
+        value = super()._extract_value()
+
+        # some vehicles (e.g. VW ID.7) report an empty list of `values` and only
+        # provide the limit via `activeLimit` (always in percent).
+        if value is None:
+            value = self._extract_active_limit()
+
+        return value
+
+    def _extract_active_limit(self) -> float | None:
+        data = self.coordinator.data or {}
+        active_limit: float | None = key_path_get(
+            data, "charge-chargelimits.activeLimit", None
+        )
+
+        return None if active_limit is None else round(active_limit)
 
     async def async_set_native_value(self, value: float) -> None:
         assert value >= 50, "Value must be between 50 and 100"
